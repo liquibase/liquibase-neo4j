@@ -11,12 +11,13 @@ import spock.lang.Specification
 import java.time.ZoneId
 import java.util.logging.LogManager
 
+import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
 class Neo4jDatabaseTest extends Specification {
 
     static {
-        LogManager.getLogManager().reset();
+        LogManager.getLogManager().reset()
     }
 
     private static final String PASSWORD = "sup3rs3cur3"
@@ -71,6 +72,28 @@ class Neo4jDatabaseTest extends Specification {
 
         then:
         database.getNeo4jVersion().startsWith(neo4jVersion())
+    }
+
+    def "supports catalog if Neo4j version is 4+"() {
+        given:
+        def database = new Neo4jDatabase()
+
+        when:
+        database.setConnection(connection)
+
+        then:
+        database.supportsCatalogs() == neo4jVersion().startsWith("4")
+    }
+
+    def "detects server edition"() {
+        given:
+        def database = new Neo4jDatabase()
+
+        when:
+        database.setConnection(connection)
+
+        then:
+        database.isEnterprise() == enterpriseEdition()
     }
 
     private DatabaseConnection openConnection() {

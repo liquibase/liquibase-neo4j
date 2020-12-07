@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd"
+                   context="init">
+
+    <changeSet id="my-movie-init" author="fbiville">
+        <preConditions>
+            <and>
+                <sqlCheck expectedResult="0">
+                    MATCH (n)
+                    WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
+                    RETURN COUNT(n)
+                </sqlCheck>
+                <sqlCheck expectedResult="0">RETURN 0</sqlCheck>
+            </and>
+        </preConditions>
+        <comment>Creates a forgettable movie</comment>
+        <sql>MERGE (:Movie {title: 'My Life'})</sql>
+        <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
+    </changeSet>
+
+    <include file="polyglot/changelog.sql"/>
+    <includeAll path="includes"/>
+</databaseChangeLog>

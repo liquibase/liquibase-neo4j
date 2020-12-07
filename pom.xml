@@ -19,6 +19,16 @@
         <liquibase.version>4.1.1</liquibase.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.neo4j.driver</groupId>
+                <artifactId>neo4j-java-driver</artifactId>
+                <version>4.2.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -60,7 +70,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>neo4j</artifactId>
-            <version>1.15.0-rc2</version>
+            <version>1.15.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

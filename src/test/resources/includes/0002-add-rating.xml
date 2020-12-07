@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="your-rating-init" author="fbiville">
+        <comment>Creates a forgettable review</comment>
+        <sql>
+            MERGE (m:Movie {title: 'My Life'})
+            MERGE (a:Person {name: 'Hater'})
+            MERGE (a)-[:RATED {rating: 0}]->(m)
+        </sql>
+        <rollback>MATCH (a:Person {name: 'Hater'}) DETACH DELETE a</rollback>
+    </changeSet>
+
+    <changeSet id="that-is-all-folks" author="fbiville">
+        <tagDatabase tag="mission-complete-2" />
+    </changeSet>
+</databaseChangeLog>

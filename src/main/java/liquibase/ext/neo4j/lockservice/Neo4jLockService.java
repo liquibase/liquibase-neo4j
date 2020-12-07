@@ -12,24 +12,19 @@ import liquibase.executor.ExecutorService;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.lockservice.LockService;
-import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 
 import java.sql.Timestamp;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 import static java.util.function.Predicate.isEqual;
-import static liquibase.ext.neo4j.lockservice.Exceptions.ignoring;
-import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
 
 public class Neo4jLockService implements LockService {
 
-    static final String CONSTRAINT_NAME = "unique_liquibase_lock";
+    static final String LOCK_CONSTRAINT_NAME = "unique_liquibase_lock";
 
     private Neo4jDatabase database;
 
@@ -56,16 +51,16 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void waitForLock() throws LockException {
-        ConditionCheckScheduler checkScheduler = new ConditionCheckScheduler(Duration.ofMinutes(this.getChangeLogLockWaitTime()));
+        ConditionCheckScheduler checkScheduler = new ConditionCheckScheduler(Duration.ofMinutes(getChangeLogLockWaitTime()));
         boolean lockAcquired = checkScheduler.scheduleCheckWithFixedDelay(
                 this::acquireLock,
                 isEqual(true),
                 false,
-                Duration.ofSeconds(this.getChangeLogLockRecheckTime())
+                Duration.ofSeconds(getChangeLogLockRecheckTime())
         );
 
         if (!lockAcquired) {
-            DatabaseChangeLogLock[] currentLocks = this.listLocks();
+            DatabaseChangeLogLock[] currentLocks = listLocks();
             if (currentLocks.length > 0) {
                 throw new LockException(String.format(
                         "Could not acquire change log lock. Currently locked by %s",
@@ -77,7 +72,7 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void setChangeLogLockWaitTime(long changeLogLockWaitTime) {
-        this.changeLogLockPollRate = changeLogLockWaitTime;
+        changeLogLockPollRate = changeLogLockWaitTime;
     }
 
     public Long getChangeLogLockWaitTime() {
@@ -107,20 +102,25 @@ public class Neo4jLockService implements LockService {
             return true;
         }
 
-        UUID formerLockId = this.lockId;
+        UUID formerLockId = lockId;
         try {
-            this.init();
+            init();
             UUID newLockId = UUID.randomUUID();
-            run(query(String.format(
-                    "CREATE (lock:__LiquibaseLock:__LiquigraphLock {id: '%s', grant_date: DATETIME(), locked_by: '%2$s', name: '%2$s'})",
+            database.executeCypher(String.format(
+                    "CREATE (lock:__LiquibaseLock {id: '%s', grantDate: DATETIME(), lockedBy: '%2$s'})",
                     newLockId.toString(),
                     Neo4jLockService.class.getSimpleName()
-            )));
+            ));
             database.commit();
-            this.lockId = newLockId;
+            lockId = newLockId;
             return true;
         } catch (LiquibaseException e) {
-            this.lockId = formerLockId;
+            try {
+                database.rollback();
+            } catch (DatabaseException databaseException) {
+                e.addSuppressed(databaseException);
+            }
+            lockId = formerLockId;
             if (e.getMessage().contains("already exists")) {
                 return false;
             }
@@ -130,23 +130,18 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void init() throws DatabaseException {
-        try {
-            createConstraints();
-        } catch (LiquibaseException e) {
-            throw new DatabaseException("Could not initialize lock", e);
-        }
+        database.createUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
+        database.commit();
     }
 
     @Override
     public void destroy() throws DatabaseException {
+        database.dropUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
+        database.commit();
         try {
-            removeConstraints();
-        } catch (LiquibaseException e) {
-            throw new DatabaseException("Could not remove lock constraints upon destroy", e);
-        }
-        try {
-            this.releaseLock();
+            forceReleaseLock();
         } catch (LockException e) {
+            database.rollback();
             throw new DatabaseException("Could not release lock upon destroy", e);
         }
     }
@@ -157,13 +152,18 @@ public class Neo4jLockService implements LockService {
             return;
         }
         try {
-            run(query(String.format(
-                    "MATCH (lock:__LiquibaseLock:__LiquigraphLock {id: '%s'}) DELETE lock",
-                    this.lockId.toString()
-            )));
+            database.executeCypher(String.format(
+                    "MATCH (lock:__LiquibaseLock {id: '%s'}) DELETE lock",
+                    lockId.toString()
+            ));
             database.commit();
-            this.reset();
+            reset();
         } catch (LiquibaseException e) {
+            try {
+                database.rollback();
+            } catch (DatabaseException databaseException) {
+                e.addSuppressed(databaseException);
+            }
             throw new LockException("Could not release lock", e);
         }
     }
@@ -173,7 +173,7 @@ public class Neo4jLockService implements LockService {
     public DatabaseChangeLogLock[] listLocks() throws LockException {
         Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
         try {
-            List<Map<String, Object>> results = executor.queryForObject(new RawSqlStatement("MATCH (lock:__LiquibaseLock:__LiquigraphLock) WITH lock ORDER BY lock.grant_date ASC RETURN COLLECT(lock) AS locks"), List.class);
+            List<Map<String, Object>> results = executor.queryForObject(new RawSqlStatement("MATCH (lock:__LiquibaseLock) WITH lock ORDER BY lock.grantDate ASC RETURN COLLECT(lock) AS locks"), List.class);
             return results.stream().map(this::mapRow).toArray(DatabaseChangeLogLock[]::new);
         } catch (DatabaseException e) {
             throw new LockException("Could not list locks", e);
@@ -183,9 +183,9 @@ public class Neo4jLockService implements LockService {
     @Override
     public void forceReleaseLock() throws LockException {
         try {
-            run(query("MATCH (lock:__LiquibaseLock:__LiquigraphLock) DELETE lock"));
+            database.executeCypher("MATCH (lock:__LiquibaseLock) DELETE lock");
             database.commit();
-            this.reset();
+            reset();
         } catch (LiquibaseException e) {
             throw new LockException("Could not force release lock", e);
         }
@@ -193,7 +193,7 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void reset() {
-        this.lockId = null;
+        lockId = null;
     }
 
     @Override
@@ -201,77 +201,10 @@ public class Neo4jLockService implements LockService {
         return lockId != null;
     }
 
-    private void createConstraints() throws LiquibaseException {
-        String neo4jVersion = database.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            createConstraintsForNeo4j3();
-        } else if (neo4jVersion.startsWith("4")) {
-            createConstraintsForNeo4j4();
-        } else {
-            throw new DatabaseException(String.format(
-                    "Init aborted: Neo4j version %s is not supported",
-                    neo4jVersion
-            ));
-        }
-    }
-
-    private void removeConstraints() throws LiquibaseException {
-        String neo4jVersion = database.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            removeConstraintsForNeo4j3();
-        } else if (neo4jVersion.startsWith("4")) {
-            removeConstraintsForNeo4j4();
-        } else {
-            throw new DatabaseException(String.format(
-                    "Init aborted: Neo4j version %s is not supported",
-                    neo4jVersion
-            ));
-        }
-    }
-
-    private void createConstraintsForNeo4j3() throws LiquibaseException {
-        Predicate<Exception> constraintExists = messageContaining("constraint already exists");
-        // before 4.x, constraints cannot be given names
-        ignoring(constraintExists, () -> run(query("CREATE CONSTRAINT ON (lock:__LiquibaseLock) ASSERT lock.locked_by IS UNIQUE")));
-        ignoring(constraintExists, () -> run(query("CREATE CONSTRAINT ON (lock:__LiquigraphLock) ASSERT lock.name IS UNIQUE")));
-        database.commit();
-    }
-
-    private void createConstraintsForNeo4j4() throws LiquibaseException {
-        Predicate<Exception> constraintExists = messageContaining("constraint already exists");
-        // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
-        ignoring(constraintExists, () -> run(query("CREATE CONSTRAINT %s ON (lock:__LiquibaseLock) ASSERT lock.locked_by IS UNIQUE", CONSTRAINT_NAME)));
-        ignoring(constraintExists, () -> run(query("CREATE CONSTRAINT %s_bc ON (lock:__LiquigraphLock) ASSERT lock.name IS UNIQUE", CONSTRAINT_NAME)));
-        database.commit();
-    }
-
-    private void removeConstraintsForNeo4j4() throws LiquibaseException {
-        Predicate<Exception> constraintNotFoundError = messageContaining("no such constraint");
-        ignoring(constraintNotFoundError, () -> run(query("DROP CONSTRAINT %s", CONSTRAINT_NAME)));
-        ignoring(constraintNotFoundError, () -> run(query("DROP CONSTRAINT %s_bc", CONSTRAINT_NAME)));
-        database.commit();
-    }
-
-    private void removeConstraintsForNeo4j3() throws LiquibaseException {
-        Predicate<Exception> constraintNotFoundError = messageContaining("no such constraint");
-        // before 4.x, constraints cannot be given names
-        ignoring(constraintNotFoundError, () -> run(query("DROP CONSTRAINT ON (lock:__LiquibaseLock) ASSERT lock.locked_by IS UNIQUE")));
-        ignoring(constraintNotFoundError, () -> run(query("DROP CONSTRAINT ON (lock:__LiquigraphLock) ASSERT lock.name IS UNIQUE")));
-        database.commit();
-    }
-
-    private void run(SqlStatement[] sqlStatements) throws LiquibaseException {
-        database.execute(sqlStatements, Collections.emptyList());
-    }
-
-    private SqlStatement[] query(String cypher, Object... arguments) {
-        return new SqlStatement[]{new RawSqlStatement(String.format(cypher, arguments))};
-    }
-
     private DatabaseChangeLogLock mapRow(Map<String, Object> row) {
         int id = UUID.fromString(row.get("id").toString()).hashCode();
-        Timestamp grantDate = (Timestamp) row.get("grant_date");
-        String lockedBy = row.get("locked_by").toString();
+        Timestamp grantDate = (Timestamp) row.get("grantDate");
+        String lockedBy = row.get("lockedBy").toString();
         return new DatabaseChangeLogLock(id, grantDate, lockedBy);
     }
 }
