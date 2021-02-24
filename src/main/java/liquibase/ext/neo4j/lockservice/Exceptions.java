@@ -22,9 +22,3 @@ public class Exceptions {
         }
     }
 }
-
-// Callable sadly does not work with void methods
-@FunctionalInterface
-interface ThrowingRunnable {
-    void run() throws Exception;
-}

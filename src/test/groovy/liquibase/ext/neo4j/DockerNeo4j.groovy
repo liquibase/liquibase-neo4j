@@ -23,11 +23,11 @@ class DockerNeo4j {
         return System.getenv().getOrDefault("NEO4J_VERSION", "3.5")
     }
 
-    private static String dockerTag() {
-        return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
+    static boolean enterpriseEdition() {
+        return parseBoolean(System.getenv().getOrDefault("ENTERPRISE", "false"))
     }
 
-    private static boolean enterpriseEdition() {
-        return parseBoolean(System.getenv().getOrDefault("ENTERPRISE", "false"))
+    private static String dockerTag() {
+        return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
     }
 }
