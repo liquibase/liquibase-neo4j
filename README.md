@@ -55,7 +55,7 @@ Running Java under /usr/local/Cellar/openjdk/15.0.1/libexec/openjdk.jdk/Contents
 Then, you need to get the JAR file of this plugin.
 One way to do so is to build from sources, which requires:
 
- - a [JDK 8 or later](https://openjdk.java.net/install/)
+ - a [JDK 8 or 11](https://openjdk.java.net/install/)
  - [Apache Maven](https://maven.apache.org/download.cgi)
 
 Once the repository is cloned, you can run:
