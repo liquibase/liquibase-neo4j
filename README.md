@@ -200,7 +200,15 @@ Starting Liquibase at 15:08:54 (version 4.2.2 #36 built at 2020-12-09 20:07+0000
 Liquibase: Update has been successful.
 ```
 
-Let us look at the database and check whether the `Movie` node has been created:
+Let us look at the database and check whether the `Movie` node has been created.
+
+Depending on your Neo4j setup, opening the Neo4j Browser will consist in either:
+ - going to [Neo4j Aura](https://console.neo4j.io), locating your instance and clicking on the "Open with" button and selecting Neo4j Browser
+ - going to [Neo4j Sandbox](https://sandbox.neo4j.com/), locating your instance and clicking on the "Open" button
+ - directly browsing http://localhost:7474 (Docker)
+ - opening Neo4j Desktop, selecting your project, starting your instance if necessary and clicking on the "Open" button
+
+Once Neo4j browser, you can run the `MATCH (movie:Movie) RETURN movie` query and you should see the same result as below:
 
 ![Results after first run](docs/img/liquibase-neo4j-node-insertion.png)
 
