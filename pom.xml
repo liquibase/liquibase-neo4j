@@ -5,7 +5,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>4.3.2-SNAPSHOT</version>
 
     <name>liquibase-neo4j</name>
     <url>https://github.com/liquibase/liquibase-neo4j</url>
