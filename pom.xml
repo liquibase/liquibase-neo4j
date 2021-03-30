@@ -108,8 +108,10 @@
                     <optimize>true</optimize>
                     <debug>true</debug>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <!-- disables Neo4j annotation processors -->
-                    <arg>-proc:none</arg>
+					<compilerArgs>
+						<!-- disables Neo4j annotation processors -->
+						<arg>-proc:none</arg>
+					</compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
