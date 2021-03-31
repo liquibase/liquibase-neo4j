@@ -167,7 +167,7 @@
                 <version>3.2.0</version>
                 <configuration>
                     <author>false</author>
-                    <doctitle>Liquibase CDI ${project.version} API</doctitle>
+                    <doctitle>Liquibase Neo4j plugin ${project.version} API</doctitle>
                     <quiet>true</quiet>
                     <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
