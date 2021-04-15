@@ -1,4 +1,4 @@
-# Neo4j plugin for Liquibase
+# Neo4j plugin for Liquibase [![CI](https://github.com/liquibase/liquibase-neo4j/actions/workflows/maven.yml/badge.svg)](https://github.com/liquibase/liquibase-neo4j/actions/workflows/maven.yml)
 
 ## Neo4j plugin support
 
