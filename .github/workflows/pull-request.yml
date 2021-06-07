@@ -15,7 +15,7 @@ jobs:
     if: ${{ !contains( github.event.pull_request.labels.*.name, 'Extension Release Candidate :rocket:' ) }}
     strategy:
       matrix:
-        java: [8, 11, 16]
+        java: [11, 16]
 
     steps:
     - uses: actions/checkout@v2
