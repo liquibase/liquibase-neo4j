@@ -21,6 +21,21 @@
         <tag>HEAD</tag>
     </scm>
 
+	<developers>
+		<developer>
+			<id>nvoxland</id>
+			<name>Nathan Voxland</name>
+			<email>nathan.voxland@liquibase.org</email>
+			<url>http://nathan.voxland.net</url>
+			<organizationUrl>http://nathan.voxland.net/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
+	</developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
