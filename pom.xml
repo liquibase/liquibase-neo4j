@@ -45,6 +45,18 @@
 			</roles>
 			<timezone>-6</timezone>
 		</developer>
+		<developer>
+			<id>fbiville</id>
+			<name>Florent Biville</name>
+			<email>florent.biville@neo4j.org</email>
+			<url>https://florent.biville.net</url>
+			<organizationUrl>https://neo4j.com/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>Europe/Paris</timezone>
+		</developer>
 	</developers>
 
     <properties>
