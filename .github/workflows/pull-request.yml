@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Run Tests
 
 on:
   pull_request:
@@ -16,6 +16,14 @@ jobs:
     strategy:
       matrix:
         java: [11, 16]
+        neo4j_version:
+          - "3.5"
+          - "4.0"
+          - "4.1"
+          - "4.2"
+        enterprise:
+          - "true"
+          - "false"
 
     steps:
     - uses: actions/checkout@v2
@@ -31,8 +39,11 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         distribution: 'adopt'
-    - name: Run Unit Tests With Maven
-      run: mvn -B clean test --file pom.xml
+    - name: Run Tests With Maven
+      run: mvn --show-version --batch-mode verify
+      env:
+        NEO4J_VERSION: ${{ matrix.neo4j_version }}
+        ENTERPRISE: ${{ matrix.enterprise }}
 
   # This step is the automation to create a release based on a liquibase core bump
   # If a manual release is required, the steps below will need to be done manually prior
