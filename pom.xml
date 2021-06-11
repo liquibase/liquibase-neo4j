@@ -145,40 +145,32 @@
                     <optimize>true</optimize>
                     <debug>true</debug>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <!-- disables Neo4j annotation processors | needed for JDK 8 -->
+                        <arg>-proc:none</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
                 <configuration>
-                    <skipTests>false</skipTests>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <reportFormat>plain</reportFormat>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>1.12.1</version>
                 <executions>
                     <execution>
-                        <id>default-test</id>
-                        <phase>test</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>addTestSources</goal>
+                            <goal>compileTests</goal>
                         </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/*Test.java</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>integration-tests</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/*IT.java</include>
-                            </includes>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

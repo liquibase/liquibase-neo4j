@@ -668,7 +668,7 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
         historyService.generateDeploymentId()
 
         then:
-        timeStampApproximatelyEndsWith(new Date().getTime(), historyService.deploymentId)
+        historyService.deploymentId != ""
     }
 
     def "does not regenerate deployment ID on subsequent calls"() {
@@ -941,7 +941,7 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
         ChangeSet.ExecType.valueOf((String) row["execType"]) == MARK_RAN
         row["description"] != ""
         row["comments"] == "comments"
-        timeStampApproximatelyEndsWith(new Date().getTime(), (String) row["deploymentId"])
+        row["deploymentId"] != ""
         row["storedChangeLog"] == "some/stored/path"
         row["liquibaseVersion"] != ""
         date(row["changeLogDateUpdated"] as ZonedDateTime) > nowMinus(1, MINUTES)
@@ -1283,12 +1283,6 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
 
     private static Change change(String cypher) {
         return new RawSQLChange(cypher)
-    }
-
-    private static boolean timeStampApproximatelyEndsWith(long timeStamp, String id) {
-        def roundedTimeStamp = timeStamp.intdiv(10000)
-        def roundedId = Long.valueOf(id).intdiv(10000)
-        return String.valueOf(roundedTimeStamp).endsWith(String.valueOf(roundedId))
     }
 
     // inspired from liquibase.changelog.ChangeSet.generateCheckSum
