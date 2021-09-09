@@ -65,8 +65,10 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     @Override
     public String getDefaultDriver(String url) {
         String connectionUrl = StringUtil.trimToEmpty(url);
-        if (connectionUrl.startsWith("jdbc:neo4j:bolt")
-                || connectionUrl.startsWith("jdbc:neo4j:neo4j")) {
+        if (connectionUrl.startsWith("jdbc:neo4j:neo4j") || connectionUrl.startsWith("jdbc:neo4j:bolt+routing")) {
+            return "org.neo4j.jdbc.boltrouting.BoltRoutingNeo4jDriver";
+        }
+        if (connectionUrl.startsWith("jdbc:neo4j:bolt")) {
             return "org.neo4j.jdbc.bolt.BoltDriver";
         }
         return null;
