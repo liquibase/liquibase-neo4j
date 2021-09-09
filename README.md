@@ -6,8 +6,7 @@
 
 This plugin supports Neo4j 3.5.x and 4.x.
 
-The Neo4j plugin has been tested with Liquibase Community.
-It supports the following features:
+It has been tested with Liquibase Community and supports the following features:
 
 - change log [file](https://docs.liquibase.com/concepts/advanced/include.html) and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion
 - [polyglot](https://docs.liquibase.com/concepts/basic/other-formats.html) change logs (XML, SQL, YAML ...)
@@ -71,7 +70,7 @@ cp target/liquibase-neo4j-*.jar $LIQUIBASE_HOME/lib
 
 The Neo4j plugin relies on the JDBC driver to execute queries.
 
-You need to pick the 4.x driver JAR for Neo4j 4.x or 3.5.x for Neo4j 3.5.x in the [releases section](https://github.com/neo4j-contrib/neo4j-jdbc/releases) of the project.
+You need to pick the 4.x driver JAR for Neo4j 4.x or 3.5.x for Neo4j 3.5.x in the [releases section](https://github.com/neo4j-contrib/neo4j-jdbc/releases) of the project (minimum of 4.0.3 is strongly advised).
 
 That JAR needs to be copied to `$LIQUIBASE_HOME/lib` as well.
 
@@ -99,7 +98,7 @@ A **change set**:
  - is uniquely identified by the combination of `id` and `author`
  - defines one to many write operations, also known as **changes**
  - is bound to its own transaction
- - is by default immutable: changing query will result in an execution error. That can be changed with the `runOnChange` attribute
+ - is by default immutable: changing its queries will result in an execution error. That can be changed with the `runOnChange` attribute
  - is by default incremental: it will be run only once against the same target database. That can be changed with the `runAlways` attribute
 
 Here, there is a single migration (change set).
@@ -107,11 +106,11 @@ It creates a node with the `Movie` label, and a single textual property named `t
 
 ### Dry-run
 
-Before actually executing the migration, let us dry-run it.
+Before actually executing the migration, you should dry-run it.
 This makes sure the connection settings are all correct, 
 and the changes to run are the ones we expect.
 
-There are a variety of ways to run a Neo4j database:
+There is a variety of ways to run a Neo4j database:
  - in the cloud ☁️ with [Neo4j Aura](https://neo4j.com/cloud/aura/)
  - in the cloud ☁️ with [Neo4j Sandbox](https://sandbox.neo4j.com/)
  - locally 🏠 with [Neo4j Desktop](https://neo4j.com/download/)
@@ -165,15 +164,15 @@ CREATE (:Movie {title: 'My Life'});
 Liquibase command 'updateSQL' was executed successfully.
 ```
 
-The `updateSQL` commands dumps the queries Liquibase **would** run to the standard output.
+The `updateSQL` commands dumps to the standard output the queries Liquibase **would** run.
 The database remains untouched.
 
-In the middle of the output, you should the query of the previously defined change set.
-It seems we're good to go!
+In the middle of the output, you should see the query of the previously defined change set.
+Time to run the change sets for real this time!
 
 ### Run
 
-Now is time to run the `update` command:
+Run the following:
 
 ```shell
 liquibase --url jdbc:neo4j:bolt://localhost \
@@ -202,7 +201,7 @@ Starting Liquibase at 15:08:54 (version 4.2.2 #36 built at 2020-12-09 20:07+0000
 Liquibase: Update has been successful.
 ```
 
-Let us look at the database and check whether the `Movie` node has been created.
+Look at the database and check whether the `Movie` node has been created.
 
 Depending on your Neo4j setup, opening the Neo4j Browser will consist in either:
  - going to [Neo4j Aura](https://console.neo4j.io), locating your instance and clicking on the "Open with" button and selecting Neo4j Browser
@@ -210,7 +209,7 @@ Depending on your Neo4j setup, opening the Neo4j Browser will consist in either:
  - directly browsing http://localhost:7474 (Docker)
  - opening Neo4j Desktop, selecting your project, starting your instance if necessary and clicking on the "Open" button
 
-Once Neo4j browser, you can run the `MATCH (movie:Movie) RETURN movie` query and you should see the same result as below:
+Once Neo4j browser is open, you can run the `MATCH (movie:Movie) RETURN movie` query and you should see the same result as below:
 
 ![Results after first run](docs/img/liquibase-neo4j-node-insertion.png)
 
@@ -246,13 +245,13 @@ Starting Liquibase at 15:14:29 (version 4.2.2 #36 built at 2020-12-09 20:07+0000
 Liquibase: Update has been successful.
 ```
 
-Let us look at the database again.
+Look at the database again.
 
 ![Results after second run](docs/img/liquibase-neo4j-node-insertion-run-2.png)
 
 Nothing changed!
 
-It actually works by design. Remember that change sets are incremental by default, i.e. they run only once by default.
+It actually works by design. Remember that change sets are incremental by default, i.e. they run only once.
 
 The database actually contains more than 1 node:
 
