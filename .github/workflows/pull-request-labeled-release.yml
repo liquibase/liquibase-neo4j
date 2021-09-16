@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         java: [11, 16]
-        neo4j: ['3.5', '4.0', '4.1', '4.2']
+        neo4j: ['3.5', '4.0', '4.1', '4.2', '4.3']
     services:
       neo4j:
         image: neo4j:${{ matrix.neo4j }}
