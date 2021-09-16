@@ -4,7 +4,7 @@
 
 ## Neo4j plugin support
 
-This plugin supports Neo4j 3.5.x and 4.x.
+This plugin supports Neo4j 3.5.x and 4.x (Community Edition and Enterprise Edition).
 
 It has been tested with Liquibase Community and supports the following features:
 
