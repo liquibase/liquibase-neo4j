@@ -58,6 +58,11 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     @Override
+    public Database getDatabase() {
+        return this.database;
+    }
+
+    @Override
     public void init() throws DatabaseException {
         createConstraints();
         initializeHistory();
@@ -87,7 +92,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     @Override
-    protected void replaceChecksum(ChangeSet changeSet) throws DatabaseException {
+    public void replaceChecksum(ChangeSet changeSet) throws DatabaseException {
         try {
             database.executeCypher(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s'})-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
@@ -219,6 +224,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                                 "   .deploymentId, " +
                                 "   .storedChangeLog, " +
                                 "   .liquibaseVersion, " +
+                                "   .origin, " +
                                 "   orderExecuted: changeSetExecution.orderExecuted, " +
                                 "   dateExecuted: changeSetExecution.dateExecuted, " +
                                 "   tag: tag, " +
@@ -252,6 +258,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     private void insertChangeSet(ChangeSet changeSet, ChangeSet.ExecType execType, int nextSequenceValue) throws LiquibaseException {
+        Object origin = changeSet.getAttribute("origin");
         database.executeCypher(
                 "MATCH (changeLog:__LiquibaseChangeLog) " +
                         "SET changeLog.dateUpdated = DATETIME() " +
@@ -265,7 +272,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                         "   comments: '%s', " +
                         "   deploymentId: '%s', " +
                         "   storedChangeLog: '%s', " +
-                        "   liquibaseVersion: '%s' " +
+                        "   liquibaseVersion: '%s'," +
+                        "   origin: '%s' " +
                         "})-[:IN_CHANGELOG {" +
                         "   dateExecuted: DATETIME(), " +
                         "   orderExecuted: %d " +
@@ -280,6 +288,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 getDeploymentId(),
                 changeSet.getStoredFilePath(),
                 getLiquibaseVersion(),
+                origin == null ? "liquibase-neo4j" : origin,
                 nextSequenceValue
         );
     }
@@ -420,21 +429,41 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         Collection<String> contexts = (Collection<String>) row.get("contexts");
         @SuppressWarnings("unchecked")
         Collection<String> labels = (Collection<String>) row.get("labels");
-        RanChangeSet ranChangeSet = new RanChangeSet(
-                (String) row.get("changeLog"),
-                (String) row.get("id"),
-                (String) row.get("author"),
-                CheckSum.parse((String) row.get("checkSum")),
-                Date.from(((ZonedDateTime) row.get("dateExecuted")).toInstant()),
-                (String) row.get("tag"),
-                ChangeSet.ExecType.valueOf((String) row.get("execType")),
-                (String) row.get("description"),
-                (String) row.get("comments"),
-                new ContextExpression(contexts),
-                new Labels(labels),
-                (String) row.get("deploymentId"),
-                (String) row.get("storedChangeLog")
-        );
+        Object origin = row.get("origin");
+        RanChangeSet ranChangeSet;
+        if (origin == null || !origin.equals("liquigraph")) {
+            ranChangeSet = new RanChangeSet(
+                    (String) row.get("changeLog"),
+                    (String) row.get("id"),
+                    (String) row.get("author"),
+                    CheckSum.parse((String) row.get("checkSum")),
+                    Date.from(((ZonedDateTime) row.get("dateExecuted")).toInstant()),
+                    (String) row.get("tag"),
+                    ChangeSet.ExecType.valueOf((String) row.get("execType")),
+                    (String) row.get("description"),
+                    (String) row.get("comments"),
+                    new ContextExpression(contexts),
+                    new Labels(labels),
+                    (String) row.get("deploymentId"),
+                    (String) row.get("storedChangeLog")
+            );
+        } else {
+            ranChangeSet = new LiquigraphRanChangeSet(
+                    (String) row.get("changeLog"),
+                    (String) row.get("id"),
+                    (String) row.get("author"),
+                    CheckSum.parse((String) row.get("checkSum")),
+                    Date.from(((ZonedDateTime) row.get("dateExecuted")).toInstant()),
+                    (String) row.get("tag"),
+                    ChangeSet.ExecType.valueOf((String) row.get("execType")),
+                    (String) row.get("description"),
+                    (String) row.get("comments"),
+                    new ContextExpression(contexts),
+                    new Labels(labels),
+                    (String) row.get("deploymentId"),
+                    (String) row.get("storedChangeLog")
+            );
+        }
         ranChangeSet.setOrderExecuted(Integer.valueOf(row.get("orderExecuted").toString(), 10));
         ranChangeSet.setLiquibaseVersion(row.get("liquibaseVersion").toString());
         return ranChangeSet;
