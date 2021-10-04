@@ -4,7 +4,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>4.4.3.2-SNAPSHOT</version>
+    <version>4.5.0</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
@@ -64,7 +64,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
-        <liquibase.version>4.4.3</liquibase.version>
+        <liquibase.version>4.5.0</liquibase.version>
     </properties>
 
     <dependencyManagement>
