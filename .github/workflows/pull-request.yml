@@ -15,7 +15,7 @@ jobs:
     if: ${{ !contains( github.event.pull_request.labels.*.name, 'Extension Release Candidate :rocket:' ) }}
     strategy:
       matrix:
-        java: [8, 11, 16]
+        java: [8, 11, 17]
         neo4j_version:
           - "3.5"
           - "4.1"
