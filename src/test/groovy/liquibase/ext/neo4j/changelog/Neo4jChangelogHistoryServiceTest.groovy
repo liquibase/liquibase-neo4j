@@ -572,24 +572,35 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
         row["changeSetId"] == "newer"
     }
 
-    def "disconnects any tag to the newest change set before re-tagging it"() {
+    def "allows multiple tags per change set"() {
         given:
         manuallyCreateOrderedChangesets(
                 ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
                 ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
         )
-        manuallyAssignTag("görüşüruz", "newer", 2019, 12, 25)
+        manuallyAssignTag("gluten-day", "newer", 2019, 12, 25)
+        manuallyAssignTag("glutton-bay", "older", 2015, 12, 25)
 
         when:
         historyService.tag("guten-tag")
 
         then:
-        def row = queryRunner.getSingleRow("""
+        def rows = queryRunner.getRows("""
             MATCH (tag:__LiquibaseTag)-[:TAGS]->(changeSet:__LiquibaseChangeSet)
             RETURN tag.tag AS tag, changeSet.id AS changeSetId
+            ORDER BY tag.tag ASC
         """)
-        row["tag"] == "guten-tag"
-        row["changeSetId"] == "newer"
+        rows.size() == 3
+        def iterator = rows.iterator()
+        def row1 = iterator.next()
+        row1["tag"] == "gluten-day"
+        row1["changeSetId"] == "newer"
+        def row2 = iterator.next()
+        row2["tag"] == "glutton-bay"
+        row2["changeSetId"] == "older"
+        def row3 = iterator.next()
+        row3["tag"] == "guten-tag"
+        row3["changeSetId"] == "newer"
     }
 
     def "tags a new change set without affecting previous change sets tagged with another tag value"() {
