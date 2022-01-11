@@ -397,11 +397,11 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                             "OPTIONAL MATCH (tag)-[r:TAGS]->(:__LiquibaseChangeSet) DELETE r " +
                             "WITH tag " +
                             "MATCH (changeSet:__LiquibaseChangeSet)-[execution:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                            "OPTIONAL MATCH (changeSet)<-[r:TAGS]-(:__LiquibaseTag) DELETE r " +
                             "SET changeLog.dateUpdated = DATETIME() " +
                             "WITH tag, changeSet " +
                             "ORDER BY execution.dateExecuted DESC, execution.orderExecuted DESC " +
                             "LIMIT 1 " +
+                            "OPTIONAL MATCH (changeSet)<-[r:TAGS]-(:__LiquibaseTag) DELETE r " +
                             "MERGE (tag)-[:TAGS]->(changeSet) " +
                             "RETURN changeSet {.id, .author, .changeLog}",
                     tagString),
