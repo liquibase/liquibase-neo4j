@@ -592,6 +592,33 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
         row["changeSetId"] == "newer"
     }
 
+    def "tags a new change set without affecting previous change sets tagged with another tag value"() {
+        given:
+        manuallyCreateOrderedChangesets(
+                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
+        )
+        manuallyAssignTag("gluten-free", "older", 2019, 12, 25)
+
+        when:
+        historyService.tag("guten-tag")
+
+        then:
+        def rows = queryRunner.getRows("""
+            MATCH (tag:__LiquibaseTag)-[:TAGS]->(changeSet:__LiquibaseChangeSet)
+            RETURN tag.tag AS tag, changeSet.id AS changeSetId
+            ORDER BY tag ASC
+        """)
+        rows.size() == 2
+        def iterator = rows.iterator()
+        def row1 = iterator.next()
+        row1["tag"] == "gluten-free"
+        row1["changeSetId"] == "older"
+        def row2 = iterator.next()
+        row2["tag"] == "guten-tag"
+        row2["changeSetId"] == "newer"
+    }
+
     def "finds disconnected tags"() {
         when:
         manuallyUpsertDisconnectedTag("guten-tag", 2020, 12, 25)
