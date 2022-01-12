@@ -1,8 +1,7 @@
 package liquibase.ext.neo4j.lockservice;
 
+import liquibase.GlobalConfiguration;
 import liquibase.Scope;
-import liquibase.configuration.GlobalConfiguration;
-import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
@@ -79,8 +78,7 @@ public class Neo4jLockService implements LockService {
         if (changeLogLockPollRate != null) {
             return changeLogLockPollRate;
         }
-        return LiquibaseConfiguration.getInstance().getConfiguration(GlobalConfiguration.class)
-                .getDatabaseChangeLogLockWaitTime();
+        return GlobalConfiguration.CHANGELOGLOCK_WAIT_TIME.getCurrentValue();
     }
 
     @Override
@@ -92,8 +90,7 @@ public class Neo4jLockService implements LockService {
         if (changeLogLockRecheckTime != null) {
             return changeLogLockRecheckTime;
         }
-        return LiquibaseConfiguration.getInstance().getConfiguration(GlobalConfiguration.class)
-                .getDatabaseChangeLogLockPollRate();
+        return GlobalConfiguration.CHANGELOGLOCK_POLL_RATE.getCurrentValue();
     }
 
     @Override
@@ -108,7 +105,7 @@ public class Neo4jLockService implements LockService {
             UUID newLockId = UUID.randomUUID();
             database.executeCypher(String.format(
                     "CREATE (lock:__LiquibaseLock {id: '%s', grantDate: DATETIME(), lockedBy: '%2$s'})",
-                    newLockId.toString(),
+                    newLockId,
                     Neo4jLockService.class.getSimpleName()
             ));
             database.commit();
