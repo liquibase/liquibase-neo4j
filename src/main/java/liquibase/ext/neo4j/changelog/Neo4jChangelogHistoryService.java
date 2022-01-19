@@ -58,6 +58,11 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     @Override
+    public Neo4jDatabase getDatabase() {
+        return database;
+    }
+
+    @Override
     public void init() throws DatabaseException {
         createConstraints();
         initializeHistory();
@@ -86,8 +91,9 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         return ranChangeSets;
     }
 
+    // visible for Liquigraph
     @Override
-    protected void replaceChecksum(ChangeSet changeSet) throws DatabaseException {
+    public void replaceChecksum(ChangeSet changeSet) throws DatabaseException {
         try {
             database.executeCypher(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s'})-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
