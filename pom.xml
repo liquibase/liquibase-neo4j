@@ -64,7 +64,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
-        <liquibase.version>4.7.0</liquibase.version>
+        <liquibase.version>4.7.1</liquibase.version>
     </properties>
 
     <dependencyManagement>
