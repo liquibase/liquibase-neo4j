@@ -82,11 +82,12 @@ Let us create a simple change log file first, called `changeLog.xml`:
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
 
     <changeSet id="my-movie-init" author="fbiville">
         <comment>Creates a forgettable movie</comment>
-        <sql>CREATE (:Movie {title: 'My Life'})</sql>
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
     </changeSet>
 </databaseChangeLog>
 ```
