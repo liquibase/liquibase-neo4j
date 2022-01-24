@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd"
                    context="init">
 
@@ -16,7 +17,7 @@
             </and>
         </preConditions>
         <comment>Creates a forgettable movie</comment>
-        <sql>MERGE (:Movie {title: 'My Life'})</sql>
+        <neo4j:cypher>MERGE (:Movie {title: 'My Life'})</neo4j:cypher>
         <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
     </changeSet>
 
