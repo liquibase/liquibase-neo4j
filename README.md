@@ -63,16 +63,10 @@ Once the repository is cloned, you can run:
 
 ```shell
 mvn package -DskipTests
-cp target/liquibase-neo4j-*.jar $LIQUIBASE_HOME/lib
+cp target/liquibase-neo4j-*-full.jar $LIQUIBASE_HOME/lib
 ```
 
-### JDBC driver
-
-The Neo4j plugin relies on the JDBC driver to execute queries.
-
-You need to pick the 4.x driver JAR for Neo4j 4.x or 3.5.x for Neo4j 3.5.x in the [releases section](https://github.com/neo4j-contrib/neo4j-jdbc/releases) of the project (minimum of 4.0.3 is strongly advised).
-
-That JAR needs to be copied to `$LIQUIBASE_HOME/lib` as well.
+The "full" JAR file includes the dependencies required for the Neo4j extension to work.
 
 ## Quickstart
 
