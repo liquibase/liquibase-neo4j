@@ -131,8 +131,6 @@
                     <debug>true</debug>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArgs>
-                        <!-- disables Neo4j annotation processors | needed for JDK 8 -->
-                        <arg>-proc:none</arg>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
                     <showWarnings>true</showWarnings>
