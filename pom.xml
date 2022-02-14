@@ -125,7 +125,7 @@
 
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.0</version>
                 <configuration>
                     <optimize>true</optimize>
                     <debug>true</debug>
