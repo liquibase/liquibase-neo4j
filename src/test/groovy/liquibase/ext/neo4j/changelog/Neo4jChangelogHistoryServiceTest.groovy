@@ -24,7 +24,6 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Specification
 
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.logging.LogManager
 
@@ -48,6 +47,7 @@ import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
+import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceTest.TIMEZONE
 
 class Neo4jChangelogHistoryServiceTest extends Specification {
 
@@ -56,8 +56,6 @@ class Neo4jChangelogHistoryServiceTest extends Specification {
     }
 
     private static final String PASSWORD = "s3cr3t"
-
-    private static final TIMEZONE = ZoneId.of("Europe/Paris")
 
     @Shared
     GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE)
