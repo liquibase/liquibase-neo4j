@@ -1,17 +1,18 @@
 package liquibase.ext.neo4j
 
-import liquibase.ext.neo4j.lockservice.Neo4jLockServiceTest
 
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.temporal.TemporalUnit
+
+import static java.time.ZonedDateTime.now
+import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceTest.TIMEZONE
 
 class DateUtils {
 
     static Date date(Integer year, Integer month, Integer day) {
-        Date.from(LocalDate.of(year, month, day).atStartOfDay().atZone(Neo4jLockServiceTest.TIMEZONE).toInstant())
+        Date.from(LocalDate.of(year, month, day).atStartOfDay().atZone(TIMEZONE).toInstant())
     }
 
     static Date date(ZonedDateTime time) {
@@ -23,7 +24,7 @@ class DateUtils {
     }
 
     static Date nowMinus(Duration duration) {
-        Date.from((LocalDateTime.now() - duration).atZone(Neo4jLockServiceTest.TIMEZONE).toInstant())
+        Date.from((now(TIMEZONE) - duration).toInstant())
     }
 
 }
