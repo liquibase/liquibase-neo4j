@@ -1,1 +1,2 @@
+liquibase.ext.neo4j.parser.FormattedCypherChangeLogParser
 liquibase.ext.neo4j.parser.CypherChangeLogParser

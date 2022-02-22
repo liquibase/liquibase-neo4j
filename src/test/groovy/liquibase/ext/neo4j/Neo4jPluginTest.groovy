@@ -99,6 +99,11 @@ MERGE (m:Movie {title: 'My Life'})
             MERGE (a:Person {name: 'Hater'})
             MERGE (a)-[:RATED {rating: 0}]->(m)
 """.trim())
+        output.contains("""
+MATCH (m:Movie {title: 'My Life'})
+MATCH (a:Person {name: 'Hater'})
+MATCH (a)-[r:RATED {rating: 0}]->(m) SET r.rating = 5
+""".trim())
     }
 
     def "runs migrations"() {
@@ -129,7 +134,7 @@ MERGE (m:Movie {title: 'My Life'})
         rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
         rows[1] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
         rows[2] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
-        rows[3] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 0]]]]
+        rows[3] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
     }
 
 
