@@ -18,6 +18,10 @@ It has been tested with Liquibase Community and supports the following features:
 - change set [runOnChange](https://docs.liquibase.com/concepts/advanced/runonchange.html), and runAlways change set variants
 - change set [logical file path](https://docs.liquibase.com/concepts/advanced/logicalfilepath.html)
 
+## Migrating from Liquigraph?
+
+Follow the [guide](https://www.liquigraph.org/migration-to-liquibase/)!
+
 ## Download & Install
 
 ### Liquibase CLI
