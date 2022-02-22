@@ -21,7 +21,7 @@
         <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
     </changeSet>
 
-    <include file="polyglot/changelog.sql"/>
+    <include file="polyglot/changelog.cypher"/>
     <includeAll path="includes"/>
 
     <changeSet id="rarely-applied" author="fbiville">
