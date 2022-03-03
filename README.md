@@ -75,6 +75,8 @@ cp target/liquibase-neo4j-*-full.jar $LIQUIBASE_HOME/lib
 
 ## Quickstart
 
+### Concepts
+
 Let us create a simple change log file first, called `changeLog.xml`:
 
 ```xml
@@ -103,6 +105,36 @@ A **change set**:
 
 Here, there is a single migration (change set).
 It creates a node with the `Movie` label, and a single textual property named `title` with value `My Life`.
+
+### Connection URI
+
+The URI that the Neo4j plugin for Liquibase accepts must follow the JDBC URL format supported by the [underlying JDBC connector](https://github.com/neo4j-contrib/neo4j-jdbc).
+Note that only the Bolt variants are supported, connections through HTTP are not supported by the plugin:
+
+ - ✅ `jdbc:neo4j:bolt://host:port` is supported
+ - ✅ `jdbc:neo4j:bolt+s://host:port` is supported
+ - ✅ `jdbc:neo4j:bolt+ssc://host:port` is supported
+ - ✅ `jdbc:neo4j:neo4j://host:port` is supported
+ - ✅ `jdbc:neo4j:neo4j+s://host:port` is supported
+ - ✅ `jdbc:neo4j:neo4j+ssc://host:port` is supported
+ - ❌ `jdbc:neo4j:http://host:port` is NOT supported
+ - ❌ `jdbc:neo4j:https://host:port` is NOT supported
+
+Starting with Neo4j 4 (Enterprise Edition), a Neo4j server may host several databases.
+If you want to explicit target a specific database, you need to specify the `database` URI parameter, like in the following examples:
+
+ - `jdbc:neo4j:bolt://localhost?database=myDb`
+ - `jdbc:neo4j:neo4j+ssc://example.com?database=otherDb`
+ - `jdbc:neo4j:bolt+s://example.com?database=yetAnotherDb`
+ 
+When you select a specific database, the Neo4j plugin will store Liquibase metadata in that database as well.
+Storing the metadata in one database and running change sets in another is currently not supported.
+The Neo4j plugin also ensures exclusive access during the lifetime of the execution to that specific server and database.
+Concurrent executions on a server to different database are allowed.
+
+The general list of supported parameters is documented [here](https://github.com/neo4j-contrib/neo4j-jdbc#list-of-supported-neo4j-configuration-parameters).
+Most of the parameters should be left unspecified, as they can interact with the plugin execution in unpredictable ways.
+
 
 ### Dry-run
 
@@ -209,7 +241,7 @@ Depending on your Neo4j setup, opening the Neo4j Browser will consist in either:
  - directly browsing http://localhost:7474 (Docker)
  - opening Neo4j Desktop, selecting your project, starting your instance if necessary and clicking on the "Open" button
 
-Once Neo4j browser is open, you can run the `MATCH (movie:Movie) RETURN movie` query and you should see the same result as below:
+Once Neo4j browser is open, you can run the `MATCH (movie:Movie) RETURN movie` query, and you should see the same result as below:
 
 ![Results after first run](docs/img/liquibase-neo4j-node-insertion.png)
 
