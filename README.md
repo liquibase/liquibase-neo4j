@@ -57,11 +57,14 @@ Running Java under /usr/local/Cellar/openjdk/15.0.1/libexec/openjdk.jdk/Contents
 
 ### Plugin
 
-Then, you need to get the JAR file of this plugin.
-One way to do so is to build from sources, which requires:
+The simplest way to get the plugin, "batteries included", is to download the "full" JAR of the latest [release](https://github.com/liquibase/liquibase-neo4j/releases).
+This JAR needs to be added to `$LIQUIBASE_HOME/lib` afterwards.
 
- - a [JDK 8 or 11](https://openjdk.java.net/install/)
- - [Apache Maven](https://maven.apache.org/download.cgi)
+Alternatively, you can build the plugin from sources, which requires:
+
+- [Git](https://git-scm.com/)
+- a [JDK 8 or 11](https://openjdk.java.net/install/)
+- [Apache Maven](https://maven.apache.org/download.cgi)
 
 Once the repository is cloned, you can run:
 
@@ -69,8 +72,6 @@ Once the repository is cloned, you can run:
 mvn package -DskipTests
 cp target/liquibase-neo4j-*-full.jar $LIQUIBASE_HOME/lib
 ```
-
-The "full" JAR file includes the dependencies required for the Neo4j extension to work.
 
 ## Quickstart
 
