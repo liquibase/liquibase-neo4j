@@ -23,4 +23,14 @@
 
     <include file="polyglot/changelog.sql"/>
     <includeAll path="includes"/>
+
+    <changeSet id="rarely-applied" author="fbiville">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <neo4j:version matches="4.4" />
+                <neo4j:edition enterprise="true" />
+            </and>
+        </preConditions>
+        <neo4j:cypher>CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'})</neo4j:cypher>
+    </changeSet>
 </databaseChangeLog>

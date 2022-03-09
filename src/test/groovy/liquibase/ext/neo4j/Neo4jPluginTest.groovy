@@ -99,6 +99,11 @@ MERGE (m:Movie {title: 'My Life'})
             MERGE (a:Person {name: 'Hater'})
             MERGE (a)-[:RATED {rating: 0}]->(m)
 """.trim())
+        if (definesExtraChangeSet(queryRunner)) {
+            output.concat("""
+CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
+""")
+        }
     }
 
     def "runs migrations"() {
@@ -125,15 +130,30 @@ MERGE (m:Movie {title: 'My Life'})
             WITH m AS node, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
             RETURN LABELS(node) AS labels, PROPERTIES(node) AS properties, outgoing_relationships
         """)
-        rows.size() == 4
+
+        def hasExtraChangeSet = definesExtraChangeSet(queryRunner)
+        rows.size() == (hasExtraChangeSet ? 5 : 4)
         rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
         rows[1] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
         rows[2] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
         rows[3] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 0]]]]
+        if (hasExtraChangeSet) {
+            rows[4] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
+        }
     }
 
 
     private static PrintStream mute() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
+    }
+
+    private static boolean definesExtraChangeSet(CypherRunner cypherRunner) {
+        def results = cypherRunner.getSingleRow("""
+        CALL dbms.components()
+        YIELD name, versions, edition
+        WHERE name = 'Neo4j Kernel' 
+        RETURN versions[0] AS version, edition = "enterprise" AS isEnterprise
+        """)
+        return results["version"].startsWith("4.4") && results["isEnterprise"] == true
     }
 }

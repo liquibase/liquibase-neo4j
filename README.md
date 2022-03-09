@@ -11,7 +11,39 @@ It has been tested with Liquibase Community and supports the following features:
 - change log [file](https://docs.liquibase.com/concepts/advanced/include.html) and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion
 - [polyglot](https://docs.liquibase.com/concepts/basic/other-formats.html) change logs (XML, SQL, YAML ...)
 - change set ["SQL" changes](https://docs.liquibase.com/change-types/community/sql.html) (i.e. Cypher queries in Neo4j context)
-- change set [preconditions](https://docs.liquibase.com/concepts/advanced/preconditions.html) with "SQL" checks
+- change set built-in [preconditions](https://docs.liquibase.com/concepts/advanced/preconditions.html) and Neo4j-specific ones:
+  - Neo4j version precondition: 
+  ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+        
+        <changeSet id="applies-only-to-neo4j-4.4-ignored-otherwise" author="fbiville">
+            <preConditions onFail="CONTINUE">
+                <neo4j:version matches="4.4" />
+            </preConditions>
+            <!-- do something specific for Neo4j 4.4.x -->
+        </changeSet>
+    </databaseChangeLog>
+    ```  
+  - Neo4j edition precondition: 
+  ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+        <changeSet id="applies-only-to-neo4j-EE-ignored-otherwise" author="fbiville">
+            <preConditions onFail="CONTINUE">
+                <neo4j:edition enterprise="true" />
+            </preConditions>
+            <!-- do something specific for Neo4j Enterprise Edition -->
+        </changeSet>
+    </databaseChangeLog>
+    ```
 - change set [imperative](https://docs.liquibase.com/commands/community/tag.html), and [declarative](https://docs.liquibase.com/change-types/community/tag-database.html) tagging
 - change set [context and label](https://www.liquibase.org/blog/contexts-vs-labels) filtering
 - change set [rollbacks](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html)
