@@ -9,8 +9,8 @@ import static java.lang.Boolean.parseBoolean
 
 class DockerNeo4j {
 
-    static container(String password, ZoneId timezone) {
-        def container = new Neo4jContainer<>(DockerImageName.parse("neo4j").withTag(dockerTag()))
+    static container(String password, ZoneId timezone, String tag = dockerTag()) {
+        def container = new Neo4jContainer<>(DockerImageName.parse("neo4j").withTag(tag))
                 .withAdminPassword(password)
                 .withNeo4jConfig("db.temporal.timezone", timezone.id)
         if (!enterpriseEdition()) {
