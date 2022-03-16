@@ -8,12 +8,12 @@
     <changeSet id="my-movie-init" author="fbiville">
         <preConditions>
             <and>
-                <sqlCheck expectedResult="0">
+                <neo4j:cypherCheck expectedResult="0">
                     MATCH (n)
                     WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
                     RETURN COUNT(n)
-                </sqlCheck>
-                <sqlCheck expectedResult="0">RETURN 0</sqlCheck>
+                </neo4j:cypherCheck>
+                <neo4j:cypherCheck expectedResult="0">RETURN 0</neo4j:cypherCheck>
             </and>
         </preConditions>
         <comment>Creates a forgettable movie</comment>
