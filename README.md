@@ -11,7 +11,7 @@ It has been tested with Liquibase Community and supports the following features:
 - change log [file](https://docs.liquibase.com/concepts/advanced/include.html) and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion
 - [polyglot](https://docs.liquibase.com/concepts/basic/other-formats.html) change logs (XML, SQL, YAML ...)
 - change set ["SQL" changes](https://docs.liquibase.com/change-types/community/sql.html) (i.e. Cypher queries in Neo4j context)
-- change set built-in [preconditions](https://docs.liquibase.com/concepts/advanced/preconditions.html) and Neo4j-specific ones:
+- change set built-in [preconditions](https://docs.liquibase.com/concepts/advanced/preconditions.html) (you can use `<neo4j:cypherCheck>` instead of `<sqlCheck>`) and Neo4j-specific ones:
   - Neo4j version precondition: 
   ```xml
     <?xml version="1.0" encoding="UTF-8"?>
