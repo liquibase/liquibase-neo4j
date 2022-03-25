@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'main' && github.event.pull_request.merged && contains( github.event.pull_request.labels.*.name, 'Extension Release Candidate :rocket:' ) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
         with:
@@ -40,7 +40,7 @@ jobs:
     name: Draft Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Local Maven Repository
         uses: actions/cache@v2
         with:
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ draft-release ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
