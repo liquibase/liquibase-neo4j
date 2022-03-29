@@ -98,7 +98,7 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
                 .setOutput(output)
 
         when:
-        command.execute();
+        command.execute()
 
         then:
         def rows = fixUpProperties(queryRunner.getRows("""
@@ -156,6 +156,39 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
         if (hasExtraNodeFromConditionalChangeSet) {
             rows[9] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
         }
+    }
+
+    def "runs inserts"() {
+        given:
+        def output = mute()
+        System.out = output
+        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "/changelog-insert.xml")
+                .setOutput(output)
+
+        when:
+        command.execute()
+
+        then:
+        def row = queryRunner.getSingleRow("""
+            MATCH (p:Person)
+            RETURN properties(p) AS props
+        """)
+        def props = row["props"]
+        props["id"] == "8987212b-a6ff-48a1-901f-8c4b39bd6d9e"
+        props["age"] == 30L
+        props["first_name"] == "Florent"
+        props["last_name"] == "Biville"
+        props["local_date"] == LocalDate.of(2022, 12, 25)
+        props["local_time"] == LocalTime.of(22, 23, 24)
+        props["local_date_time"] == LocalDateTime.of(2018, 2, 1, 12, 13, 14)
+        props["zoned_date_time"] == ZonedDateTime.of(LocalDateTime.of(2020, 7, 12, 22, 23, 24), ZoneOffset.ofHours(2))
+        props["polite"] == true
+        props["picture"] == Base64.getDecoder().decode("DLxmEfVUC9CAmjiNyVphWw==")
+        props["bio"].startsWith("Lorem ipsum")
     }
 
     private static PrintStream mute() {
