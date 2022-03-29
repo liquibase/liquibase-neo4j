@@ -147,6 +147,29 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
         }
     }
 
+    def "runs inserts"() {
+        given:
+        System.out = mute()
+        String[] arguments = [
+                "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
+                "--username", "neo4j",
+                "--password", PASSWORD,
+                "--changeLogFile", "classpath:/changelog-insert.xml",
+                "update"
+        ].toArray()
+
+        when:
+        Main.run(arguments)
+
+        then:
+        def rows = queryRunner.getRows("""
+            MATCH (p:Person {firstName: "Florent", lastName: "Biville"})
+            RETURN COUNT(p) = 1 AS result
+        """)
+        rows.size() == 1
+        rows[0] == ["result": true]
+    }
+
 
     private static PrintStream mute() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
