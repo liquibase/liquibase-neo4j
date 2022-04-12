@@ -148,6 +148,29 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
     }
 
 
+    def "run deletes"(){
+        given:
+        queryRunner.run("MERGE (:Person {name: 'Charles', firstName: 'Clarence'})")
+        String[] arguments = [
+                "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
+                "--username", "neo4j",
+                "--password", PASSWORD,
+                "--changeLogFile", "classpath:/changelog-delete.xml",
+                "update"
+        ].toArray()
+
+        when:
+        Main.run(arguments)
+
+        then:
+        def rows = queryRunner.getRows("""
+            MATCH(n)
+            RETURN n
+        """)
+        rows.size() == 0
+    }
+
+
     private static PrintStream mute() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
     }
