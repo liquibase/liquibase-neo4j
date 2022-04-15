@@ -22,7 +22,6 @@ public class DeleteGenerator extends AbstractSqlGenerator<DeleteStatement> {
                            SqlGeneratorChain<DeleteStatement> sqlGeneratorChain) {
     String label = deleteStatement.getTableName();
     String cypher = String.format("MATCH (n: %s)%nDELETE n", label);
-    System.out.println(cypher);
     return new Sql[]{new UnparsedSql(cypher)};
   }
 
