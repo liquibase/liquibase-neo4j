@@ -164,10 +164,11 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
 
         then:
         def rows = queryRunner.getRows("""
-            MATCH(n)
-            RETURN n
+            MATCH (p: Person)
+            RETURN Count(p) = 0 as result
         """)
-        rows.size() == 0
+        rows.size() == 1
+        rows[0] == ["result": true]
     }
 
 
