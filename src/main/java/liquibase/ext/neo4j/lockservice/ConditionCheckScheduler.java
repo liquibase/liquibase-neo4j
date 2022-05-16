@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.lockservice;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Callable;
@@ -10,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-public class ConditionCheckScheduler {
+public class ConditionCheckScheduler implements Closeable {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
@@ -22,8 +23,8 @@ public class ConditionCheckScheduler {
     }
 
     public <T> T scheduleCheckWithFixedDelay(Callable<T> valueSupplier, Predicate<T> check, T defaultValue, Duration delay) {
-        if (delay.compareTo(this.timeout) >= 0) {
-            throw new IllegalArgumentException(String.format("delay %s should be strictly less than the configured timeout %s", delay, this.timeout));
+        if (delay.compareTo(timeout) >= 0) {
+            throw new IllegalArgumentException(String.format("delay %s should be strictly less than the configured timeout %s", delay, timeout));
         }
 
         Instant waitingStarted = Instant.now();
@@ -41,5 +42,10 @@ public class ConditionCheckScheduler {
             delayInNanos = delay.toNanos();
         }
         return defaultValue;
+    }
+
+    @Override
+    public void close() {
+        scheduledExecutorService.shutdown();
     }
 }
