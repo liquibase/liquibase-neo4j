@@ -50,13 +50,15 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void waitForLock() throws LockException {
-        ConditionCheckScheduler checkScheduler = new ConditionCheckScheduler(Duration.ofMinutes(getChangeLogLockWaitTime()));
-        boolean lockAcquired = checkScheduler.scheduleCheckWithFixedDelay(
-                this::acquireLock,
-                isEqual(true),
-                false,
-                Duration.ofSeconds(getChangeLogLockRecheckTime())
-        );
+        boolean lockAcquired;
+        try (ConditionCheckScheduler checkScheduler = new ConditionCheckScheduler(Duration.ofMinutes(getChangeLogLockWaitTime()))) {
+            lockAcquired = checkScheduler.scheduleCheckWithFixedDelay(
+                    this::acquireLock,
+                    isEqual(true),
+                    false,
+                    Duration.ofSeconds(getChangeLogLockRecheckTime())
+            );
+        }
 
         if (!lockAcquired) {
             DatabaseChangeLogLock[] currentLocks = listLocks();
