@@ -153,7 +153,7 @@ Note that only the Bolt variants are supported, connections through HTTP are not
  - ❌ `jdbc:neo4j:https://host:port` is NOT supported
 
 Starting with Neo4j 4 (Enterprise Edition), a Neo4j server may host several databases.
-If you want to explicit target a specific database, you need to specify the `database` URI parameter, like in the following examples:
+If you want to explicitly target a specific database, you need to specify the `database` URI parameter, like in the following examples:
 
  - `jdbc:neo4j:bolt://localhost?database=myDb`
  - `jdbc:neo4j:neo4j+ssc://example.com?database=otherDb`
@@ -162,7 +162,7 @@ If you want to explicit target a specific database, you need to specify the `dat
 When you select a specific database, the Neo4j plugin will store Liquibase metadata in that database as well.
 Storing the metadata in one database and running change sets in another is currently not supported.
 The Neo4j plugin also ensures exclusive access during the lifetime of the execution to that specific server and database.
-Concurrent executions on a server to different database are allowed.
+Concurrent executions on a server to different databases are allowed.
 
 The general list of supported parameters is documented [here](https://github.com/neo4j-contrib/neo4j-jdbc#list-of-supported-neo4j-configuration-parameters).
 Most of the parameters should be left unspecified, as they can interact with the plugin execution in unpredictable ways.
