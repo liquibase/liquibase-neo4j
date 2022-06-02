@@ -180,6 +180,10 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         this.execute(new SqlStatement[]{createStatement(cypherQuery, parameters)}, Collections.emptyList());
     }
 
+    public List<Map<String, ?>> runCypher(String cypherQuery, Object... parameters) throws LiquibaseException {
+        return this.queryForList(createStatement(cypherQuery, parameters));
+    }
+
     public String getNeo4jVersion() {
         return neo4jVersion;
     }
@@ -195,9 +199,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     private Map<String, ?> readComponents() {
-        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
         try {
-            List<Map<String, ?>> result = executor.queryForList(new RawSqlStatement(SERVER_VERSION_QUERY));
+            List<Map<String, ?>> result = queryForList(new RawSqlStatement(SERVER_VERSION_QUERY));
             this.rollback();
             int size = result.size();
             if (size != 1) {
@@ -247,4 +250,9 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.executeCypher("DROP CONSTRAINT `%s`", name));
     }
 
+
+    private List<Map<String, ?>> queryForList(SqlStatement statement) throws DatabaseException {
+        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
+        return executor.queryForList(statement);
+    }
 }
