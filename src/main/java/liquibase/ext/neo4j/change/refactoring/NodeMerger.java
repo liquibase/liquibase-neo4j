@@ -2,8 +2,7 @@ package liquibase.ext.neo4j.change.refactoring;
 
 import liquibase.exception.LiquibaseException;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
-import liquibase.ext.neo4j.statement.CypherPreparedStatement;
-import liquibase.statement.ExecutablePreparedStatement;
+import liquibase.ext.neo4j.statement.ParameterizedCypherStatement;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 
@@ -14,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.singletonList;
 
 public class NodeMerger {
 
@@ -41,12 +42,14 @@ public class NodeMerger {
         return rows.stream().mapToLong(row -> (long) row.get("ID")).boxed().collect(Collectors.toList());
     }
 
-    private Optional<RawSqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.runCypher("MATCH (n) WHERE ID(n) IN %s\n" +
-                "UNWIND labels(n) AS label\n" +
-                "WITH DISTINCT label\n" +
-                "ORDER BY label ASC\n" +
-                "RETURN collect(label) AS LABELS", cypherIdList(tailOf(ids)));
+    private Optional<SqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
+        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+                "MATCH (n) WHERE ID(n) IN $0\n" +
+                        "UNWIND labels(n) AS label\n" +
+                        "WITH DISTINCT label\n" +
+                        "ORDER BY label ASC\n" +
+                        "RETURN collect(label) AS LABELS",
+                singletonList(tailOf(ids))));
 
         StringJoiner labelLiterals = new StringJoiner("`:`", ":`", "`");
         Map<String, ?> row = rows.get(0);
@@ -55,16 +58,17 @@ public class NodeMerger {
         for (String label : labels) {
             labelLiterals.add(label);
         }
-        String query = String.format("MATCH (n) WHERE ID(n) = %d SET n%s", ids.get(0), labelLiterals.toString());
-        return Optional.of(new RawSqlStatement(query));
+        return Optional.of(new ParameterizedCypherStatement(
+                String.format("MATCH (n) WHERE ID(n) = $0 SET n%s", labelLiterals.toString()),
+                singletonList(ids.get(0))));
     }
 
-    private Optional<ExecutablePreparedStatement> generatePropertyCopyStatement(List<Long> ids, List<PropertyMergePolicy> policies) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.runCypher("UNWIND %s AS id\n" +
+    private Optional<SqlStatement> generatePropertyCopyStatement(List<Long> ids, List<PropertyMergePolicy> policies) throws LiquibaseException {
+        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement("UNWIND $0 AS id\n" +
                 "MATCH (n) WHERE id(n) = id\n" +
                 "UNWIND keys(n) AS key\n" +
                 "WITH {key: key, values: collect(n[key])} AS property\n" +
-                "RETURN property", cypherIdList(ids));
+                "RETURN property", singletonList(ids)));
 
         if (rows.isEmpty()) {
             return Optional.empty();
@@ -99,12 +103,14 @@ public class NodeMerger {
             builder.append("` = $");
             builder.append(parameterIndex++);
         }
-        return Optional.of(new CypherPreparedStatement(builder.toString(), parameters));
+        return Optional.of(new ParameterizedCypherStatement(builder.toString(), parameters));
     }
 
-    private Optional<RawSqlStatement> generateNodeDeletion(List<Long> ids) {
-        String query = String.format("MATCH (n) WHERE id(n) IN %s DETACH DELETE n", cypherIdList(tailOf(ids)));
-        return Optional.of(new RawSqlStatement(query));
+    private Optional<SqlStatement> generateNodeDeletion(List<Long> ids) {
+        return Optional.of(new ParameterizedCypherStatement(
+                "MATCH (n) WHERE id(n) IN $0 DETACH DELETE n",
+                singletonList(tailOf(ids))
+        ));
     }
 
     private static <T> List<T> tailOf(List<T> values) {
@@ -114,10 +120,6 @@ public class NodeMerger {
             result.add(values.get(i));
         }
         return result;
-    }
-
-    private static String cypherIdList(List<Long> ids) {
-        return ids.stream().map(Object::toString).collect(Collectors.joining(",", "[", "]"));
     }
 
     private static Optional<PropertyMergePolicy> findPolicy(List<PropertyMergePolicy> policies, String propertyName) {

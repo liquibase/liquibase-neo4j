@@ -7,6 +7,7 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
+import liquibase.ext.neo4j.statement.ParameterizedCypherStatement;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 import liquibase.util.StringUtil;
@@ -182,6 +183,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     public List<Map<String, ?>> runCypher(String cypherQuery, Object... parameters) throws LiquibaseException {
         return this.queryForList(createStatement(cypherQuery, parameters));
+    }
+
+    // TODO: remove runCypher when run is used everywhere
+    public List<Map<String, ?>> run(ParameterizedCypherStatement statement) throws LiquibaseException {
+        return this.queryForList(statement);
     }
 
     public String getNeo4jVersion() {

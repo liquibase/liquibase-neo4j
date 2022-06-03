@@ -1,6 +1,6 @@
 package liquibase.ext.neo4j
 
-import liquibase.ext.neo4j.statement.CypherPreparedStatement
+import liquibase.ext.neo4j.statement.ParameterizedCypherStatement
 import liquibase.statement.SqlStatement
 import liquibase.statement.core.RawSqlStatement
 import org.neo4j.driver.Driver
@@ -85,7 +85,7 @@ class CypherRunner implements AutoCloseable {
             run(statement.sql)
             return
         }
-        if (statement instanceof CypherPreparedStatement) {
+        if (statement instanceof ParameterizedCypherStatement) {
             def parameters = statement.parameters
             Map<String, Object> indexedMap = IntStream.range(0, parameters.size())
                     .boxed()

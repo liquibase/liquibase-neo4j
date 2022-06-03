@@ -2,28 +2,31 @@ package liquibase.ext.neo4j.statement;
 
 import liquibase.database.PreparedStatementFactory;
 import liquibase.exception.DatabaseException;
-import liquibase.statement.ExecutablePreparedStatement;
+import liquibase.executor.jvm.ResultSetExtractor;
+import liquibase.sql.visitor.SqlVisitor;
+import liquibase.statement.QueryablePreparedStatement;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-public class CypherPreparedStatement implements ExecutablePreparedStatement {
+public class ParameterizedCypherStatement implements QueryablePreparedStatement {
 
     private final String cypher;
-    private final List<Object> parameters;
+    private final List<?> parameters;
 
-    public CypherPreparedStatement(String cypher, List<Object> parameters) {
+    public ParameterizedCypherStatement(String cypher, List<?> parameters) {
         this.cypher = cypher;
         this.parameters = parameters;
     }
 
     @Override
-    public void execute(PreparedStatementFactory factory) throws DatabaseException {
+    public Object query(PreparedStatementFactory factory, ResultSetExtractor rse, List<SqlVisitor> sqlVisitors) throws DatabaseException {
         PreparedStatement preparedStatement = factory.create(cypher);
         for (int i = 0; i < parameters.size(); i++) {
             setParameter(preparedStatement, i);
         }
+        return run(rse, preparedStatement);
     }
 
     @Override
@@ -40,8 +43,16 @@ public class CypherPreparedStatement implements ExecutablePreparedStatement {
         return cypher;
     }
 
-    public List<Object> getParameters() {
+    public List<?> getParameters() {
         return parameters;
+    }
+
+    private Object run(ResultSetExtractor rse, PreparedStatement preparedStatement) throws DatabaseException {
+        try {
+            return rse.extractData(preparedStatement.executeQuery());
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
     }
 
     private void setParameter(PreparedStatement preparedStatement, int i) throws DatabaseException {
