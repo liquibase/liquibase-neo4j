@@ -2,6 +2,7 @@ package liquibase.ext.neo4j.change.refactoring
 
 import liquibase.database.Database
 import liquibase.database.DatabaseFactory
+import liquibase.exception.LiquibaseException
 import liquibase.ext.neo4j.CypherRunner
 import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.database.Neo4jDatabase
@@ -126,5 +127,18 @@ class NodeMergerTest extends Specification {
         Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
         Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
         Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
+    }
+
+    def "fails to generate statements if mergeable properties do not have a policy"() {
+        given:
+        queryRunner.run("CREATE (:Person {name: 'Anastasia'}), (:Person {name: 'Zouheir'})")
+        def unusedPolicy = PropertyMergePolicy.of(Pattern.compile("nom"), PropertyMergeStrategy.KEEP_ALL)
+
+        when:
+        nodeMerger.merge(MergePattern.of("(p:Person)", "p"), [unusedPolicy])
+
+        then:
+        def exc = thrown(LiquibaseException)
+        exc.message == "could not find merge policy for node property name"
     }
 }

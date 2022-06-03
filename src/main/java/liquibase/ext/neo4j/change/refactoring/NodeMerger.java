@@ -81,7 +81,7 @@ public class NodeMerger {
                 String propertyName = (String) property.get("key");
                 List<Object> aggregatedPropertyValues = (List<Object>) property.get("values");
                 Object value = findPolicy(policies, propertyName)
-                        .orElseThrow(() -> new LiquibaseException(String.format("could not find merge policy for node property %s", property)))
+                        .orElseThrow(() -> new LiquibaseException(String.format("could not find merge policy for node property %s", propertyName)))
                         .apply(aggregatedPropertyValues);
                 combinedProperties.put(propertyName, value);
             }
