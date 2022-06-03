@@ -105,7 +105,7 @@ class NodeMergerTest extends Specification {
         "CREATE (:Foo), (:Bar)" | "(n:Bar)" | "n"
     }
 
-    def "merges properties of matching nodes based on each property's policy"(Pattern propertyMatcher, PropertyMergeStrategy strategy, Object result) {
+    def "generates statements to merge properties of matching nodes based on each property's policy"(Pattern propertyMatcher, PropertyMergeStrategy strategy, Object result) {
         given:
         queryRunner.run("CREATE (:Person), (:Person {name: 'Anastasia'}), (:Unmatched), (:Person {name: 'Zouheir'}), (:Person)")
         def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
