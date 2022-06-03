@@ -14,6 +14,7 @@ import spock.lang.Specification
 
 import java.time.ZoneId
 import java.util.logging.LogManager
+import java.util.regex.Pattern
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
@@ -84,7 +85,7 @@ class NodeMergerTest extends Specification {
         row["labels"] == ["Label Oops", "Label1", "Label2", "Label3"]
     }
 
-    def "does not generate statement when less than 2 nodes are matching"(String graphInit, String fragment, String outputVariable) {
+    def "does not generate any statement when less than 2 nodes are matching"(String graphInit, String fragment, String outputVariable) {
         given:
         if (graphInit != "") {
             queryRunner.run(graphInit)
@@ -104,23 +105,26 @@ class NodeMergerTest extends Specification {
         "CREATE (:Foo), (:Bar)" | "(n:Bar)" | "n"
     }
 
-    def "merges properties of nodes based on each property's policy"(PropertyMergeStrategy strategy, Object result) {
+    def "merges properties of matching nodes based on each property's policy"(Pattern propertyMatcher, PropertyMergeStrategy strategy, Object result) {
         given:
-        queryRunner.run("""CREATE (:Person), (:Person {name: 'Anastasia'}), (:Person {name: 'Zouheir'}), (:Person)""")
+        queryRunner.run("CREATE (:Person), (:Person {name: 'Anastasia'}), (:Unmatched), (:Person {name: 'Zouheir'}), (:Person)")
         def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         and:
-        def statements = nodeMerger.merge(pattern, [PropertyMergePolicy.of("name", strategy)])
+        def statements = nodeMerger.merge(pattern, [PropertyMergePolicy.of(propertyMatcher, strategy)])
         statements.each queryRunner::run
 
         expect:
-        def row = queryRunner.getSingleRow("MATCH (n) RETURN n {.*}")
+        def row = queryRunner.getSingleRow("MATCH (n:Person) RETURN n {.*}")
         row["n"]["name"] == result
 
         where:
-        strategy                         | result
-        PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
-        PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
-        PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
+        propertyMatcher         | strategy                         | result
+        Pattern.compile("name") | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
+        Pattern.compile("name") | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
+        Pattern.compile("name") | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
+        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
+        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
+        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
     }
 }
