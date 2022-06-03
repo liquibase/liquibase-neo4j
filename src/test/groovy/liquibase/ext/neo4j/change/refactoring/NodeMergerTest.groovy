@@ -6,6 +6,7 @@ import liquibase.exception.LiquibaseException
 import liquibase.ext.neo4j.CypherRunner
 import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.database.Neo4jDatabase
+import liquibase.statement.SqlStatement
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import org.testcontainers.containers.GenericContainer
@@ -140,5 +141,28 @@ class NodeMergerTest extends Specification {
         then:
         def exc = thrown(LiquibaseException)
         exc.message == "could not find merge policy for node property name"
+    }
+
+    def "generates statements to merge incoming relationships"() {
+        given:
+        queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})<-[:FOLLOWS]-(:Person {name: 'Marouane'}), (:Person {name: 'Zouheir'})<-[:FOUNDED_BY {year: 2012}]-(:Conference {name: 'Devoxx France'})")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        when:
+        def statements = nodeMerger.merge(pattern, [
+                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+        ])
+        statements.each queryRunner::run
+
+        then:
+        def row = queryRunner.getSingleRow("""
+MATCH (p:Person)
+RETURN p {.*}, [ (p)<-[incoming]-() | incoming ] AS allIncoming
+""")
+        row["p"]["name"] == "Zouheir"
+        row["p"]["age"] == 22
+        // TODO: refine assertions
+        row["allIncoming"].size() == 2
     }
 }

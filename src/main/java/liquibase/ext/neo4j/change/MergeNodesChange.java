@@ -13,7 +13,7 @@ import java.util.List;
 public class MergeNodesChange extends AbstractChange {
 
     private String fragment;
-    private String outputVar;
+    private String outputVariable;
     private List<MergeNodeProperty> properties = new ArrayList<>();
 
     @Override
@@ -39,12 +39,12 @@ public class MergeNodesChange extends AbstractChange {
         this.fragment = fragment;
     }
 
-    public String getOutputVar() {
-        return outputVar;
+    public String getOutputVariable() {
+        return outputVariable;
     }
 
-    public void setOutputVar(String outputVar) {
-        this.outputVar = outputVar;
+    public void setOutputVariable(String outputVariable) {
+        this.outputVariable = outputVariable;
     }
 
     public List<MergeNodeProperty> getProperties() {

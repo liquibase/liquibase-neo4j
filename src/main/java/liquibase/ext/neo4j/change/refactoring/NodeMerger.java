@@ -4,13 +4,15 @@ import liquibase.exception.LiquibaseException;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.ext.neo4j.statement.ParameterizedCypherStatement;
 import liquibase.statement.SqlStatement;
-import liquibase.statement.core.RawSqlStatement;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -27,11 +29,12 @@ public class NodeMerger {
     public SqlStatement[] merge(MergePattern pattern, List<PropertyMergePolicy> policies) throws LiquibaseException {
         List<Long> ids = getNodeIds(pattern);
         if (ids.size() < 2) {
-            return new RawSqlStatement[0];
+            return new SqlStatement[0];
         }
         List<SqlStatement> statements = new ArrayList<>(); // TODO: size properly
         generateLabelCopyStatement(ids).ifPresent(statements::add);
         generatePropertyCopyStatement(ids, policies).ifPresent(statements::add);
+        generateRelationshipCopyStatements(ids).ifPresent(statements::add);
         generateNodeDeletion(ids).ifPresent(statements::add);
         return statements.toArray(new SqlStatement[0]);
     }
@@ -64,11 +67,12 @@ public class NodeMerger {
     }
 
     private Optional<SqlStatement> generatePropertyCopyStatement(List<Long> ids, List<PropertyMergePolicy> policies) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement("UNWIND $0 AS id\n" +
-                "MATCH (n) WHERE id(n) = id\n" +
-                "UNWIND keys(n) AS key\n" +
-                "WITH {key: key, values: collect(n[key])} AS property\n" +
-                "RETURN property", singletonList(ids)));
+        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+                "UNWIND $0 AS id\n" +
+                        "MATCH (n) WHERE id(n) = id\n" +
+                        "UNWIND keys(n) AS key\n" +
+                        "WITH {key: key, values: collect(n[key])} AS property\n" +
+                        "RETURN property", singletonList(ids)));
 
         if (rows.isEmpty()) {
             return Optional.empty();
@@ -88,7 +92,8 @@ public class NodeMerger {
         }
 
         int parameterIndex = 0;
-        List<Object> parameters = new ArrayList<>(1 + combinedProperties.size());
+        int parameterCount = 1 + combinedProperties.size();
+        List<Object> parameters = new ArrayList<>(parameterCount);
         parameters.add(parameterIndex, ids.get(0));
         parameters.addAll(combinedProperties.values());
 
@@ -97,13 +102,45 @@ public class NodeMerger {
         builder.append(parameterIndex);
         builder.append(" SET ");
         parameterIndex++;
-        for (Map.Entry<String, Object> entry : combinedProperties.entrySet()) {
+        Set<Map.Entry<String, Object>> propertyEntries = combinedProperties.entrySet();
+        for (Map.Entry<String, Object> entry : propertyEntries) {
             builder.append("n.`");
             builder.append(entry.getKey());
             builder.append("` = $");
-            builder.append(parameterIndex++);
+            builder.append(parameterIndex);
+            if (parameterIndex < parameterCount - 1) {
+                builder.append(", ");
+            }
+            parameterIndex++;
         }
         return Optional.of(new ParameterizedCypherStatement(builder.toString(), parameters));
+    }
+
+    private Optional<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
+        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+                "MATCH (n) WHERE id(n) IN $0\n" +
+                        "WITH [ (n)<-[incoming]-() | incoming ] AS incomingRels\n" +
+                        "UNWIND incomingRels AS INCOMING\n" +
+                        "RETURN INCOMING",
+                singletonList(tailOf(ids))
+        ));
+        int parameterIndex = 0;
+        StringBuilder query = new StringBuilder();
+        List<Object> parameters = new ArrayList<>();
+        query.append("MATCH (end) WHERE id(end) = $0 ");
+        parameters.add(ids.get(0));
+        parameterIndex++;
+        for (Map<String, ?> row : rows) {
+            Map<String, Object> incoming = (Map<String, Object>) row.get("INCOMING");
+            query.append(String.format("WITH end MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex));
+            parameters.add(parameterIndex, (long) incoming.get("_startId"));
+            parameterIndex++;
+            query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:%2$s]->(end) SET rel_%1$d = $%1$d ", parameterIndex, (String) incoming.get("_type")));
+            parameters.add(parameterIndex, relProperties(incoming));
+            parameterIndex++;
+        }
+//        return Optional.empty();
+        return Optional.of(new ParameterizedCypherStatement(query.toString(), parameters));
     }
 
     private Optional<SqlStatement> generateNodeDeletion(List<Long> ids) {
@@ -124,5 +161,16 @@ public class NodeMerger {
 
     private static Optional<PropertyMergePolicy> findPolicy(List<PropertyMergePolicy> policies, String propertyName) {
         return policies.stream().filter(policy -> policy.property().matcher(propertyName).find()).findFirst();
+    }
+
+    private static Map<String, Object> relProperties(Map<String, Object> incoming) {
+        Map<String, Object> result = new HashMap<>(incoming.size() - 4);
+        for (Map.Entry<String, Object> entry : incoming.entrySet()) {
+            if (entry.getKey().startsWith("_")) {
+                continue;
+            }
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
     }
 }

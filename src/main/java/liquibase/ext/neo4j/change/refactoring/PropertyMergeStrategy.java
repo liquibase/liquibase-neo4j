@@ -10,9 +10,9 @@ public enum PropertyMergeStrategy {
             case KEEP_ALL:
                 return values;
             case KEEP_FIRST:
-                return values.isEmpty() ? null : values.get(0);
+                return values.get(0);
             case KEEP_LAST:
-                return values.isEmpty() ? null : values.get(values.size() - 1);
+                return values.get(values.size() - 1);
         }
         throw new IllegalStateException(String.format("Unknown enum value for %s class: %s", this.getClass(), this));
     }
