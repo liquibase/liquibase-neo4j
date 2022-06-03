@@ -66,16 +66,14 @@ class NodeMergerTest extends Specification {
 
     def "generates statements to merge labels of the matching disconnected nodes"() {
         given:
-        queryRunner.run("CREATE (:Label1:Label3), (:Label2:Label4), (:Label1:Label4)")
+        queryRunner.run("CREATE (:Label1:Label3), (:Label2:`Label Oops`), (:Label1:`Label Oops`)")
         def pattern = MergePattern.of("(p)", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [])
 
         and:
-        statements.each { statement ->
-            queryRunner.run(statement.sql)
-        }
+        statements.each queryRunner::run
 
         then:
         def row = queryRunner.getSingleRow("""
@@ -83,7 +81,7 @@ class NodeMergerTest extends Specification {
             WITH label ORDER BY label ASC
             RETURN collect(label) AS labels
         """.stripIndent())
-        row["labels"] == ["Label1", "Label2", "Label3", "Label4"]
+        row["labels"] == ["Label Oops", "Label1", "Label2", "Label3"]
     }
 
     def "does not generate statement when less than 2 nodes are matching"(String graphInit, String fragment, String outputVariable) {
@@ -104,5 +102,25 @@ class NodeMergerTest extends Specification {
         "CREATE (:Foo)"         | "(n:Foo)" | "n"
         "CREATE (:Foo), (:Bar)" | "(n:Foo)" | "n"
         "CREATE (:Foo), (:Bar)" | "(n:Bar)" | "n"
+    }
+
+    def "merges properties of nodes based on each property's policy"(PropertyMergeStrategy strategy, Object result) {
+        given:
+        queryRunner.run("""CREATE (:Person), (:Person {name: 'Anastasia'}), (:Person {name: 'Zouheir'}), (:Person)""")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        and:
+        def statements = nodeMerger.merge(pattern, [PropertyMergePolicy.of("name", strategy)])
+        statements.each queryRunner::run
+
+        expect:
+        def row = queryRunner.getSingleRow("MATCH (n) RETURN n {.*}")
+        row["n"]["name"] == result
+
+        where:
+        strategy                         | result
+        PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
+        PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
+        PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
     }
 }

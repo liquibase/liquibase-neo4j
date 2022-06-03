@@ -1,8 +1,13 @@
 package liquibase.ext.neo4j
 
+import liquibase.ext.neo4j.statement.CypherPreparedStatement
+import liquibase.statement.SqlStatement
+import liquibase.statement.core.RawSqlStatement
 import org.neo4j.driver.Driver
 
 import java.util.function.Predicate
+import java.util.stream.Collectors
+import java.util.stream.IntStream
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
@@ -70,9 +75,25 @@ class CypherRunner implements AutoCloseable {
     List<Map<String, Object>> getRows(String query) {
         driver.session().withCloseable { session ->
             session.readTransaction({ tx ->
-                tx.run(query).list({record -> record.asMap()})
+                tx.run(query).list({ record -> record.asMap() })
             })
         }
+    }
+
+    void run(SqlStatement statement) {
+        if (statement instanceof RawSqlStatement) {
+            run(statement.sql)
+            return
+        }
+        if (statement instanceof CypherPreparedStatement) {
+            def parameters = statement.parameters
+            Map<String, Object> indexedMap = IntStream.range(0, parameters.size())
+                    .boxed()
+                    .collect(Collectors.toMap((Integer index) -> index.toString(), (Integer index) -> parameters.get(index)))
+            run(statement.cypher, indexedMap)
+            return
+        }
+        throw new IllegalArgumentException("unsupported type of statement: ${statement.getClass()}")
     }
 
     void run(String query) {
