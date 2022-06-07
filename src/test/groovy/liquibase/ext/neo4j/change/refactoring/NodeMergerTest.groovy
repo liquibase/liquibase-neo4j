@@ -6,7 +6,6 @@ import liquibase.exception.LiquibaseException
 import liquibase.ext.neo4j.CypherRunner
 import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.database.Neo4jDatabase
-import liquibase.statement.SqlStatement
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import org.testcontainers.containers.GenericContainer
@@ -145,7 +144,7 @@ class NodeMergerTest extends Specification {
 
     def "generates statements to merge incoming relationships"() {
         given:
-        queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})<-[:FOLLOWS]-(:Person {name: 'Marouane'}), (:Person {name: 'Zouheir'})<-[:FOUNDED_BY {year: 2012}]-(:Conference {name: 'Devoxx France'})")
+        queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})<-[:MAINTAINED_BY]-(:Project {name: 'Secret'}), (:Person {name: 'Zouheir'})<-[:FOUNDED_BY {year: 2012}]-(:Conference {name: 'Devoxx France'})")
         def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
@@ -158,11 +157,96 @@ class NodeMergerTest extends Specification {
         then:
         def row = queryRunner.getSingleRow("""
 MATCH (p:Person)
-RETURN p {.*}, [ (p)<-[incoming]-() | incoming ] AS allIncoming
+WITH p {.*} AS person, [ (p)<-[incoming]-() | incoming {.*, type: type(incoming)} ] AS allIncoming
+UNWIND allIncoming AS incoming
+WITH person, incoming
+ORDER BY incoming['type'] ASC
+RETURN person AS p, collect(incoming) AS allIncoming
 """)
         row["p"]["name"] == "Zouheir"
         row["p"]["age"] == 22
-        // TODO: refine assertions
-        row["allIncoming"].size() == 2
+        row["allIncoming"] == [
+                [type: "FOUNDED_BY", year: 2012],
+                [type: "MAINTAINED_BY"],
+        ]
+    }
+
+    def "generates statements to merge outgoing relationships"() {
+        given:
+        queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})-[:MAINTAINS]->(:Project {name: 'Secret'}), (:Person {name: 'Zouheir'})-[:FOUNDED {year: 2012}]->(:Conference {name: 'Devoxx France'})")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        when:
+        def statements = nodeMerger.merge(pattern, [
+                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+        ])
+        statements.each queryRunner::run
+
+        then:
+        def row = queryRunner.getSingleRow("""
+MATCH (p:Person)
+WITH p {.*} AS person, [ (p)-[outgoing]->() | outgoing {.*, type: type(outgoing)} ] AS allOutgoing
+UNWIND allOutgoing AS outgoing
+WITH person, outgoing
+ORDER BY outgoing['type'] ASC
+RETURN person AS p, collect(outgoing) AS allOutgoing
+""")
+        row["p"]["name"] == "Zouheir"
+        row["p"]["age"] == 22
+        row["allOutgoing"] == [
+                [type: "FOUNDED", year: 2012],
+                [type: "MAINTAINS"],
+        ]
+    }
+
+    def "generates statements that preserve existing self-relationships"() {
+        given:
+        queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:IS {obviously: true}]->(anastasia), (zouheir:Person {name: 'Zouheir'})-[:IS_SAME_AS {evidently: true}]->(zouheir)")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        when:
+        def statements = nodeMerger.merge(pattern, [
+                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+        ])
+        statements.each queryRunner::run
+
+        then:
+        def row = queryRunner.getSingleRow("""
+MATCH (p:Person)-[r]->(p)
+WITH r {.*, type: type(r)} AS rel
+ORDER BY rel['type'] ASC
+RETURN collect(rel) AS rels
+""")
+        row["rels"] == [
+                [type: "IS", obviously: true],
+                [type: "IS_SAME_AS", evidently: true],
+        ]
+    }
+
+    def "generates statements that yields self-relationships"() {
+        given:
+        queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:FOLLOWS_1 {direction: 'a to z'}]->(zouheir:Person {name: 'Zouheir'})-[:FOLLOWS_2 {direction: 'z to a'}]->(anastasia)")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        when:
+        def statements = nodeMerger.merge(pattern, [
+                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+        ])
+        statements.each queryRunner::run
+
+        then:
+        def row = queryRunner.getSingleRow("""
+MATCH (p:Person)-[r]->(p)
+WITH r {.*, type: type(r)} AS rel
+ORDER BY rel['type'] ASC
+RETURN collect(rel) AS rels
+""")
+        row["rels"] == [
+                [type: "FOLLOWS_1", direction: "a to z"],
+                [type: "FOLLOWS_2", direction: "z to a"],
+        ]
     }
 }
