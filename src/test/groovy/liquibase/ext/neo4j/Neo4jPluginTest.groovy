@@ -104,7 +104,7 @@ MATCH (m:Movie {title: 'My Life'})
 MATCH (a:Person {name: 'Hater'})
 MATCH (a)-[r:RATED {rating: 0}]->(m) SET r.rating = 5
 """.trim())
-        if (definesExtraChangeSet(queryRunner)) {
+        if (definesExtraNode(queryRunner)) {
             output.concat("""
 CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
 """)
@@ -136,13 +136,13 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
             RETURN LABELS(node) AS labels, PROPERTIES(node) AS properties, outgoing_relationships
         """)
 
-        def hasExtraChangeSet = definesExtraChangeSet(queryRunner)
-        rows.size() == (hasExtraChangeSet ? 5 : 4)
+        def hasExtraNodeFromConditionalChangeSet = definesExtraNode(queryRunner)
+        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 5 : 4)
         rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
         rows[1] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
         rows[2] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
         rows[3] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
-        if (hasExtraChangeSet) {
+        if (hasExtraNodeFromConditionalChangeSet) {
             rows[4] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
         }
     }
@@ -152,7 +152,7 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
     }
 
-    private static boolean definesExtraChangeSet(CypherRunner cypherRunner) {
+    private static boolean definesExtraNode(CypherRunner cypherRunner) {
         def results = cypherRunner.getSingleRow("""
         CALL dbms.components()
         YIELD name, versions, edition

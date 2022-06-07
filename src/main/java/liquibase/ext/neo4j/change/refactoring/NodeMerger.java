@@ -208,7 +208,7 @@ public class NodeMerger {
     }
 
     private static Optional<PropertyMergePolicy> findPolicy(List<PropertyMergePolicy> policies, String propertyName) {
-        return policies.stream().filter(policy -> policy.property().matcher(propertyName).find()).findFirst();
+        return policies.stream().filter(policy -> policy.getPropertyNamePattern().matcher(propertyName).find()).findFirst();
     }
 
     private static Map<String, Object> relProperties(Map<String, Object> incoming) {

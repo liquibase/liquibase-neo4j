@@ -4,6 +4,11 @@ import liquibase.change.AbstractChange;
 import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
+import liquibase.exception.LiquibaseException;
+import liquibase.ext.neo4j.change.refactoring.MergePattern;
+import liquibase.ext.neo4j.change.refactoring.NodeMerger;
+import liquibase.ext.neo4j.change.refactoring.PropertyMergePolicy;
+import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 
 import java.util.ArrayList;
@@ -14,7 +19,7 @@ public class MergeNodesChange extends AbstractChange {
 
     private String fragment;
     private String outputVariable;
-    private List<MergeNodeProperty> properties = new ArrayList<>();
+    private List<PropertyMergePolicy> propertyPolicies = new ArrayList<>();
 
     @Override
     public String getConfirmationMessage() {
@@ -23,7 +28,12 @@ public class MergeNodesChange extends AbstractChange {
 
     @Override
     public SqlStatement[] generateStatements(Database database) {
-        return new SqlStatement[0];
+        try {
+            MergePattern pattern = MergePattern.of(fragment, outputVariable);
+            return new NodeMerger((Neo4jDatabase) database).merge(pattern, propertyPolicies);
+        } catch (LiquibaseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -47,11 +57,11 @@ public class MergeNodesChange extends AbstractChange {
         this.outputVariable = outputVariable;
     }
 
-    public List<MergeNodeProperty> getProperties() {
-        return properties;
+    public List<PropertyMergePolicy> getPropertyPolicies() {
+        return propertyPolicies;
     }
 
-    public void setProperties(List<MergeNodeProperty> properties) {
-        this.properties = properties;
+    public void setPropertyPolicies(List<PropertyMergePolicy> propertyPolicies) {
+        this.propertyPolicies = propertyPolicies;
     }
 }

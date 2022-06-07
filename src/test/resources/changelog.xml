@@ -33,4 +33,14 @@
         </preConditions>
         <neo4j:cypher>CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'})</neo4j:cypher>
     </changeSet>
+
+    <changeSet id="my-movie-double-init" author="florent">
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="my-movie-double-init-fix" author="florent">
+        <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
+            <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_FIRST"/>
+        </neo4j:mergeNodes>
+    </changeSet>
 </databaseChangeLog>
