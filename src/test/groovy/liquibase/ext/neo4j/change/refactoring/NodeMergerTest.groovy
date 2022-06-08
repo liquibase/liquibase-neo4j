@@ -15,7 +15,6 @@ import spock.lang.Specification
 
 import java.time.ZoneId
 import java.util.logging.LogManager
-import java.util.regex.Pattern
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
@@ -106,7 +105,7 @@ class NodeMergerTest extends Specification {
         "CREATE (:Foo), (:Bar)" | "(n:Bar)" | "n"
     }
 
-    def "generates statements to merge properties of matching nodes based on each property's policy"(Pattern propertyMatcher, PropertyMergeStrategy strategy, Object result) {
+    def "generates statements to merge properties of matching nodes based on each property's policy"(String propertyMatcher, PropertyMergeStrategy strategy, Object result) {
         given:
         queryRunner.run("CREATE (:Person), (:Person {name: 'Anastasia'}), (:Unmatched), (:Person {name: 'Zouheir'}), (:Person)")
         def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
@@ -120,19 +119,19 @@ class NodeMergerTest extends Specification {
         row["n"]["name"] == result
 
         where:
-        propertyMatcher         | strategy                         | result
-        Pattern.compile("name") | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
-        Pattern.compile("name") | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
-        Pattern.compile("name") | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
-        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
-        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
-        Pattern.compile(".*")   | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
+        propertyMatcher | strategy                         | result
+        "name"          | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
+        "name"          | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
+        "name"          | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
+        ".*"            | PropertyMergeStrategy.KEEP_ALL   | ["Anastasia", "Zouheir"]
+        ".*"            | PropertyMergeStrategy.KEEP_FIRST | "Anastasia"
+        ".*"            | PropertyMergeStrategy.KEEP_LAST  | "Zouheir"
     }
 
     def "fails to generate statements if mergeable properties do not have a policy"() {
         given:
         queryRunner.run("CREATE (:Person {name: 'Anastasia'}), (:Person {name: 'Zouheir'})")
-        def unusedPolicy = PropertyMergePolicy.of(Pattern.compile("nom"), PropertyMergeStrategy.KEEP_ALL)
+        def unusedPolicy = PropertyMergePolicy.of("nom", PropertyMergeStrategy.KEEP_ALL)
 
         when:
         nodeMerger.merge(MergePattern.of("(p:Person)", "p"), [unusedPolicy])
@@ -149,8 +148,8 @@ class NodeMergerTest extends Specification {
 
         when:
         def statements = nodeMerger.merge(pattern, [
-                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
-                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+                PropertyMergePolicy.of("name", PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(".*", PropertyMergeStrategy.KEEP_FIRST)
         ])
         statements.each queryRunner::run
 
@@ -178,8 +177,8 @@ RETURN person AS p, collect(incoming) AS allIncoming
 
         when:
         def statements = nodeMerger.merge(pattern, [
-                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
-                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+                PropertyMergePolicy.of("name", PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(".*", PropertyMergeStrategy.KEEP_FIRST)
         ])
         statements.each queryRunner::run
 
@@ -207,8 +206,8 @@ RETURN person AS p, collect(outgoing) AS allOutgoing
 
         when:
         def statements = nodeMerger.merge(pattern, [
-                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
-                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+                PropertyMergePolicy.of("name", PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(".*", PropertyMergeStrategy.KEEP_FIRST)
         ])
         statements.each queryRunner::run
 
@@ -227,13 +226,16 @@ RETURN collect(rel) AS rels
 
     def "generates statements that yields self-relationships"() {
         given:
-        queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:FOLLOWS_1 {direction: 'a to z'}]->(zouheir:Person {name: 'Zouheir'})-[:FOLLOWS_2 {direction: 'z to a'}]->(anastasia)")
+        queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:FOLLOWS_1 {direction: 'a to z'}]->(zouheir:Person {name: 'Zouheir'}), " +
+                "(zouheir)-[:FOLLOWS_2 {direction: 'z to a'}]->(anastasia)," +
+                "(zouheir)-[:FOLLOWS_3 {direction: 'z to z'}]->(zouheir)," +
+                "(zouheir)-[:FOLLOWS_4 {direction: 'z to m'}]->(:Person {name: 'Marouane'}) ")
         def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [
-                PropertyMergePolicy.of(Pattern.compile("name"), PropertyMergeStrategy.KEEP_LAST),
-                PropertyMergePolicy.of(Pattern.compile(".*"), PropertyMergeStrategy.KEEP_FIRST)
+                PropertyMergePolicy.of("name", PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(".*", PropertyMergeStrategy.KEEP_FIRST)
         ])
         statements.each queryRunner::run
 
@@ -247,6 +249,8 @@ RETURN collect(rel) AS rels
         row["rels"] == [
                 [type: "FOLLOWS_1", direction: "a to z"],
                 [type: "FOLLOWS_2", direction: "z to a"],
+                [type: "FOLLOWS_3", direction: "z to z"],
+                [type: "FOLLOWS_4", direction: "z to m"],
         ]
     }
 }

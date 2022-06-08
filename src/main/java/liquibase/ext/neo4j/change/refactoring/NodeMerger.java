@@ -8,6 +8,7 @@ import liquibase.statement.SqlStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +17,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
-import static liquibase.ext.neo4j.collections.Optionals.optionalToList;
 
 public class NodeMerger {
 
@@ -31,10 +31,10 @@ public class NodeMerger {
         if (ids.size() < 2) {
             return new SqlStatement[0];
         }
-        List<SqlStatement> statements = new ArrayList<>(5);
+        List<SqlStatement> statements = new ArrayList<>(4);
         generateLabelCopyStatement(ids).ifPresent(statements::add);
         generatePropertyCopyStatement(ids, policies).ifPresent(statements::add);
-        statements.addAll(generateRelationshipCopyStatements(ids));
+        generateRelationshipCopyStatements(ids).ifPresent(statements::add);
         generateNodeDeletion(ids).ifPresent(statements::add);
         return statements.toArray(new SqlStatement[0]);
     }
@@ -118,19 +118,19 @@ public class NodeMerger {
         return Optional.of(new ParameterizedCypherStatement(builder.toString(), parameters));
     }
 
-    private List<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
-        List<SqlStatement> result = optionalToList(generateIncomingAndSelfRelationshipStatements(ids));
-        result.addAll(optionalToList(generateOutgoingRelationshipStatements(ids)));
-        return result;
-    }
-
-    private Optional<SqlStatement> generateIncomingAndSelfRelationshipStatements(List<Long> ids) throws LiquibaseException {
+    private Optional<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
+        Set<Long> nodeIdTail = tailOf(ids);
         List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
                 "MATCH (n) WHERE id(n) IN $0\n" +
                         "WITH [ (n)<-[incoming]-() | incoming ] AS incomingRels\n" +
-                        "UNWIND incomingRels AS INCOMING\n" +
-                        "RETURN INCOMING",
-                singletonList(tailOf(ids))
+                        "UNWIND incomingRels AS REL\n" +
+                        "RETURN REL\n" +
+                        "UNION\n" +
+                        "MATCH (n) WHERE id(n) IN $0\n" +
+                        "WITH [ (n)-[outgoing]->() | outgoing ] AS outgoingRels\n" +
+                        "UNWIND outgoingRels AS REL\n" +
+                        "RETURN REL",
+                singletonList(nodeIdTail)
         ));
         if (rows.isEmpty()) {
             return Optional.empty();
@@ -138,50 +138,29 @@ public class NodeMerger {
         int parameterIndex = 0;
         StringBuilder query = new StringBuilder();
         List<Object> parameters = new ArrayList<>();
-        query.append("MATCH (end) WHERE id(end) = $0 ");
+        query.append("MATCH (target) WHERE id(target) = $0 ");
         parameters.add(ids.get(0));
         parameterIndex++;
         for (Map<String, ?> row : rows) {
             @SuppressWarnings("unchecked")
-            Map<String, Object> incoming = (Map<String, Object>) row.get("INCOMING");
-            parameters.add(parameterIndex, relProperties(incoming));
-            if (isSelfRel(incoming)) {
-                query.append(String.format("WITH end CREATE (end)-[rel_%1$d:%2$s]->(end) SET rel_%1$d = $%3$d ", parameterIndex, incoming.get("_type"), parameterIndex));
+            Map<String, Object> relation = (Map<String, Object>) row.get("REL");
+            parameters.add(parameterIndex, relProperties(relation));
+            long startId = (long) relation.get("_startId");
+            long endId = (long) relation.get("_endId");
+            if (nodeIdTail.contains(startId) && nodeIdTail.contains(endId)) { // current or post-merge self-rel
+                query.append(String.format("WITH target CREATE (target)-[rel_%1$d:%2$s]->(target) SET rel_%1$d = $%3$d ", parameterIndex, relation.get("_type"), parameterIndex));
                 parameterIndex++;
                 continue;
             }
-            parameters.add(parameterIndex + 1, incoming.get("_startId"));
-            query.append(String.format("WITH end MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
-            query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:%2$s]->(end) SET rel_%1$d = $%3$d ", parameterIndex + 1, incoming.get("_type"), parameterIndex));
-            parameterIndex += 2;
-        }
-        return Optional.of(new ParameterizedCypherStatement(query.toString(), parameters));
-    }
-
-    private Optional<SqlStatement> generateOutgoingRelationshipStatements(List<Long> ids) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
-                "MATCH (n) WHERE id(n) IN $0\n" +
-                        "WITH [ (n)-[outgoing]->() | outgoing ] AS outgoingRels\n" +
-                        "UNWIND outgoingRels AS OUTGOING\n" +
-                        "RETURN OUTGOING",
-                singletonList(tailOf(ids))
-        ));
-        if (rows.isEmpty()) {
-            return Optional.empty();
-        }
-        int parameterIndex = 0;
-        StringBuilder query = new StringBuilder();
-        List<Object> parameters = new ArrayList<>();
-        query.append("MATCH (start) WHERE id(start) = $0 ");
-        parameters.add(ids.get(0));
-        parameterIndex++;
-        for (Map<String, ?> row : rows) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> outgoing = (Map<String, Object>) row.get("OUTGOING");
-            parameters.add(parameterIndex, outgoing.get("_endId"));
-            parameters.add(parameterIndex + 1, relProperties(outgoing));
-            query.append(String.format("WITH start MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex));
-            query.append(String.format("CREATE (n_%1$d)<-[rel_%1$d:%2$s]-(start) SET rel_%1$d = $%3$d ", parameterIndex, outgoing.get("_type"), parameterIndex + 1));
+            if (nodeIdTail.contains(endId)) { // incoming
+                parameters.add(parameterIndex + 1, startId);
+                query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
+                query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:%2$s]->(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
+            } else { // outgoing
+                parameters.add(parameterIndex + 1, endId);
+                query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
+                query.append(String.format("CREATE (n_%1$d)<-[rel_%1$d:%2$s]-(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
+            }
             parameterIndex += 2;
         }
         return Optional.of(new ParameterizedCypherStatement(query.toString(), parameters));
@@ -194,13 +173,9 @@ public class NodeMerger {
         ));
     }
 
-    private static boolean isSelfRel(Map<String, Object> incoming) {
-        return (long) incoming.get("_startId") == (long) incoming.get("_endId");
-    }
-
-    private static <T> List<T> tailOf(List<T> values) {
+    private static <T> Set<T> tailOf(List<T> values) {
         int size = values.size();
-        List<T> result = new ArrayList<>(size - 1);
+        Set<T> result = new LinkedHashSet<>(size - 1);
         for (int i = 1; i < size; i++) {
             result.add(values.get(i));
         }
