@@ -70,6 +70,6 @@ public class PropertyMergePolicy extends AbstractLiquibaseSerializable {
 
     @Override
     public String getSerializedObjectNamespace() {
-        return "neo4j";
+        return GENERIC_CHANGELOG_EXTENSION_NAMESPACE;
     }
 }
