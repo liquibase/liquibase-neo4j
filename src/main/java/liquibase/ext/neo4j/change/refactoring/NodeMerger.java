@@ -72,7 +72,8 @@ public class NodeMerger {
                         "MATCH (n) WHERE id(n) = id\n" +
                         "UNWIND keys(n) AS key\n" +
                         "WITH {key: key, values: collect(n[key])} AS property\n" +
-                        "RETURN property", singletonList(ids)));
+                        "RETURN property\n" +
+                        "ORDER BY property.key ASC", singletonList(ids)));
 
         if (rows.isEmpty()) {
             return Optional.empty();
