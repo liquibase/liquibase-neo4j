@@ -122,14 +122,10 @@ public class NodeMerger {
         Set<Long> nodeIdTail = tailOf(ids);
         List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
                 "MATCH (n) WHERE id(n) IN $0\n" +
-                        "WITH [ (n)<-[incoming]-() | incoming ] AS incomingRels\n" +
-                        "UNWIND incomingRels AS REL\n" +
-                        "RETURN REL\n" +
-                        "UNION\n" +
-                        "MATCH (n) WHERE id(n) IN $0\n" +
-                        "WITH [ (n)-[outgoing]->() | outgoing ] AS outgoingRels\n" +
-                        "UNWIND outgoingRels AS REL\n" +
-                        "RETURN REL",
+                        "WITH [ (n)-[r]-() | r ] AS rels\n" +
+                        "UNWIND rels AS REL\n" +
+                        "RETURN DISTINCT REL\n" +
+                        "ORDER BY type(REL) ASC, id(REL) ASC",
                 singletonList(nodeIdTail)
         ));
         if (rows.isEmpty()) {
