@@ -1,7 +1,8 @@
 package liquibase.ext.neo4j
 
-import liquibase.ext.neo4j.statement.ParameterizedCypherStatement
+
 import liquibase.statement.SqlStatement
+import liquibase.statement.core.RawParameterizedSqlStatement
 import liquibase.statement.core.RawSqlStatement
 import org.neo4j.driver.Driver
 
@@ -85,12 +86,12 @@ class CypherRunner implements AutoCloseable {
             run(statement.sql)
             return
         }
-        if (statement instanceof ParameterizedCypherStatement) {
+        if (statement instanceof RawParameterizedSqlStatement) {
             def parameters = statement.parameters
             Map<String, Object> indexedMap = IntStream.range(0, parameters.size())
                     .boxed()
                     .collect(Collectors.toMap((Integer index) -> index.toString(), (Integer index) -> parameters.get(index)))
-            run(statement.cypher, indexedMap)
+            run(statement.sql, indexedMap)
             return
         }
         throw new IllegalArgumentException("unsupported type of statement: ${statement.getClass()}")

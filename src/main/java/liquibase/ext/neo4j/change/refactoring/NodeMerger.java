@@ -2,8 +2,8 @@ package liquibase.ext.neo4j.change.refactoring;
 
 import liquibase.exception.LiquibaseException;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
-import liquibase.ext.neo4j.statement.ParameterizedCypherStatement;
 import liquibase.statement.SqlStatement;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,8 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
-import static java.util.Collections.singletonList;
 
 public class NodeMerger {
 
@@ -42,17 +40,17 @@ public class NodeMerger {
     private List<Long> getNodeIds(MergePattern pattern) throws LiquibaseException {
         String query = String.format("MATCH %s RETURN id(%s) AS ID", pattern.cypherFragment(), pattern.outputVariable());
         List<Map<String, ?>> rows = database.runCypher(query);
-        return rows.stream().mapToLong(row -> (long) row.get("ID")).boxed().collect(Collectors.toList());
+        return rows.stream().map(row -> (Long) row.get("ID")).collect(Collectors.toList());
     }
 
     private Optional<SqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+        List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
                 "MATCH (n) WHERE ID(n) IN $0\n" +
                         "UNWIND labels(n) AS label\n" +
                         "WITH DISTINCT label\n" +
                         "ORDER BY label ASC\n" +
                         "RETURN collect(label) AS LABELS",
-                singletonList(tailOf(ids))));
+                tailOf(ids)));
 
         StringJoiner labelLiterals = new StringJoiner("`:`", ":`", "`");
         Map<String, ?> row = rows.get(0);
@@ -61,19 +59,19 @@ public class NodeMerger {
         for (String label : labels) {
             labelLiterals.add(label);
         }
-        return Optional.of(new ParameterizedCypherStatement(
+        return Optional.of(new RawParameterizedSqlStatement(
                 String.format("MATCH (n) WHERE ID(n) = $0 SET n%s", labelLiterals),
-                singletonList(ids.get(0))));
+                ids.get(0)));
     }
 
     private Optional<SqlStatement> generatePropertyCopyStatement(List<Long> ids, List<PropertyMergePolicy> policies) throws LiquibaseException {
-        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+        List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
                 "UNWIND $0 AS id\n" +
                         "MATCH (n) WHERE id(n) = id\n" +
                         "UNWIND keys(n) AS key\n" +
                         "WITH {key: key, values: collect(n[key])} AS property\n" +
                         "RETURN property\n" +
-                        "ORDER BY property.key ASC", singletonList(ids)));
+                        "ORDER BY property.key ASC", ids));
 
         if (rows.isEmpty()) {
             return Optional.empty();
@@ -116,18 +114,18 @@ public class NodeMerger {
             }
             parameterIndex++;
         }
-        return Optional.of(new ParameterizedCypherStatement(builder.toString(), parameters));
+        return Optional.of(new RawParameterizedSqlStatement(builder.toString(), parameters.toArray()));
     }
 
     private Optional<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
         Set<Long> nodeIdTail = tailOf(ids);
-        List<Map<String, ?>> rows = database.run(new ParameterizedCypherStatement(
+        List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
                 "MATCH (n) WHERE id(n) IN $0\n" +
                         "WITH [ (n)-[r]-() | r ] AS rels\n" +
                         "UNWIND rels AS REL\n" +
                         "RETURN DISTINCT REL\n" +
                         "ORDER BY type(REL) ASC, id(REL) ASC",
-                singletonList(nodeIdTail)
+                nodeIdTail
         ));
         if (rows.isEmpty()) {
             return Optional.empty();
@@ -160,13 +158,13 @@ public class NodeMerger {
             }
             parameterIndex += 2;
         }
-        return Optional.of(new ParameterizedCypherStatement(query.toString(), parameters));
+        return Optional.of(new RawParameterizedSqlStatement(query.toString(), parameters.toArray()));
     }
 
     private Optional<SqlStatement> generateNodeDeletion(List<Long> ids) {
-        return Optional.of(new ParameterizedCypherStatement(
+        return Optional.of(new RawParameterizedSqlStatement(
                 "MATCH (n) WHERE id(n) IN $0 DETACH DELETE n",
-                singletonList(tailOf(ids))
+                tailOf(ids)
         ));
     }
 
