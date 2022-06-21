@@ -6,6 +6,7 @@ import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -15,6 +16,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
 
 public class NodeMerger {
 
@@ -92,29 +95,9 @@ public class NodeMerger {
             }
         }
 
-        int parameterIndex = 0;
-        int parameterCount = 1 + combinedProperties.size();
-        List<Object> parameters = new ArrayList<>(parameterCount);
-        parameters.add(parameterIndex, ids.get(0));
-        parameters.addAll(combinedProperties.values());
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("MATCH (n) WHERE id(n) = $");
-        builder.append(parameterIndex);
-        builder.append(" SET ");
-        parameterIndex++;
-        Set<Map.Entry<String, Object>> propertyEntries = combinedProperties.entrySet();
-        for (Map.Entry<String, Object> entry : propertyEntries) {
-            builder.append("n.`");
-            builder.append(entry.getKey());
-            builder.append("` = $");
-            builder.append(parameterIndex);
-            if (parameterIndex < parameterCount - 1) {
-                builder.append(", ");
-            }
-            parameterIndex++;
-        }
-        return Optional.of(new RawParameterizedSqlStatement(builder.toString(), parameters.toArray()));
+        return Optional.of(new RawParameterizedSqlStatement(
+                "MATCH (n) WHERE id(n) = $0 SET n = $1",
+                asList(ids.get(0), combinedProperties).toArray()));
     }
 
     private Optional<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
