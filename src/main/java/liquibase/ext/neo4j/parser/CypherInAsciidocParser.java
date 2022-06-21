@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,10 @@ public class CypherInAsciidocParser implements ChangeLogParser {
             List<StructuralNode> nodes = document.findBy(selectors);
             for (StructuralNode node : nodes) {
                 Block block = (Block) node;
+                if (!isCypherBlock(node)) {
+                    continue;
+                }
+
                 RawSQLChange change = new RawSQLChange();
                 change.setSql(String.join("\n", block.getLines()));
                 ChangeSet changeSet = new ChangeSet(
@@ -83,5 +88,12 @@ public class CypherInAsciidocParser implements ChangeLogParser {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAccessor.openStream(null, physicalChangeLogLocation)))) {
             return reader.lines().collect(Collectors.joining("\n"));
         }
+    }
+
+    private static boolean isCypherBlock(StructuralNode node) {
+        return node.getAttributes()
+                .values()
+                .stream()
+                .anyMatch(v -> v.toString().toLowerCase(Locale.ENGLISH).equals("cypher"));
     }
 }

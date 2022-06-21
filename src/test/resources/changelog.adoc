@@ -1,0 +1,22 @@
+= Awesome project
+
+Here is a great data migration:
+
+[source,cypher,id=initial-data,author=fbiville]
+----
+CREATE (:Foo {name: "fighters"})
+----
+
+And another one:
+
+[source,cypher,id=more-data,author=fbiville]
+----
+CREATE (:Bar {name: "tender"})
+----
+
+But not this one:
+
+[source,sql]
+----
+SELECT * FROM foobar
+----

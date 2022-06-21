@@ -156,6 +156,34 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
         }
     }
 
+    def "runs Asciidoc migrations"() {
+        given:
+        System.out = mute()
+        String[] arguments = [
+                "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
+                "--username", "neo4j",
+                "--password", PASSWORD,
+                "--changeLogFile", "/changelog.adoc",
+                "update"
+        ].toArray()
+
+        when:
+        Main.run(arguments)
+
+        then:
+        def rows = queryRunner.getRows("""
+            MATCH (m)
+            WHERE NONE(label IN LABELS(m) WHERE label STARTS WITH "__Liquibase")
+            OPTIONAL MATCH (m)-[r]->()
+            WITH m, r
+            ORDER BY LABELS(m)[0] ASC, TYPE(r) ASC
+            WITH m AS node, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
+            RETURN LABELS(node) AS labels, PROPERTIES(node) AS properties, outgoing_relationships
+        """)
+
+        rows.size() == 2
+    }
+
     private static PrintStream mute() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
     }
