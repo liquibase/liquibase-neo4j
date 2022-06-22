@@ -6,11 +6,9 @@ import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.exception.ChangeLogParseException;
 import liquibase.parser.ChangeLogParser;
-import liquibase.parser.core.sql.SqlChangeLogParser;
 import liquibase.resource.ResourceAccessor;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
-import org.asciidoctor.OptionsBuilder;
 import org.asciidoctor.ast.Block;
 import org.asciidoctor.ast.Document;
 import org.asciidoctor.ast.StructuralNode;
@@ -18,9 +16,6 @@ import org.asciidoctor.ast.StructuralNode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +27,7 @@ public class CypherInAsciidocParser implements ChangeLogParser {
     private final Asciidoctor asciidocParser;
 
     public CypherInAsciidocParser() {
-        this.asciidocParser = Asciidoctor.Factory.create();
+        asciidocParser = Asciidoctor.Factory.create();
     }
 
     @Override
@@ -52,9 +47,13 @@ public class CypherInAsciidocParser implements ChangeLogParser {
         changeLog.setPhysicalFilePath(physicalChangeLogLocation);
 
         try {
-            Document document = asciidocParser.load(readContents(resourceAccessor, physicalChangeLogLocation), Options.builder().build());
-            Map<Object, Object> selectors = new HashMap<>(1);
+            Document document = asciidocParser.load(
+                    readContents(resourceAccessor, physicalChangeLogLocation),
+                    Options.builder().build()
+            );
+            Map<Object, Object> selectors = new HashMap<>(2);
             selectors.put("context", ":listing");
+            selectors.put("style", "source");
             List<StructuralNode> nodes = document.findBy(selectors);
             for (StructuralNode node : nodes) {
                 Block block = (Block) node;
@@ -91,9 +90,10 @@ public class CypherInAsciidocParser implements ChangeLogParser {
     }
 
     private static boolean isCypherBlock(StructuralNode node) {
-        return node.getAttributes()
-                .values()
-                .stream()
-                .anyMatch(v -> v.toString().toLowerCase(Locale.ENGLISH).equals("cypher"));
+        Object language = node.getAttribute("language");
+        if (language == null) {
+            return false;
+        }
+        return "cypher".equals(((String) language).toLowerCase(Locale.ENGLISH));
     }
 }
