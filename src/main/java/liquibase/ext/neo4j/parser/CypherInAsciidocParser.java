@@ -5,10 +5,12 @@ import liquibase.changelog.ChangeLogParameters;
 import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.exception.ChangeLogParseException;
+import liquibase.ext.neo4j.parser.adoc.LiquibaseAdocInclude;
 import liquibase.parser.ChangeLogParser;
 import liquibase.resource.ResourceAccessor;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Options;
+import org.asciidoctor.SafeMode;
 import org.asciidoctor.ast.Block;
 import org.asciidoctor.ast.Document;
 import org.asciidoctor.ast.StructuralNode;
@@ -43,13 +45,18 @@ public class CypherInAsciidocParser implements ChangeLogParser {
 
     @Override
     public DatabaseChangeLog parse(String physicalChangeLogLocation, ChangeLogParameters changeLogParameters, ResourceAccessor resourceAccessor) throws ChangeLogParseException {
+        LiquibaseAdocInclude includeProcessor = new LiquibaseAdocInclude(resourceAccessor);
+        asciidocParser.javaExtensionRegistry().includeProcessor(includeProcessor);
+
+
         DatabaseChangeLog changeLog = new DatabaseChangeLog();
         changeLog.setPhysicalFilePath(physicalChangeLogLocation);
 
         try {
+            String content = readContents(resourceAccessor, physicalChangeLogLocation);
             Document document = asciidocParser.load(
-                    readContents(resourceAccessor, physicalChangeLogLocation),
-                    Options.builder().build()
+                    content,
+                    Options.builder().safe(SafeMode.SAFE).build()
             );
             Map<Object, Object> selectors = new HashMap<>(2);
             selectors.put("context", ":listing");

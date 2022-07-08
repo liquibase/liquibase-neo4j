@@ -1,0 +1,6 @@
+== pas empty
+
+[source,cypher,id=more-data2,author=fbiville]
+----
+CREATE (:Bar {name: "tender2"})
+----
