@@ -49,6 +49,24 @@ It has been tested with Liquibase Community and supports the following features:
 - change set [rollbacks](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html)
 - change set [runOnChange](https://docs.liquibase.com/concepts/advanced/runonchange.html), and runAlways change set variants
 - change set [logical file path](https://docs.liquibase.com/concepts/advanced/logicalfilepath.html)
+- node merge refactoring:
+```xml
+<neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
+    <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST" />
+    <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST" />
+    <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_ALL" />
+</neo4j:mergeNodes>
+```
+Specify a Cypher query fragment, which defines the nodes to match for the merge operation. If fewer than two nodes are matched, the merge is a no-op.
+
+Specify the variable in that fragment that refer to the matched nodes. This is reused to create the internal merge Cypher queries to execute.
+
+Finally, make sure to define the merge policy for each persisted property.
+The plugin goes through every unique property name, selects the first matching merge policy, in declaration order. If at least one property name does not match a policy, the merge fails and is canceled. Once the policy is matched for the property name, one of the following operations happens:
+ - `KEEP_FIRST`: the first defined property value for that name is kept
+ - `KEEP_LAST`: the last defined property value for that name is kept
+ - `KEEP_ALL`: all defined property values are aggregated into an array (even if only a single value is found)
+Note: "first" and "last" are defined by the ordering of the specified Cypher query fragment. It is strongly advised to explicitly order the matched nodes like in the example with the explicit `ORDER BY` clause.
 
 ## Migrating from Liquigraph?
 
