@@ -21,7 +21,4 @@ But not this one:
 SELECT * FROM foobar
 ----
 
-include::empty.adoc[]
-
-
-liquibase-include::changeset.xml[labels='']
+include::include/changelog.adoc[]

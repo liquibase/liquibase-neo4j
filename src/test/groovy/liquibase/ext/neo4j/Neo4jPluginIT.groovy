@@ -181,7 +181,10 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
             RETURN LABELS(node) AS labels, PROPERTIES(node) AS properties, outgoing_relationships
         """)
 
-        rows.size() == 2
+        rows.size() == 3
+        rows[0] == [labels: ["Bar"], properties: [name: "tender"], outgoing_relationships: []]
+        rows[1] == [labels: ["Baz"], properties: [name: "no-name"], outgoing_relationships: []]
+        rows[2] == [labels: ["Foo"], properties: [name: "fighters"], outgoing_relationships: []]
     }
 
     private static PrintStream mute() {

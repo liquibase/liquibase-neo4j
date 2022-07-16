@@ -1,0 +1,6 @@
+== pas empty
+
+[source,cypher,id=even-more-data,author=fbiville]
+----
+CREATE (:Baz {name: "no-name"})
+----
