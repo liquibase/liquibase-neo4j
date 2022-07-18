@@ -31,4 +31,4 @@ jobs:
         - name: Populate release change log
           run: mvn jreleaser:release -P release
           env:
-            JRELEASER_GITHUB_TOKEN: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
+            JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
