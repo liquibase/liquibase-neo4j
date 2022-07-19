@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.parser.adoc;
 
+import liquibase.Scope;
 import liquibase.resource.ResourceAccessor;
 import org.asciidoctor.ast.Document;
 import org.asciidoctor.extension.IncludeProcessor;
@@ -13,12 +14,6 @@ import java.util.stream.Collectors;
 
 public class LiquibaseAdocInclude extends IncludeProcessor {
 
-    private final ResourceAccessor resourceAccessor;
-
-    public LiquibaseAdocInclude(ResourceAccessor resourceAccessor) {
-        this.resourceAccessor = resourceAccessor;
-    }
-
     @Override
     public boolean handles(String target) {
         return true;
@@ -28,7 +23,7 @@ public class LiquibaseAdocInclude extends IncludeProcessor {
     public void process(Document document, PreprocessorReader reader, String target, Map<String, Object> attributes) {
         try {
             reader.pushInclude(
-                readContents(resourceAccessor, target),
+                readContents(Scope.getCurrentScope().getResourceAccessor(), target),
                     target,
                     target,
                     0,

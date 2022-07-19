@@ -29,7 +29,9 @@ public class CypherInAsciidocParser implements ChangeLogParser {
     private final Asciidoctor asciidocParser;
 
     public CypherInAsciidocParser() {
-        asciidocParser = Asciidoctor.Factory.create();
+        Asciidoctor asciidocParser = Asciidoctor.Factory.create();
+        asciidocParser.javaExtensionRegistry().includeProcessor(new LiquibaseAdocInclude());
+        this.asciidocParser = asciidocParser;
     }
 
     @Override
@@ -45,8 +47,6 @@ public class CypherInAsciidocParser implements ChangeLogParser {
 
     @Override
     public DatabaseChangeLog parse(String physicalChangeLogLocation, ChangeLogParameters changeLogParameters, ResourceAccessor resourceAccessor) throws ChangeLogParseException {
-        LiquibaseAdocInclude includeProcessor = new LiquibaseAdocInclude(resourceAccessor);
-        asciidocParser.javaExtensionRegistry().includeProcessor(includeProcessor);
 
 
         DatabaseChangeLog changeLog = new DatabaseChangeLog();
