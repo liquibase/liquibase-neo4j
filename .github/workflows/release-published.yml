@@ -27,3 +27,8 @@ jobs:
             MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
             MAVEN_PASSWORD: ${{ secrets.SONATYPE_TOKEN }}
             GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+        - name: Populate release change log
+          run: mvn jreleaser:release -P release
+          env:
+            JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

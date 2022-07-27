@@ -65,6 +65,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
         <liquibase.version>4.13.0</liquibase.version>
+        <version.to.release>${project.version}</version.to.release>
     </properties>
 
     <dependencyManagement>
@@ -238,7 +239,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
 
     </build>
@@ -320,6 +320,34 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.jreleaser</groupId>
+                        <artifactId>jreleaser-maven-plugin</artifactId>
+                        <version>1.1.0</version>
+                        <configuration>
+                            <jreleaser>
+                                <project>
+                                    <name>liquibase-neo4j</name>
+                                    <version>${version.to.release}</version>
+                                </project>
+                                <release>
+                                    <github>
+                                        <overwrite>true</overwrite>
+                                        <skipTag>true</skipTag>
+                                        <tagName>liquibase-neo4j-{{projectVersion}}</tagName>
+                                        <releaseName>liquibase-neo4j-{{projectVersion}}</releaseName>
+                                        <changelog>
+                                            <formatted>ALWAYS</formatted>
+                                            <hide>
+                                                <contributors>GitHub,dependabot,liquibot</contributors>
+                                            </hide>
+                                        </changelog>
+                                    </github>
+                                </release>
+                            </jreleaser>
+                        </configuration>
+                    </plugin>
+
                 </plugins>
             </build>
         </profile>

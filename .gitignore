@@ -2,3 +2,5 @@
 /.idea
 /target
 /.java-version
+/out
+/trace.log
