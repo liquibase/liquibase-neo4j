@@ -72,8 +72,9 @@ public class NodeMerger {
                 "UNWIND $0 AS id\n" +
                         "MATCH (n) WHERE id(n) = id\n" +
                         "UNWIND keys(n) AS key\n" +
-                        "WITH {key: key, values: collect(n[key])} AS property\n" +
-                        "RETURN property\n" +
+                        "WITH key, n[key] as value\n" +
+                        "WITH key, collect(value) AS values\n" +
+                        "RETURN {key: key, values: values} AS property\n" +
                         "ORDER BY property.key ASC", ids));
 
         if (rows.isEmpty()) {
