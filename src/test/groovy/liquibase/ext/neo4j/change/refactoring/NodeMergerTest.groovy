@@ -199,6 +199,37 @@ RETURN person AS p, collect(outgoing) AS allOutgoing
         ]
     }
 
+    def "escapes relationship types proper"() {
+        given:
+        queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 42})<-[:MAINTAINED_BY]-(:Project {name: 'Secret'}), (:Conference {name: 'JavaLand'}) <-[:`HAT BESUCHT`]- (m:Person {name: 'Michael'})<-[:`FOUNDED BY` {year: 2015}]-(:JUG {name: 'EuregJUG'}), (m)-[:`DAS IST` {offensichtlich: true}]->(m)")
+        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+
+        when:
+        def statements = nodeMerger.merge(pattern, [
+                PropertyMergePolicy.of("name", PropertyMergeStrategy.KEEP_LAST),
+                PropertyMergePolicy.of(".*", PropertyMergeStrategy.KEEP_FIRST)
+        ])
+        statements.each queryRunner::run
+
+        then:
+        def row = queryRunner.getSingleRow("""
+MATCH (p:Person)
+WITH p {.*} AS person, [ (p)-[outgoing]-() | outgoing {.*, type: type(outgoing)} ] AS rels
+UNWIND rels AS rel
+WITH person, rel
+ORDER BY rel['type'] ASC
+RETURN person AS p, collect(rel) AS rels
+""")
+        row["p"]["name"] == "Michael"
+        row["p"]["age"] == 42
+        row["rels"] == [
+                [type: "DAS IST", 'offensichtlich': true],
+                [type: "FOUNDED BY", year: 2015],
+                [type: "HAT BESUCHT"],
+                [type: "MAINTAINED_BY"],
+        ]
+    }
+
     def "generates statements that preserve existing self-relationships"() {
         given:
         queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:IS {obviously: true}]->(anastasia), (zouheir:Person {name: 'Zouheir'})-[:IS_SAME_AS {evidently: true}]->(zouheir)")

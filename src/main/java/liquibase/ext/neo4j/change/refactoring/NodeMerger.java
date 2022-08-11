@@ -127,18 +127,18 @@ public class NodeMerger {
             long startId = (long) relation.get("_startId");
             long endId = (long) relation.get("_endId");
             if (nodeIdTail.contains(startId) && nodeIdTail.contains(endId)) { // current or post-merge self-rel
-                query.append(String.format("WITH target CREATE (target)-[rel_%1$d:%2$s]->(target) SET rel_%1$d = $%3$d ", parameterIndex, relation.get("_type"), parameterIndex));
+                query.append(String.format("WITH target CREATE (target)-[rel_%1$d:`%2$s`]->(target) SET rel_%1$d = $%3$d ", parameterIndex, relation.get("_type"), parameterIndex));
                 parameterIndex++;
                 continue;
             }
             if (nodeIdTail.contains(endId)) { // incoming
                 parameters.add(parameterIndex + 1, startId);
                 query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
-                query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:%2$s]->(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
+                query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:`%2$s`]->(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
             } else { // outgoing
                 parameters.add(parameterIndex + 1, endId);
                 query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
-                query.append(String.format("CREATE (n_%1$d)<-[rel_%1$d:%2$s]-(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
+                query.append(String.format("CREATE (n_%1$d)<-[rel_%1$d:`%2$s`]-(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
             }
             parameterIndex += 2;
         }
