@@ -337,6 +337,7 @@
                                         <tagName>liquibase-neo4j-{{projectVersion}}</tagName>
                                         <releaseName>liquibase-neo4j-{{projectVersion}}</releaseName>
                                         <changelog>
+                                            <preset>conventional-commits</preset>
                                             <formatted>ALWAYS</formatted>
                                             <hide>
                                                 <contributors>GitHub,dependabot,liquibot</contributors>
