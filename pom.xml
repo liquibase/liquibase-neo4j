@@ -344,6 +344,14 @@
                                         </changelog>
                                     </github>
                                 </release>
+                                <files>
+                                    <artifact>
+                                        <path>${project.build.directory}/${project.artifactId}-${project.version}.jar</path>
+                                    </artifact>
+                                    <artifact>
+                                        <path>${project.build.directory}/${project.artifactId}-${project.version}-full.jar</path>
+                                    </artifact>
+                                </files>
                             </jreleaser>
                         </configuration>
                     </plugin>
