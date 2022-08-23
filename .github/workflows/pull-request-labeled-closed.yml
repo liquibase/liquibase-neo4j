@@ -27,7 +27,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Build With Maven
-        run: mvn -B clean package -Dmaven.test.skip
+        run: mvn --quiet --batch-mode clean package -Dmaven.test.skip
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -109,7 +109,7 @@ jobs:
 
       - name: Bump POM Version for Development
         run: |
-          mvn -B versions:set -DnextSnapshot=true
+          mvn --quiet --batch-mode versions:set -DnextSnapshot=true
           git add pom.xml
           git commit -m "Version Bumped to Snapshot for Development"
           git push "https://liquibot:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:${{ github.base_ref }}
