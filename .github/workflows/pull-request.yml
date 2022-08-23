@@ -38,7 +38,7 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'adopt'
     - name: Run Tests With Maven
-      run: mvn --show-version --batch-mode verify
+      run: mvn --quiet --show-version --batch-mode verify
       env:
         NEO4J_VERSION: ${{ matrix.neo4j_version }}
         ENTERPRISE: ${{ matrix.enterprise }}
@@ -83,7 +83,7 @@ jobs:
 
       - name: Bump POM Version for Next Release
         run: |
-          mvn -B versions:set -DnewVersion=$VERSION_TAG
+          mvn --quiet --batch-mode versions:set -DnewVersion=$VERSION_TAG
           git add pom.xml
           git commit -m "Version Bumped to $VERSION_TAG"
           git tag -a -m "Version Bumped to $VERSION_TAG" liquibase-neo4j-$VERSION_TAG
