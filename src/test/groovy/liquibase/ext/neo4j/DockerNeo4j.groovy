@@ -20,7 +20,7 @@ class DockerNeo4j {
     }
 
     static String neo4jVersion() {
-        return System.getenv().getOrDefault("NEO4J_VERSION", "3.5")
+        return System.getenv().getOrDefault("NEO4J_VERSION", "4.4")
     }
 
     static boolean enterpriseEdition() {
