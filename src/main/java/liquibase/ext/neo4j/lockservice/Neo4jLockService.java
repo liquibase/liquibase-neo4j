@@ -11,6 +11,7 @@ import liquibase.executor.ExecutorService;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.lockservice.LockService;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 
 import java.sql.Timestamp;
@@ -107,9 +108,9 @@ public class Neo4jLockService implements LockService {
         try {
             init();
             UUID newLockId = UUID.randomUUID();
-            database.executeCypher(String.format(
-                    "CREATE (lock:__LiquibaseLock {id: '%s', grantDate: DATETIME(), lockedBy: '%2$s'})",
-                    newLockId,
+            database.execute(new RawParameterizedSqlStatement(
+                    "CREATE (lock:__LiquibaseLock {id: $0, grantDate: DATETIME(), lockedBy: $1})",
+                    newLockId.toString(),
                     Neo4jLockService.class.getSimpleName()
             ));
             database.commit();
@@ -153,8 +154,8 @@ public class Neo4jLockService implements LockService {
             return;
         }
         try {
-            database.executeCypher(String.format(
-                    "MATCH (lock:__LiquibaseLock {id: '%s'}) DELETE lock",
+            database.execute(new RawParameterizedSqlStatement(
+                    "MATCH (lock:__LiquibaseLock {id: $0}) DELETE lock",
                     lockId.toString()
             ));
             database.commit();
@@ -174,7 +175,8 @@ public class Neo4jLockService implements LockService {
     public DatabaseChangeLogLock[] listLocks() throws LockException {
         Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
         try {
-            List<Map<String, Object>> results = executor.queryForObject(new RawSqlStatement("MATCH (lock:__LiquibaseLock) WITH lock ORDER BY lock.grantDate ASC RETURN COLLECT(lock) AS locks"), List.class);
+            RawSqlStatement cypher = new RawSqlStatement("MATCH (lock:__LiquibaseLock) WITH lock ORDER BY lock.grantDate ASC RETURN COLLECT(lock) AS locks");
+            List<Map<String, Object>> results = executor.queryForObject(cypher, List.class);
             return results.stream().map(this::mapRow).toArray(DatabaseChangeLogLock[]::new);
         } catch (DatabaseException e) {
             throw new LockException("Could not list locks", e);
@@ -184,7 +186,7 @@ public class Neo4jLockService implements LockService {
     @Override
     public void forceReleaseLock() throws LockException {
         try {
-            database.executeCypher("MATCH (lock:__LiquibaseLock) DELETE lock");
+            database.execute(new RawSqlStatement("MATCH (lock:__LiquibaseLock) DELETE lock"));
             database.commit();
             reset();
         } catch (LiquibaseException e) {

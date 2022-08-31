@@ -8,11 +8,9 @@ import liquibase.exception.LiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.statement.SqlStatement;
-import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 import liquibase.util.StringUtil;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,10 +35,6 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     private String neo4jVersion;
 
     private String neo4jEdition;
-
-    public static RawSqlStatement createStatement(String cypher, Object... arguments) {
-        return new RawSqlStatement(String.format(cypher, arguments));
-    }
 
     @Override
     public void setConnection(DatabaseConnection conn) {
@@ -177,17 +171,12 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         }
     }
 
-    public void executeCypher(String cypherQuery, Object... parameters) throws LiquibaseException {
-        this.execute(new SqlStatement[]{createStatement(cypherQuery, parameters)}, Collections.emptyList());
+    public void execute(SqlStatement statement) throws LiquibaseException {
+        jdbcExecutor().execute(statement);
     }
 
-    public List<Map<String, ?>> runCypher(String cypherQuery, Object... parameters) throws LiquibaseException {
-        return this.queryForList(createStatement(cypherQuery, parameters));
-    }
-
-    // TODO: remove runCypher when run is used everywhere
-    public List<Map<String, ?>> run(RawParameterizedSqlStatement statement) throws LiquibaseException {
-        return this.queryForList(statement);
+    public List<Map<String, ?>> run(SqlStatement statement) throws LiquibaseException {
+        return jdbcExecutor().queryForList(statement);
     }
 
     public String getNeo4jVersion() {
@@ -206,7 +195,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     private Map<String, ?> readComponents() {
         try {
-            List<Map<String, ?>> result = queryForList(new RawSqlStatement(SERVER_VERSION_QUERY));
+            List<Map<String, ?>> result = jdbcExecutor().queryForList(new RawSqlStatement(SERVER_VERSION_QUERY));
             this.rollback();
             int size = result.size();
             if (size != 1) {
@@ -220,45 +209,57 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     // before 4.x, constraints cannot be given names
     private void createUniqueConstraintForNeo4j3(String label, String property) {
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.executeCypher("CREATE CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property));
+        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property)))
+        );
     }
 
     private void createUniqueConstraintForNeo4j4(String name, String label, String property) {
         // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.executeCypher("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", name, label, property));
+        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", name, label, property)))
+        );
     }
 
     // before 4.x, constraints cannot be given names
     private void createNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.executeCypher("CREATE CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list));
+        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list)))
+        );
     }
 
     private void createNodeKeyConstraintForNeo4j4(String name, String label, String[] properties) {
         // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.executeCypher("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT %s IS NODE KEY", name, label, list));
+        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT %s IS NODE KEY", name, label, list)))
+        );
     }
 
     // before 4.x, constraints cannot be given names
     private void dropUniqueConstraintForNeo4j3(String label, String property) {
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.executeCypher("DROP CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property));
+        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property)))
+        );
     }
 
     // before 4.x, constraints cannot be given names
     private void dropNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.executeCypher("DROP CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list));
+        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list)))
+        );
     }
 
     private void dropConstraintForNeo4j4(String name) {
         // `DROP CONSTRAINT IF EXISTS` is only available with Neo4j 4.2+
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.executeCypher("DROP CONSTRAINT `%s`", name));
+        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
+                new RawSqlStatement(String.format("DROP CONSTRAINT `%s`", name)))
+        );
     }
 
-
-    private List<Map<String, ?>> queryForList(SqlStatement statement) throws DatabaseException {
-        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
-        return executor.queryForList(statement);
+    private Executor jdbcExecutor() {
+        return Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
     }
 }

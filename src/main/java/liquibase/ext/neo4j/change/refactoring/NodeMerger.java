@@ -42,7 +42,7 @@ public class NodeMerger {
 
     private List<Long> getNodeIds(MergePattern pattern) throws LiquibaseException {
         String query = String.format("MATCH %s RETURN id(%s) AS ID", pattern.cypherFragment(), pattern.outputVariable());
-        List<Map<String, ?>> rows = database.runCypher(query);
+        List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(query));
         return rows.stream().map(row -> (Long) row.get("ID")).collect(Collectors.toList());
     }
 
