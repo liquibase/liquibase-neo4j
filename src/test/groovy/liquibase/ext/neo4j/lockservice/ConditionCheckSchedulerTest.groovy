@@ -74,4 +74,17 @@ class ConditionCheckSchedulerTest extends Specification {
         def exception = thrown(IllegalArgumentException.class)
         exception.message == "delay PT24H0.1S should be strictly less than the configured timeout PT0.1S"
     }
+
+    def "fails and returns last seen exception"() {
+        given:
+        def interval = timeout.minusMillis(80)
+
+        when:
+        scheduler.scheduleCheckWithFixedDelay(() -> {throw new RuntimeException("oopsie")}, alwaysTrue, false, interval)
+
+        then:
+        def cause = scheduler.getLastException().getCause()
+        cause instanceof RuntimeException
+        cause.getMessage() == "oopsie"
+    }
 }

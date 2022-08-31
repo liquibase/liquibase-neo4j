@@ -50,6 +50,7 @@ public class Neo4jLockService implements LockService {
 
     @Override
     public void waitForLock() throws LockException {
+        Exception lastException;
         boolean lockAcquired;
         try (ConditionCheckScheduler checkScheduler = new ConditionCheckScheduler(Duration.ofMinutes(getChangeLogLockWaitTime()))) {
             lockAcquired = checkScheduler.scheduleCheckWithFixedDelay(
@@ -58,6 +59,7 @@ public class Neo4jLockService implements LockService {
                     false,
                     Duration.ofSeconds(getChangeLogLockRecheckTime())
             );
+            lastException = checkScheduler.getLastException();
         }
 
         if (!lockAcquired) {
@@ -67,7 +69,7 @@ public class Neo4jLockService implements LockService {
                         "Could not acquire change log lock. Currently locked by %s",
                         currentLocks[0].getLockedBy()));
             }
-            throw new LockException("Could not acquire change log lock despite no lock currently stored");
+            throw new LockException("Could not acquire change log lock despite no lock currently stored", lastException);
         }
     }
 

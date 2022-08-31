@@ -17,6 +17,8 @@ public class ConditionCheckScheduler implements Closeable {
 
     private final Duration timeout;
 
+    private Exception lastException;
+
     public ConditionCheckScheduler(Duration timeout) {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(1);
         this.timeout = timeout;
@@ -37,7 +39,9 @@ public class ConditionCheckScheduler implements Closeable {
                 if (check.test(currentResult)) {
                     return currentResult;
                 }
-            } catch (ExecutionException | InterruptedException | TimeoutException ignored) {
+            } catch (InterruptedException | TimeoutException ignored) {
+            } catch (ExecutionException executionException) {
+                lastException = executionException;
             }
             delayInNanos = delay.toNanos();
         }
@@ -47,5 +51,9 @@ public class ConditionCheckScheduler implements Closeable {
     @Override
     public void close() {
         scheduledExecutorService.shutdown();
+    }
+
+    public Exception getLastException() {
+        return lastException;
     }
 }
