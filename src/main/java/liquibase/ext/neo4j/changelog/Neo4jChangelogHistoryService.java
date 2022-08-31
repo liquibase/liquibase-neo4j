@@ -14,6 +14,7 @@ import liquibase.exception.LiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 import liquibase.util.LiquibaseUtil;
 
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
-import static liquibase.ext.neo4j.database.Neo4jDatabase.createStatement;
 
 public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryService {
 
@@ -95,14 +95,14 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     @Override
     public void replaceChecksum(ChangeSet changeSet) throws DatabaseException {
         try {
-            database.executeCypher(
-                    "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s'})-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                            "SET changeLog.dateUpdated = DATETIME() SET changeSet.checkSum = '%s'",
+            database.execute(new RawParameterizedSqlStatement(
+                    "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2})-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
+                            "SET changeLog.dateUpdated = DATETIME() SET changeSet.checkSum = $3",
                     changeSet.getId(),
                     changeSet.getAuthor(),
                     changeSet.getFilePath(),
                     changeSet.generateCheckSum().toString()
-            );
+            ));
             database.commit();
         } catch (LiquibaseException e) {
             throw new DatabaseException(String.format("Could not replace checksum of change set %s", changeSet), e);
@@ -140,13 +140,13 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     @Override
     public void removeFromHistory(ChangeSet changeSet) throws DatabaseException {
         try {
-            database.executeCypher(
-                    "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' })-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
+            database.execute(new RawParameterizedSqlStatement(
+                    "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 })-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
                     "SET changeLog.dateUpdated = DATETIME() DETACH DELETE changeSet",
                     changeSet.getId(),
                     changeSet.getAuthor(),
                     changeSet.getFilePath()
-            );
+            ));
             database.commit();
         } catch (LiquibaseException e) {
             database.rollback();
@@ -162,7 +162,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         if (lastChangeSetSequenceValue == null) {
             Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
             int value = (int) executor
-                    .queryForLong(createStatement("MATCH (:__LiquibaseChangeSet)-[execution:IN_CHANGELOG]->(:__LiquibaseChangeLog) "
+                    .queryForLong(new RawSqlStatement(
+                            "MATCH (:__LiquibaseChangeSet)-[execution:IN_CHANGELOG]->(:__LiquibaseChangeLog) "
                             + "RETURN MAX(execution.orderExecuted) AS value"));
             database.rollback();
             lastChangeSetSequenceValue = value;
@@ -186,16 +187,17 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     @Override
     public boolean tagExists(String tag) throws DatabaseException {
         Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
-        long count = executor.queryForLong(createStatement("MATCH (t:__LiquibaseTag {tag: '%s'}) RETURN COUNT(t) AS count", tag));
+        long count = executor.queryForLong(new RawParameterizedSqlStatement("MATCH (t:__LiquibaseTag {tag: $0}) RETURN COUNT(t) AS count", tag));
         database.rollback();
         return count > 0;
     }
 
     @Override
     public void clearAllCheckSums() throws LiquibaseException {
-        database.executeCypher("MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
+        database.execute(new RawSqlStatement(
+                "MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
                 "SET changeLog.dateUpdated = DATETIME() " +
-                "REMOVE changeSet.checkSum");
+                "REMOVE changeSet.checkSum"));
         database.commit();
     }
 
@@ -237,49 +239,49 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     private void updateChangeSet(ChangeSet changeSet, ChangeSet.ExecType execType, int nextSequenceValue) throws LiquibaseException {
-        database.executeCypher(
+        database.execute(new RawParameterizedSqlStatement(
                 "MATCH (changeLog:__LiquibaseChangeLog) " +
                         "SET changeLog.dateUpdated = DATETIME() " +
                         "WITH changeLog " +
-                        "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' })-[changeSetExecution:IN_CHANGELOG]->(changeLog) " +
+                        "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 })-[changeSetExecution:IN_CHANGELOG]->(changeLog) " +
                         "SET changeSetExecution.dateExecuted = DATETIME() " +
-                        "SET changeSetExecution.orderExecuted = %d " +
-                        "SET changeSet.checkSum = '%s' " +
-                        "SET changeSet.execType = '%s' " +
-                        "SET changeSet.deploymentId = '%s' ",
+                        "SET changeSetExecution.orderExecuted = $3 " +
+                        "SET changeSet.checkSum = $4 " +
+                        "SET changeSet.execType = $5 " +
+                        "SET changeSet.deploymentId = $6 ",
                 changeSet.getId(),
                 changeSet.getAuthor(),
                 changeSet.getFilePath(),
                 nextSequenceValue,
-                changeSet.generateCheckSum(),
+                changeSet.generateCheckSum().toString(),
                 execType.value,
                 getDeploymentId()
-        );
+        ));
     }
 
     private void insertChangeSet(ChangeSet changeSet, ChangeSet.ExecType execType, int nextSequenceValue) throws LiquibaseException {
-        database.executeCypher(
+        database.execute(new RawParameterizedSqlStatement(
                 "MATCH (changeLog:__LiquibaseChangeLog) " +
                         "SET changeLog.dateUpdated = DATETIME() " +
                         "CREATE (changeSet:__LiquibaseChangeSet {" +
-                        "   changeLog: '%s', " +
-                        "   id: '%s'," +
-                        "   author: '%s'," +
-                        "   checkSum: '%s'," +
-                        "   execType: '%s', " +
-                        "   description: '%s', " +
-                        "   comments: '%s', " +
-                        "   deploymentId: '%s', " +
-                        "   storedChangeLog: '%s', " +
-                        "   liquibaseVersion: '%s' " +
+                        "   changeLog: $0, " +
+                        "   id: $1," +
+                        "   author: $2," +
+                        "   checkSum: $3," +
+                        "   execType: $4, " +
+                        "   description: $5, " +
+                        "   comments: $6, " +
+                        "   deploymentId: $7, " +
+                        "   storedChangeLog: $8, " +
+                        "   liquibaseVersion: $9 " +
                         "})-[:IN_CHANGELOG {" +
                         "   dateExecuted: DATETIME(), " +
-                        "   orderExecuted: %d " +
+                        "   orderExecuted: $10 " +
                         "}]->(changeLog)",
                 changeSet.getFilePath(),
                 changeSet.getId(),
                 changeSet.getAuthor(),
-                changeSet.generateCheckSum(),
+                changeSet.generateCheckSum().toString(),
                 execType.value,
                 changeSet.getDescription(),
                 changeSet.getComments(),
@@ -287,19 +289,19 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 changeSet.getStoredFilePath(),
                 getLiquibaseVersion(),
                 nextSequenceValue
-        );
+        ));
     }
 
     private void reLinkChangeSet(ChangeSet changeSet) throws LiquibaseException {
-        database.executeCypher(
-                "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' })-[:IN_CHANGELOG]->(:__LiquibaseChangeLog) " +
+        database.execute(new RawParameterizedSqlStatement(
+                "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 })-[:IN_CHANGELOG]->(:__LiquibaseChangeLog) " +
                         "OPTIONAL MATCH (changeSet)<-[c:CONTEXTUALIZES]-(:__LiquibaseContext) DELETE c " +
                         "WITH changeSet " +
                         "OPTIONAL MATCH (changeSet)<-[l:LABELS]-(:__LiquibaseLabel) DELETE l ",
                 changeSet.getId(),
                 changeSet.getAuthor(),
                 changeSet.getFilePath()
-        );
+        ));
         linkContexts(changeSet);
         linkLabels(changeSet);
         linkTag(changeSet);
@@ -311,9 +313,9 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
             return;
         }
         for (String context : contexts.getContexts()) {
-            database.executeCypher(
-                    "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' }) " +
-                            "MERGE (context:__LiquibaseContext{ context: '%s'}) " +
+            database.execute(new RawParameterizedSqlStatement(
+                    "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 }) " +
+                            "MERGE (context:__LiquibaseContext{ context: $3 }) " +
                             "   ON CREATE SET context.dateCreated = DATETIME() " +
                             "   ON MATCH SET context.dateUpdated = DATETIME() " +
                             "CREATE (context)-[:CONTEXTUALIZES]->(changeSet)",
@@ -321,7 +323,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                     changeSet.getAuthor(),
                     changeSet.getFilePath(),
                     context
-            );
+            ));
         }
     }
 
@@ -331,9 +333,9 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
             return;
         }
         for (String label : labels.getLabels()) {
-            database.executeCypher(
-                    "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' }) " +
-                            "MERGE (label:__LiquibaseLabel{ label: '%s'}) " +
+            database.execute(new RawParameterizedSqlStatement(
+                    "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 }) " +
+                            "MERGE (label:__LiquibaseLabel{ label: $3 }) " +
                             "   ON CREATE SET label.dateCreated = DATETIME() " +
                             "   ON MATCH SET label.dateUpdated = DATETIME() " +
                             "CREATE (label)-[:LABELS]->(changeSet)",
@@ -341,7 +343,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                     changeSet.getAuthor(),
                     changeSet.getFilePath(),
                     label
-            );
+            ));
         }
     }
 
@@ -365,21 +367,21 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         }
 
         String tag = tagValues.iterator().next();
-        database.executeCypher(
-                "MERGE (tag:__LiquibaseTag {tag: '%s'}) " +
+        database.execute(new RawParameterizedSqlStatement(
+                "MERGE (tag:__LiquibaseTag {tag: $0}) " +
                         "   ON CREATE SET tag.dateCreated = DATETIME()" +
                         "   ON MATCH SET tag.dateUpdated = DATETIME() " +
                         "WITH tag " +
                         "OPTIONAL MATCH (tag)-[r:TAGS]->(:__LiquibaseChangeSet) DELETE r " +
                         "WITH tag " +
-                        "MATCH (changeSet:__LiquibaseChangeSet {id: '%s', author: '%s', changeLog: '%s' }) " +
+                        "MATCH (changeSet:__LiquibaseChangeSet {id: $1, author: $2, changeLog: $3 }) " +
                         "OPTIONAL MATCH (changeSet)<-[r:TAGS]-(:__LiquibaseTag) DELETE r " +
                         "CREATE (tag)-[:TAGS]->(changeSet)",
                 tag,
                 changeSet.getId(),
                 changeSet.getAuthor(),
                 changeSet.getFilePath()
-        );
+        ));
     }
 
     /**
@@ -395,8 +397,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         try {
             Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
             @SuppressWarnings("unchecked")
-            List<Map<String, Object>> changeSetIds = executor.queryForList(createStatement(
-                    "MERGE (tag:__LiquibaseTag {tag: '%s'}) " +
+            List<Map<String, Object>> changeSetIds = executor.queryForList(new RawParameterizedSqlStatement(
+                    "MERGE (tag:__LiquibaseTag {tag: $0}) " +
                             "   ON CREATE SET tag.dateCreated = DATETIME() " +
                             "   ON MATCH SET tag.dateUpdated = DATETIME() " +
                             "WITH tag " +
@@ -408,8 +410,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                             "ORDER BY execution.dateExecuted DESC, execution.orderExecuted DESC " +
                             "LIMIT 1 " +
                             "MERGE (tag)-[:TAGS]->(changeSet) " +
-                            "RETURN changeSet {.id, .author, .changeLog}",
-                    tagString),
+                            "RETURN changeSet {.id, .author, .changeLog}", tagString),
                     Map.class
             );
             database.commit();
@@ -456,9 +457,9 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     private void initializeHistory() throws DatabaseException {
         try {
-            database.executeCypher("MERGE (changeLog:__LiquibaseChangeLog) " +
+            database.execute(new RawSqlStatement("MERGE (changeLog:__LiquibaseChangeLog) " +
                     "   ON CREATE SET changeLog.dateCreated = DATETIME() " +
-                    "   ON MATCH SET changeLog.dateUpdated = DATETIME()");
+                    "   ON MATCH SET changeLog.dateUpdated = DATETIME()"));
             database.commit();
         } catch (LiquibaseException e) {
             database.rollback();
@@ -468,11 +469,11 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     private void removeHistory() throws DatabaseException {
         try {
-            database.executeCypher("MATCH (changeLog:__LiquibaseChangeLog) DETACH DELETE changeLog");
-            database.executeCypher("MATCH (changeSet:__LiquibaseChangeSet) DETACH DELETE changeSet");
-            database.executeCypher("MATCH (label:__LiquibaseLabel)         DETACH DELETE label");
-            database.executeCypher("MATCH (context:__LiquibaseContext)     DETACH DELETE context");
-            database.executeCypher("MATCH (tag:__LiquibaseTag)             DETACH DELETE tag");
+            database.execute(new RawSqlStatement("MATCH (changeLog:__LiquibaseChangeLog) DETACH DELETE changeLog"));
+            database.execute(new RawSqlStatement("MATCH (changeSet:__LiquibaseChangeSet) DETACH DELETE changeSet"));
+            database.execute(new RawSqlStatement("MATCH (label:__LiquibaseLabel)         DETACH DELETE label"));
+            database.execute(new RawSqlStatement("MATCH (context:__LiquibaseContext)     DETACH DELETE context"));
+            database.execute(new RawSqlStatement("MATCH (tag:__LiquibaseTag)             DETACH DELETE tag"));
             database.commit();
         } catch (LiquibaseException e) {
             database.rollback();
