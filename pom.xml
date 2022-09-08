@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>4.15.0.4-SNAPSHOT</version>
+    <version>0-SNAPSHOT</version>
 
-    <name>Liquibase Neo4j Database Extension</name>
-    <description>Adds additional Neo4j specific Liquibase functionality</description>
+    <name>Liquibase Extension: Neo4j Graph Database support</name>
+    <description>Add this Liquibase extension to your project to support Neo4j Graph Database</description>
     <url>https://github.com/liquibase/liquibase-neo4j</url>
 
     <organization>
-        <name>Liquibase.org</name>
-        <url>http://www.liquibase.org</url>
+        <name>Liquibase</name>
+        <url>http://www.liquibase.com</url>
     </organization>
 
     <licenses>
@@ -32,58 +33,74 @@
         <tag>HEAD</tag>
     </scm>
 
-	<developers>
-		<developer>
-			<id>nvoxland</id>
-			<name>Nathan Voxland</name>
-			<email>nathan.voxland@liquibase.org</email>
-			<url>http://nathan.voxland.net</url>
-			<organizationUrl>http://nathan.voxland.net/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-		<developer>
-			<id>fbiville</id>
-			<name>Florent Biville</name>
-			<email>florent.biville@neo4j.org</email>
-			<url>https://florent.biville.net</url>
-			<organizationUrl>https://neo4j.com/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>Europe/Paris</timezone>
-		</developer>
-	</developers>
-
+    <developers>
+        <developer>
+            <id>liquibase</id>
+            <name>Liquibase Community</name>
+            <email>community@liquibase.com</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-6</timezone>
+        </developer>
+        <developer>
+            <id>nvoxland</id>
+            <name>Nathan Voxland</name>
+            <email>nathan.voxland@liquibase.org</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-6</timezone>
+        </developer>
+    		<developer>
+            <id>fbiville</id>
+            <name>Florent Biville</name>
+            <email>florent.biville@neo4j.org</email>
+            <url>https://florent.biville.net</url>
+            <organizationUrl>https://neo4j.com/</organizationUrl>
+            <roles>
+    				    <role>architect</role>
+    				    <role>developer</role>
+            </roles>
+            <timezone>Europe/Paris</timezone>
+    		</developer>
+      </developers>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
-        <liquibase.version>4.15.0</liquibase.version>
-        <version.to.release>${project.version}</version.to.release>
-    </properties>
+	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <liquibase.version>0-SNAPSHOT</liquibase.version>
+        <liquibase.sdk.github.token>${env.GITHUB_TOKEN}</liquibase.sdk.github.token>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.neo4j.driver</groupId>
-                <artifactId>neo4j-java-driver</artifactId>
-                <version>4.4.9</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+        <sonar.organization>liquibase</sonar.organization>
+        <sonar.projectKey>${project.artifactId}</sonar.projectKey>
+        <sonar.projectName>${project.name}</sonar.projectName>
+        <sonar.projectDescription>${project.description}</sonar.projectDescription>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.scm.provider>git</sonar.scm.provider>
+        <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+
+        <jacoco.fileset.directory>target</jacoco.fileset.directory>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
             <version>${liquibase.version}</version>
-            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+            <version>4.13.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-test-harness</artifactId>
+            <version>1.0.3</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
@@ -91,31 +108,10 @@
             <version>4.0.5</version>
             <scope>runtime</scope>
         </dependency>
-
-
-        <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-            <version>2.2-groovy-4.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>neo4j</artifactId>
-            <version>1.17.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
-            <version>1.7.36</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>
@@ -123,22 +119,16 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
+                    <release>8</release>
                     <optimize>true</optimize>
                     <debug>true</debug>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <compilerArgs>
-                        <arg>-Xlint:all</arg>
-                    </compilerArgs>
-                    <showWarnings>true</showWarnings>
-                    <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
-
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
@@ -147,233 +137,79 @@
                     <reportFormat>plain</reportFormat>
                 </configuration>
             </plugin>
-
             <plugin>
-                <groupId>org.codehaus.gmavenplus</groupId>
-                <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.13.1</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.3.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <attach>true</attach>
+                    <author>false</author>
+                    <doctitle>Liquibase Neo4j Graph Database ${project.version} API</doctitle>
+                    <quiet>true</quiet>
+                    <doclint>none</doclint>
+                    <encoding>UTF-8</encoding>
+
+                    <includeDependencySources>false</includeDependencySources>
+                </configuration>
                 <executions>
                     <execution>
+                        <id>javadoc-default</id>
                         <goals>
-                            <goal>addTestSources</goal>
-                            <goal>compileTests</goal>
+                            <goal>jar</goal>
                         </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.1.0</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
-                        <id>enforce-java</id>
-                        <phase>compile</phase>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>enforce</goal>
+                            <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>1.8</version>
-                                </requireJavaVersion>
-                            </rules>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.3.0</version>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
                 <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Specification-Title>Liquibase</Specification-Title>
-                            <Specification-Version>${liquibase.version}</Specification-Version>
-                            <Specification-Vendor>Liquibase.org</Specification-Vendor>
-                            <Implementation-Title>${project.name}</Implementation-Title>
-                            <Implementation-Version>${project.version}</Implementation-Version>
-                            <Implementation-Vendor>Neo4j</Implementation-Vendor>
-                        </manifestEntries>
-                    </archive>
+                    <fileSets>
+                        <fileSet>
+                            <directory>${jacoco.fileset.directory}</directory>
+                            <includes>
+                                <include>**/jacoco.exec</include>
+                            </includes>
+                        </fileSet>
+                    </fileSets>
                 </configuration>
             </plugin>
 
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.13</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>sonatype-nexus-staging</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.1.2184</version>
             </plugin>
 
             <plugin>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>über-jar</id>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>full</shadedClassifierName>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>**/module-info.class</exclude>
-                                        <exclude>META-INF/MANIFEST.MF</exclude>
-                                        <exclude>empty.txt</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-                                    <addHeader>false</addHeader>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.liquibase.ext</groupId>
+                <artifactId>liquibase-sdk-maven-plugin</artifactId>
+                <version>0.10.17</version>
             </plugin>
         </plugins>
 
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-        </repository>
-        <snapshotRepository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-
-    <profiles>
-        <profile>
-            <!-- Required for deployment to Sonatype -->
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <author>false</author>
-                            <doctitle>Liquibase CDI ${project.version} API</doctitle>
-                            <quiet>true</quiet>
-                            <doclint>none</doclint>
-                            <encoding>UTF-8</encoding>
-                            <jarOutputDirectory>${project.basedir}/target</jarOutputDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>jar-javadoc</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>
-                            <gpgArguments>
-                                <!-- This is necessary for gpg to not try to use the pinentry programs -->
-                                <arg>--batch</arg>
-                                <arg>--no-tty</arg>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.jreleaser</groupId>
-                        <artifactId>jreleaser-maven-plugin</artifactId>
-                        <version>1.2.0</version>
-                        <configuration>
-                            <jreleaser>
-                                <project>
-                                    <name>liquibase-neo4j</name>
-                                    <version>${version.to.release}</version>
-                                </project>
-                                <release>
-                                    <github>
-                                        <update>
-                                            <enabled>true</enabled>
-                                            <sections>
-                                                <section>BODY</section>
-                                            </sections>
-                                        </update>
-                                        <skipTag>true</skipTag>
-                                        <tagName>liquibase-neo4j-{{projectVersion}}</tagName>
-                                        <releaseName>liquibase-neo4j-{{projectVersion}}</releaseName>
-                                        <changelog>
-                                            <preset>conventional-commits</preset>
-                                            <formatted>ALWAYS</formatted>
-                                            <hide>
-                                                <contributors>GitHub,dependabot,liquibot</contributors>
-                                            </hide>
-                                        </changelog>
-                                    </github>
-                                </release>
-                            </jreleaser>
-                        </configuration>
-                    </plugin>
-
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>
