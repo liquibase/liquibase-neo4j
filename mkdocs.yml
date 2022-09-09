@@ -1,0 +1,28 @@
+site_name: Neo4j Plugin for Liquibase
+nav:
+  - Home: index.md
+  - Download: download.md
+  - Quick start: quickstart.md
+  - Reference: reference.md
+repo_name: 'liquibase-neo4j'
+repo_url: 'https://github.com/liquibase/liquibase-neo4j'
+theme:
+  name: material
+plugins:
+  - markdownextradata: { }
+extra:
+  maven_central: https://repo1.maven.org/maven2
+  github_repo: https://github.com/liquibase/liquibase-neo4j
+  liquibase_version: 4.15.0
+  version: 4.15.0.3
+markdown_extensions:
+  - abbr
+  - admonition
+  - markdown_include.include:
+      base_path: docs
+  - pymdownx.highlight:
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: "#"
