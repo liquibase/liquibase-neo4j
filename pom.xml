@@ -346,6 +346,7 @@
                                 <project>
                                     <name>liquibase-neo4j</name>
                                     <version>${version.to.release}</version>
+                                    <copyright>Liquibase Inc.</copyright>
                                 </project>
                                 <release>
                                     <github>
