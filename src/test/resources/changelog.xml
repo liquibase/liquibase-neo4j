@@ -43,4 +43,19 @@
             <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_FIRST"/>
         </neo4j:mergeNodes>
     </changeSet>
+
+    <changeSet id="customer-import" author="asanturbano">
+        <loadData
+                file="data/some.csv"
+                separator=";"
+                tableName="CsvPerson">
+            <column name="first_name" header="name" type="string"/>
+            <column name="wisdom_index" header="age" type="numeric"/>
+            <column name="some_date" index="2" type="date"/>
+            <column name="_" header="ignored" type="skip" />
+            <column name="uuid" header="uuid" type="uuid" />
+            <column name="polite" header="is_polite" type="boolean" />
+            <column name="picture" header="blob" type="blob" />
+        </loadData>
+    </changeSet>
 </databaseChangeLog>

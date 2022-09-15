@@ -1,0 +1,5 @@
+name;age;some_date;ignored;uuid;is_polite;blob
+Florent;30.5;2022-12-25;ignored;8d1208fc-f401-496c-9cb8-483fef121234;false;DLxmEfVUC9CAmjiNyVphWw==
+Andrea;32;2020-07-12T22:23:24+02:00;ignored!;1bc59ddb-8d4d-41d0-9c9a-34e837de5678;true;NULL
+Nathan;34;2018-02-01T12:13:14;ignored!;123e4567-e89b-12d3-a456-426614174000;true;NULL
+Robert;36;22:23:24;ignored!;9986a49a-0cce-4982-b491-b8177fd0ef81;true;NULL

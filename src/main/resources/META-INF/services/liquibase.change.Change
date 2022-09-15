@@ -1,2 +1,3 @@
 liquibase.ext.neo4j.change.CypherChange
 liquibase.ext.neo4j.change.MergeNodesChange
+liquibase.ext.neo4j.change.LoadGraphDataChange
