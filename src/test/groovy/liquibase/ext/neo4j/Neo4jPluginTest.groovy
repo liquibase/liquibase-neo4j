@@ -9,7 +9,12 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 import java.nio.file.Files
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.logging.LogManager
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
@@ -126,27 +131,61 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
         Main.run(arguments)
 
         then:
-        def rows = queryRunner.getRows("""
-            MATCH (m)
-            WHERE NONE(label IN LABELS(m) WHERE label STARTS WITH "__Liquibase")
-            OPTIONAL MATCH (m)-[r]->()
-            WITH m, r
-            ORDER BY LABELS(m)[0] ASC, TYPE(r) ASC
-            WITH m AS node, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
-            RETURN LABELS(node) AS labels, PROPERTIES(node) AS properties, outgoing_relationships
-        """)
+        def rows = fixUpProperties(queryRunner.getRows("""
+            MATCH (n)
+            WHERE none(label IN labels(n) WHERE label STARTS WITH "__Liquibase")
+            UNWIND labels(n) AS label 
+            WITH n, label
+            ORDER BY label ASC
+            WITH n, collect(label) AS labels
+            UNWIND keys(n) AS key
+            WITH n, labels, {k: key, v: n[key]} AS property
+            ORDER BY labels ASC, key ASC, n[key] ASC
+            WITH n, labels, collect(property) AS properties
+            OPTIONAL MATCH (n)-[r]->()
+            WITH labels, properties, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
+            RETURN labels, properties, outgoing_relationships
+        """))
 
         def hasExtraNodeFromConditionalChangeSet = definesExtraNode(queryRunner)
-        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 5 : 4)
+        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 9 : 8)
         rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
-        rows[1] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
-        rows[2] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
-        rows[3] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
+        rows[1] == [labels       : ["CsvPerson"], properties: [
+                "first_name"  : "Andrea",
+                "polite"      : true,
+                "some_date"   : ZonedDateTime.of(LocalDateTime.of(2020, 7, 12, 22, 23, 24), ZoneOffset.ofHours(2)),
+                "uuid"        : "1bc59ddb-8d4d-41d0-9c9a-34e837de5678",
+                "wisdom_index": 32L,
+        ], outgoing_relationships: []]
+        rows[2] == [labels       : ["CsvPerson"], properties: [
+                "first_name"  : "Florent",
+                "picture"     : Base64.getDecoder().decode("DLxmEfVUC9CAmjiNyVphWw=="),
+                "polite"      : false,
+                "some_date"   : LocalDate.of(2022, 12, 25),
+                "uuid"        : "8d1208fc-f401-496c-9cb8-483fef121234",
+                "wisdom_index": 30.5D,
+        ], outgoing_relationships: []]
+        rows[3] == [labels       : ["CsvPerson"], properties: [
+                "first_name"  : "Nathan",
+                "polite"      : true,
+                "some_date"   : LocalDateTime.of(2018, 2, 1, 12, 13, 14),
+                "uuid"        : "123e4567-e89b-12d3-a456-426614174000",
+                "wisdom_index": 34L,
+        ], outgoing_relationships: []]
+        rows[4] == [labels       : ["CsvPerson"], properties: [
+                "first_name"  : "Robert",
+                "polite"      : true,
+                "some_date"   : LocalTime.of(22, 23, 24),
+                "uuid"        : "9986a49a-0cce-4982-b491-b8177fd0ef81",
+                "wisdom_index": 36L,
+        ], outgoing_relationships: []]
+        rows[5] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
+        rows[6] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
+        rows[7] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
         if (hasExtraNodeFromConditionalChangeSet) {
-            rows[4] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
+            rows[8] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
         }
     }
-
 
     private static PrintStream mute() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
@@ -160,5 +199,17 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
         RETURN versions[0] AS version, edition = "enterprise" AS isEnterprise
         """)
         return results["version"].startsWith("4.4") && results["isEnterprise"] == true
+    }
+
+    // TODO: gather all other keys automatically
+    private static List<Map<String, Object>> fixUpProperties(List<Map<String, Object>> rows) {
+        return rows.collect(row -> {
+            def props = row["properties"].collectEntries { [it.k, it.v] }
+            return [
+                    labels                : row["labels"],
+                    outgoing_relationships: row["outgoing_relationships"],
+                    properties            : props
+            ]
+        })
     }
 }
