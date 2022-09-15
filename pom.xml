@@ -363,7 +363,10 @@
                                             <preset>conventional-commits</preset>
                                             <formatted>ALWAYS</formatted>
                                             <hide>
-                                                <contributors>GitHub,dependabot,liquibot</contributors>
+                                                <contributors>
+                                                    <contributor>GitHub</contributor>
+                                                    <contributor>.*bot</contributor>
+                                                </contributors>
                                             </hide>
                                         </changelog>
                                     </github>
