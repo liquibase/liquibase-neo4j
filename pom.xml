@@ -365,7 +365,7 @@
                                             <hide>
                                                 <contributors>
                                                     <contributor>GitHub</contributor>
-                                                    <contributor>.*bot</contributor>
+                                                    <contributor>bot</contributor>
                                                 </contributors>
                                             </hide>
                                         </changelog>
