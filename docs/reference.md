@@ -163,16 +163,7 @@ and **no** comment directive.
 The extension supports change log [file](https://docs.liquibase.com/concepts/advanced/include.html)
 and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion.
 
-### Run on change, run always
-
-Change set [runOnChange](https://docs.liquibase.com/concepts/advanced/runonchange.html), and runAlways attributes are
-fully supported.
-
-### Logical file path
-
-The extension supports change set [logical file path](https://docs.liquibase.com/concepts/advanced/logicalfilepath.html).
-
-### SQL and rollback changes
+### Cypher and rollback changes
 
 The built-in [SQL](https://docs.liquibase.com/change-types/community/sql.html)
 and [rollback](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html) changes are supported.
