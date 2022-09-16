@@ -362,7 +362,21 @@
                                         <changelog>
                                             <preset>conventional-commits</preset>
                                             <formatted>ALWAYS</formatted>
+                                            <labelers>
+                                                <labeler>
+                                                    <label>liquibot</label>
+                                                    <title>regex:(Version Bumped to.*|.*next release.*)</title>
+                                                </labeler>
+                                            </labelers>
+                                            <categories>
+                                                <category>
+                                                    <title>ignored</title>
+                                                    <key>liquibot</key>
+                                                    <labels>liquibot</labels>
+                                                </category>
+                                            </categories>
                                             <hide>
+                                                <categories>liquibot</categories>
                                                 <contributors>
                                                     <contributor>GitHub</contributor>
                                                     <contributor>bot</contributor>
