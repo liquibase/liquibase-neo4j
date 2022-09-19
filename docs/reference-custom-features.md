@@ -23,7 +23,7 @@ and **no** comment directive.
 The extension supports change log [file](https://docs.liquibase.com/concepts/advanced/include.html)
 and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion.
 
-### Cypher and rollback changes
+## Cypher and rollback changes
 
 The built-in [SQL](https://docs.liquibase.com/change-types/community/sql.html)
 and [rollback](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html) changes are supported.
@@ -92,7 +92,7 @@ All boolean operators are supported.
 
 ## Graph refactorings
 
-#### Node Merge
+### Node Merge
 
 ```xml
 
