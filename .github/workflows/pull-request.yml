@@ -6,6 +6,10 @@ on:
       - opened
       - reopened
       - synchronize
+  push:
+    paths-ignore:
+      - 'mkdocs.yml'
+      - 'docs/**'
 
 jobs:
   build:
