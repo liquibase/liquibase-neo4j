@@ -8,4 +8,4 @@ Follow the [guide](https://www.liquigraph.org/migration-to-liquibase/)!
 
 ## Documentation
 
-Please proceed to https://liquibase.github.io/liquibase-neo4j.
+Please proceed to https://neo4j.com/labs/liquibase/docs.
