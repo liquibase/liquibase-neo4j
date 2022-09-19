@@ -8,6 +8,9 @@ on:
       - synchronize
   push:
     paths-ignore:
+      - 'documentation.sh'
+      - 'documentation.Dockerfile'
+      - 'documentation.dockerignore'
       - 'mkdocs.yml'
       - 'docs/**'
 
