@@ -6,6 +6,8 @@ on:
     branches:
       - main
     paths:
+      - 'documentation.Dockerfile'
+      - 'documentation.dockerignore'
       - 'mkdocs.yml'
       - 'docs/**'
 
