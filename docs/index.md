@@ -26,7 +26,10 @@ The scheme is defined as follows: `major.minor.patch(.extra)?`:
 - `major`: major version of Liquibase core that the extension was released with
 - `minor`: minor version of Liquibase core
 - `patch`: patch version of Liquibase core
-- `extra`: optional subsequent release of the extension, supporting Liquibase core at version `Major.minor.patch`
+- `extra`: optional subsequent release of the extension, supporting Liquibase core at version `Major.minor.patch` (starts at 1)
+
+When Liquibase core 4.15.0 is published, `liquibase-neo4j` 4.15.0 is published as well, shortly after.
+Subsequent extra releases will be 4.15.0.1, 4.15.0.2, ...
 
 The extension is guaranteed to work with the corresponding Liquibase core version.
 It may also work with previous and subsequent Liquibase core releases but that is not guaranteed.
