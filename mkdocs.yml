@@ -3,7 +3,10 @@ nav:
   - Home: index.md
   - Download: download.md
   - Quick start: quickstart.md
-  - Reference: reference.md
+  - 'Reference':
+    - 'Introduction': reference-intro.md
+    - 'Connection': reference-connection.md
+    - 'Custom features': reference-custom-features.md
 repo_name: 'liquibase-neo4j'
 repo_url: 'https://github.com/liquibase/liquibase-neo4j'
 theme:
