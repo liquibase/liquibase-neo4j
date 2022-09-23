@@ -1,0 +1,15 @@
+name: Attach Artifact to Release
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  attach-artifact-to-release:
+    uses: liquibase/build-logic/.github/workflows/extension-attach-artifact-release.yml@main
+    secrets:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      GPG_SECRET: ${{ secrets.GPG_SECRET }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
