@@ -11,8 +11,7 @@ on:
 jobs:
   build-test:
     uses: liquibase/build-logic/.github/workflows/extension-test.yml@main
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    secrets: inherit
 
   integration-test:
     needs: build-test
