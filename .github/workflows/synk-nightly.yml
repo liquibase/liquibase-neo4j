@@ -10,5 +10,5 @@ on:
 
 jobs:
   security-scan:
-    uses: liquibase/build-logic/.github/workflows/synk-nightly.yml@main
+    uses: liquibase/build-logic/.github/workflows/synk-nightly.yml@v0.2.0
     secrets: inherit
