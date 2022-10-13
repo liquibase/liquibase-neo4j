@@ -83,7 +83,7 @@ class Neo4jPluginTest extends Specification {
                 "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
                 "--username", "neo4j",
                 "--password", PASSWORD,
-                "--changeLogFile", "classpath:/changelog.xml",
+                "--changeLogFile", "/changelog.xml",
                 "updateSQL"
         ].toArray()
 
@@ -123,7 +123,7 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
                 "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
                 "--username", "neo4j",
                 "--password", PASSWORD,
-                "--changeLogFile", "classpath:/changelog.xml",
+                "--changeLogFile", "/changelog.xml",
                 "update"
         ].toArray()
 
