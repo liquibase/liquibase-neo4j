@@ -19,15 +19,15 @@ class DockerNeo4j {
         return container.withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
     }
 
-    static String neo4jVersion() {
-        return System.getenv().getOrDefault("NEO4J_VERSION", "4.4")
+    static String dockerTag() {
+        return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
     }
 
     static boolean enterpriseEdition() {
         return parseBoolean(System.getenv().getOrDefault("ENTERPRISE", "false"))
     }
 
-    private static String dockerTag() {
-        return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
+    private static String neo4jVersion() {
+        return System.getenv().getOrDefault("NEO4J_VERSION", "4.4")
     }
 }

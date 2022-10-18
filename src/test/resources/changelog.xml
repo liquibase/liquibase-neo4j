@@ -17,7 +17,7 @@
             </and>
         </preConditions>
         <comment>Creates a forgettable movie</comment>
-        <neo4j:cypher>MERGE (:Movie {title: 'My Life'})</neo4j:cypher>
+        <neo4j:cypher>MERGE (:Movie {title: 'My Life', genre: 'Horror'})</neo4j:cypher>
         <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
     </changeSet>
 
@@ -35,7 +35,7 @@
     </changeSet>
 
     <changeSet id="my-movie-double-init" author="florent">
-        <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life', genre: 'Horror'})</neo4j:cypher>
     </changeSet>
 
     <changeSet id="my-movie-double-init-fix" author="florent">
@@ -57,5 +57,13 @@
             <column name="polite" header="is_polite" type="boolean" />
             <column name="picture" header="blob" type="blob" />
         </loadData>
+    </changeSet>
+
+    <changeSet id="genre-extraction" author="marouane">
+        <neo4j:extractProperty property="genre" fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC" nodesNamed="m">
+            <neo4j:toNodes withLabel="Genre" withProperty="genre">
+                <neo4j:linkedFromSource withType="HAS_GENRE" withDirection="OUTGOING" />
+            </neo4j:toNodes>
+        </neo4j:extractProperty>
     </changeSet>
 </databaseChangeLog>

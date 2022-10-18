@@ -10,96 +10,40 @@ import liquibase.change.core.TagDatabaseChange
 import liquibase.changelog.ChangeSet
 import liquibase.changelog.DatabaseChangeLog
 import liquibase.changelog.RanChangeSet
-import liquibase.database.Database
-import liquibase.database.DatabaseFactory
 import liquibase.exception.DatabaseException
-import liquibase.ext.neo4j.CypherRunner
-import liquibase.ext.neo4j.DockerNeo4j
-import org.neo4j.driver.AuthTokens
-import org.neo4j.driver.GraphDatabase
+import liquibase.ext.neo4j.Neo4jContainerSpec
 import org.neo4j.driver.exceptions.ClientException
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
 import spock.lang.Requires
-import spock.lang.Shared
-import spock.lang.Specification
 
 import java.time.ZonedDateTime
-import java.util.logging.LogManager
 
 import static java.time.temporal.ChronoUnit.MINUTES
 import static java.util.Collections.singletonList
-import static liquibase.changelog.ChangeSet.ExecType.EXECUTED
-import static liquibase.changelog.ChangeSet.ExecType.MARK_RAN
-import static liquibase.changelog.ChangeSet.ExecType.RERAN
-import static liquibase.changelog.ChangeSet.RunStatus.ALREADY_RAN
-import static liquibase.changelog.ChangeSet.RunStatus.INVALID_MD5SUM
-import static liquibase.changelog.ChangeSet.RunStatus.NOT_RAN
-import static liquibase.changelog.ChangeSet.RunStatus.RUN_AGAIN
+import static liquibase.changelog.ChangeSet.ExecType.*
+import static liquibase.changelog.ChangeSet.RunStatus.*
 import static liquibase.ext.neo4j.DateUtils.date
 import static liquibase.ext.neo4j.DateUtils.nowMinus
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
-import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 import static liquibase.ext.neo4j.MapUtils.containsAll
 import static liquibase.ext.neo4j.ReflectionUtils.getField
 import static liquibase.ext.neo4j.ReflectionUtils.setField
-import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_SET_CONSTRAINT_NAME
-import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT_CONSTRAINT_NAME
-import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
-import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
-import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceIT.TIMEZONE
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.*
 
-class Neo4jChangelogHistoryServiceIT extends Specification {
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    private static final String PASSWORD = "s3cr3t"
-
-    @Shared
-    GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE)
-
-    @Shared
-    CypherRunner queryRunner
-
-    Database database
+class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
     def historyService = new Neo4jChangelogHistoryService()
 
-    def setupSpec() {
-        neo4jContainer.start()
-        queryRunner = new CypherRunner(
-                GraphDatabase.driver(neo4jContainer.getBoltUrl(),
-                        AuthTokens.basic("neo4j", PASSWORD)),
-                neo4jVersion())
-    }
-
-    def cleanupSpec() {
-        queryRunner.close()
-        neo4jContainer.stop()
-    }
-
     def setup() {
-        database = DatabaseFactory.instance.openDatabase(
-                "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
-                "neo4j",
-                PASSWORD,
-                null,
-                null
-        )
         historyService.setDatabase(database)
     }
 
     def cleanup() {
-        queryRunner.run("MATCH (n) DETACH DELETE n")
         queryRunner.dropUniqueConstraint(TAG_CONSTRAINT_NAME, "__LiquibaseTag", "tag")
         queryRunner.dropUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label")
         queryRunner.dropUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context")
         if (enterpriseEdition()) {
             queryRunner.dropNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog")
         }
-        database.close()
     }
 
     def "creates constraints and changelog node upon initialization"() {
@@ -214,10 +158,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         }
         setField("ranChangeSets", historyService, singletonList(ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4))))
         historyService.generateDeploymentId()
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
         manuallyAssignTag("guten-tag", "older")
         manuallyUpsertDisconnectedContext("discon-text")
         manuallyUpsertDisconnectedLabel("lone-label")
@@ -274,10 +216,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "sorts ran change sets by ascending execution date first"() {
         given:
         def checkSum = computeCheckSum("MATCH (n) SET n:SomeLabel\nMATCH (n) SET n:SomeLabel2")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", checkSum, date(1986, 3, 4)),
-                ranChangeSet("newer", "some author", checkSum, date(2020, 3, 4)),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", checkSum, date(1986, 3, 4)),
+                ranChangeSet("newer", "some author", checkSum, date(2020, 3, 4)),)
 
         when:
         def result = historyService.getRanChangeSets()
@@ -289,10 +229,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "sorts ran change sets by ascending order second (when dates are equal)"() {
         given:
         def checkSum = computeCheckSum("MATCH (n) SET n:SomeLabel\nMATCH (n) SET n:SomeLabel2")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("ordered first", "some author", checkSum, date(1986, 3, 4)),
-                ranChangeSet("ordered second", "some author", checkSum, date(1986, 3, 4)),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("ordered first", "some author", checkSum, date(1986, 3, 4)),
+                ranChangeSet("ordered second", "some author", checkSum, date(1986, 3, 4)),)
 
         when:
         def result = historyService.getRanChangeSets()
@@ -366,9 +304,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "creates tag on single change set"() {
         given:
         def checkSum = computeCheckSum("MATCH (n) SET n:SomeLabel")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some ID", "some author", checkSum, date(2019, 12, 25)),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some ID", "some author", checkSum, date(2019, 12, 25)),)
 
         when:
         historyService.tag("guten-tag")
@@ -379,12 +315,10 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                   (changeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog)
             RETURN changeSet {.id, .author, .checkSum, tagContents: tag.tag, tagDateCreated: tag.dateCreated, tagDateUpdated: tag.dateUpdated, changeLogDateUpdated: changeLog.dateUpdated}
         """)["changeSet"] as Map<String, Object>
-        containsAll(row, [
-                id         : "some ID",
-                author     : "some author",
-                checkSum   : checkSum.toString(),
-                tagContents: "guten-tag"
-        ])
+        containsAll(row, [id         : "some ID",
+                          author     : "some author",
+                          checkSum   : checkSum.toString(),
+                          tagContents: "guten-tag"])
         date(row["tagDateCreated"] as ZonedDateTime) > nowMinus(1, MINUTES)
         row["tagDateUpdated"] == null
         date(row["changeLogDateUpdated"] as ZonedDateTime) > nowMinus(1, MINUTES)
@@ -412,10 +346,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         given:
         def checkSum1 = computeCheckSum("MATCH (n) SET n:SomeLabel1")
         def checkSum2 = computeCheckSum("MATCH (n) SET n:SomeLabel2")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some ID 1", "some author", checkSum1, date(2020, 12, 25)),
-                ranChangeSet("some ID 2", "some author", checkSum2, date(2019, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some ID 1", "some author", checkSum1, date(2020, 12, 25)),
+                ranChangeSet("some ID 2", "some author", checkSum2, date(2019, 12, 25)))
 
         when:
         historyService.tag("guten-tag")
@@ -425,12 +357,10 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
             MATCH (tag:__LiquibaseTag {tag: 'guten-tag'})-[:TAGS]->(changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(:__LiquibaseChangeLog)
             RETURN changeSet {.id, .author, .checkSum, tagContents: tag.tag, tagCreatedDate: tag.dateCreated, tagUpdatedDate: tag.dateUpdated}
         """)["changeSet"] as Map<String, Object>
-        containsAll(row, [
-                id         : "some ID 1",
-                author     : "some author",
-                checkSum   : checkSum1.toString(),
-                tagContents: "guten-tag"
-        ])
+        containsAll(row, [id         : "some ID 1",
+                          author     : "some author",
+                          checkSum   : checkSum1.toString(),
+                          tagContents: "guten-tag"])
         date(row["tagCreatedDate"] as ZonedDateTime) > nowMinus(1, MINUTES)
         row["tagUpdatedDate"] == null
     }
@@ -442,8 +372,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         manuallyCreateOrderedChangesets( // third change set wins, as the order is higher
                 ranChangeSet("some ID 1", "some author", computeCheckSum("MATCH (n) SET n:SomeLabel1"), sameDate),
                 ranChangeSet("some ID 2", "some author", computeCheckSum("MATCH (n) SET n:SomeLabel2"), sameDate),
-                ranChangeSet("some ID 3", "some author", checkSum3, sameDate),
-        )
+                ranChangeSet("some ID 3", "some author", checkSum3, sameDate),)
 
         when:
         historyService.tag("guten-tag")
@@ -453,12 +382,10 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
             MATCH (tag:__LiquibaseTag {tag: 'guten-tag'})-[:TAGS]->(changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(:__LiquibaseChangeLog)
             RETURN changeSet {.id, .author, .checkSum, tagContents: tag.tag, tagCreatedDate: tag.dateCreated, tagUpdatedDate: tag.dateUpdated}
         """)["changeSet"] as Map<String, Object>
-        containsAll(row, [
-                id         : "some ID 3",
-                author     : "some author",
-                checkSum   : checkSum3.toString(),
-                tagContents: "guten-tag"
-        ])
+        containsAll(row, [id         : "some ID 3",
+                          author     : "some author",
+                          checkSum   : checkSum3.toString(),
+                          tagContents: "guten-tag"])
     }
 
     def "updates in-memory change sets with new tag"() {
@@ -532,10 +459,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "links existing tag to the newest change set"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
         manuallyAssignTag("guten-tag", "older", 2019, 12, 25)
 
         when:
@@ -553,10 +478,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "links disconnected tag to the newest change set"() {
         given:
         manuallyUpsertDisconnectedTag("guten-tag", 2015, 12, 25)
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
 
         when:
         historyService.tag("guten-tag")
@@ -572,10 +495,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "allows multiple tags per change set"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
         manuallyAssignTag("gluten-day", "newer", 2019, 12, 25)
         manuallyAssignTag("glutton-bay", "older", 2015, 12, 25)
 
@@ -603,10 +524,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "tags a new change set without affecting previous change sets tagged with another tag value"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
+                ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
         manuallyAssignTag("gluten-free", "older", 2019, 12, 25)
 
         when:
@@ -639,9 +558,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "finds connected tags"() {
         when:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),)
         manuallyAssignTag("guten-tag", "change-set", 2019, 12, 25)
 
         then:
@@ -652,9 +569,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "finds any tags"() {
         when:
         manuallyUpsertDisconnectedTag("bonjour", 2018, 12, 25)
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),)
         manuallyAssignTag("guten-tag", "change-set", 2019, 12, 25)
 
         then:
@@ -734,9 +649,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "replaces check sum of matching change set"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25), "some/changeSet/path"),
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("change-set", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25), "some/changeSet/path"),)
         def updatedChangeSet = changeSet("change-set", "some author", "some/changeSet/path", change("MATCH (n) DETACH DELETE n"))
         def nonMatchingChangeSet = changeSet("change-set-2", "some author", "some/changeSet/path", change("MATCH (n) SET n:SomeLabel"))
 
@@ -783,8 +696,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         historyService.getRunStatus(nonMatchingChangeSet) == NOT_RAN
         historyService.getRunStatus(matchingNullCheckSumChangeSet) == ALREADY_RAN
         queryRunner.getSingleRow( // ran change sets with null check sums are always updated
-                """MATCH (s:__LiquibaseChangeSet {id: "${storedChangeSetWithNullCheckSum.id}"}) RETURN s.checkSum AS checkSum"""
-        )["checkSum"] == matchingNullCheckSumChangeSet.generateCheckSum().toString()
+                """MATCH (s:__LiquibaseChangeSet {id: "${storedChangeSetWithNullCheckSum.id}"}) RETURN s.checkSum AS checkSum""")["checkSum"] == matchingNullCheckSumChangeSet.generateCheckSum().toString()
         historyService.getRunStatus(matchingChangeSet) == ALREADY_RAN
         historyService.getRunStatus(matchingRunOnChangeChangeSetWithDifferentCheckSum) == RUN_AGAIN
         historyService.getRunStatus(matchingImmutableChangeSetWithDifferentCheckSum) == INVALID_MD5SUM
@@ -792,10 +704,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "computes next sequence value"() {
         given:
-        def changeSets = [
-                ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4)),
-                ranChangeSet("other ID with no checksum", "some author", null, date(1986, 3, 4))
-        ]
+        def changeSets = [ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4)),
+                          ranChangeSet("other ID with no checksum", "some author", null, date(1986, 3, 4))]
         manuallyCreateOrderedChangesets(*changeSets)
         queryRunner.run("""MATCH (c:__LiquibaseChangeSet {id: "some ID"}) DETACH DELETE c""") // create sequence gaps
 
@@ -819,10 +729,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "clears all checksums"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("other ID with no checksum", "some author", null, date(1986, 3, 4)),
-                ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("other ID with no checksum", "some author", null, date(1986, 3, 4)),
+                ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4)))
 
         when:
         historyService.clearAllCheckSums()
@@ -836,11 +744,9 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "upgrades null checksums in context, resets state"() {
         given:
         def unchangedCheckSum = computeCheckSum("MATCH (n) RETURN n")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some ID 1", "some author", null, date(1986, 3, 4), "some/path"),
+        manuallyCreateOrderedChangesets(ranChangeSet("some ID 1", "some author", null, date(1986, 3, 4), "some/path"),
                 ranChangeSet("some ID 2", "some author", unchangedCheckSum, date(1986, 3, 4), "some/path"),
-                ranChangeSet("some ID 3", "some author", null, date(1986, 3, 4), "some/path")
-        )
+                ranChangeSet("some ID 3", "some author", null, date(1986, 3, 4), "some/path"))
         manuallyAssignContext("context1", "some ID 1")
         manuallyAssignContext("context1", "some ID 2")
         manuallyAssignContext("context2", "some ID 3")
@@ -866,10 +772,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "removes change set from history"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some ID 1", "some author", computeCheckSum("MATCH (n) SET n:FooBar"), date(1986, 3, 4), "some/path"),
-                ranChangeSet("some ID 2", "some author", computeCheckSum("MATCH (n) SET n:FooFighters"), date(1986, 3, 4), "some/path")
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some ID 1", "some author", computeCheckSum("MATCH (n) SET n:FooBar"), date(1986, 3, 4), "some/path"),
+                ranChangeSet("some ID 2", "some author", computeCheckSum("MATCH (n) SET n:FooFighters"), date(1986, 3, 4), "some/path"))
 
         when:
         historyService.removeFromHistory(changeSet("some ID 1", "some author", "some/path"))
@@ -898,8 +802,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "does not save change set when execution failed or skipped"() {
         when:
-        historyService.setExecType(changeSet("some-id", "some-author", "some/path"), ChangeSet.ExecType.FAILED)
-        historyService.setExecType(changeSet("some-id", "some-author", "some/path"), ChangeSet.ExecType.SKIPPED)
+        historyService.setExecType(changeSet("some-id", "some-author", "some/path"), FAILED)
+        historyService.setExecType(changeSet("some-id", "some-author", "some/path"), SKIPPED)
 
         then:
         queryRunner.getSingleRow("MATCH (c:__LiquibaseChangeSet) RETURN COUNT(c) AS count")["count"] == 0L
@@ -907,10 +811,8 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "updates change set when re-ran, including execution order"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
-                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
+                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4)))
         def updatedChangeSet = changeSet("some-id-1", "some-author", "some/path", true, null, new RawSQLChange("MATCH (n) DETACH DELETE n"))
 
         when:
@@ -924,7 +826,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         row["id"] == "some-id-1"
         row["author"] == "some-author"
         CheckSum.parse((String) row["checkSum"]) == updatedChangeSet.generateCheckSum()
-        ChangeSet.ExecType.valueOf((String) row["execType"]) == RERAN
+        valueOf((String) row["execType"]) == RERAN
         date(row["changeLogDateUpdated"] as ZonedDateTime) > nowMinus(1, MINUTES)
         date(row["dateExecuted"] as ZonedDateTime) > nowMinus(1, MINUTES)
         row["orderExecuted"] == 2L
@@ -934,8 +836,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         given:
         queryRunner.run("CREATE (:__LiquibaseChangeLog)")
         historyService.generateDeploymentId()
-        def newChangeSet = new ChangeSet(
-                "some-id",
+        def newChangeSet = new ChangeSet("some-id",
                 "some-author",
                 false,
                 false,
@@ -943,8 +844,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 null,
-                null
-        )
+                null)
         newChangeSet.setStoredFilePath("some/stored/path")
         newChangeSet.setComments("comments")
         newChangeSet.addChange(new RawSQLChange("MATCH (n) DETACH DELETE n"))
@@ -974,7 +874,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
         row["id"] == "some-id"
         row["author"] == "some-author"
         CheckSum.parse((String) row["checkSum"]) == newChangeSet.generateCheckSum()
-        ChangeSet.ExecType.valueOf((String) row["execType"]) == MARK_RAN
+        valueOf((String) row["execType"]) == MARK_RAN
         row["description"] != ""
         row["comments"] == "comments"
         row["deploymentId"] != ""
@@ -988,8 +888,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "persists change set with contexts"() {
         given:
         queryRunner.run("CREATE (:__LiquibaseChangeLog)")
-        def newChangeSet = new ChangeSet(
-                "some-id",
+        def newChangeSet = new ChangeSet("some-id",
                 "some-author",
                 false,
                 false,
@@ -997,8 +896,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 "context1,context2",
                 null,
                 null,
-                null
-        )
+                null)
 
         when:
         historyService.setExecType(newChangeSet, EXECUTED)
@@ -1016,15 +914,12 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "updates change set when re-ran, resets contexts"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
-                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
+                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4)))
         manuallyAssignContext("initial-context-1", "some-id-1")
         manuallyAssignContext("initial-context-2", "some-id-1")
 
-        def updatedChangeSet = new ChangeSet(
-                "some-id-1",
+        def updatedChangeSet = new ChangeSet("some-id-1",
                 "some-author",
                 false,
                 false,
@@ -1032,8 +927,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 "new-context-1,new-context-2",
                 null,
                 null,
-                null
-        )
+                null)
 
         when:
         historyService.setExecType(updatedChangeSet, RERAN)
@@ -1052,8 +946,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "persists change set with labels"() {
         given:
         queryRunner.run("CREATE (:__LiquibaseChangeLog)")
-        def newChangeSet = new ChangeSet(
-                "some-id",
+        def newChangeSet = new ChangeSet("some-id",
                 "some-author",
                 false,
                 false,
@@ -1061,8 +954,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 null,
-                null
-        )
+                null)
         newChangeSet.setLabels(new Labels("label1", "label2"))
 
         when:
@@ -1081,15 +973,12 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "updates change set when re-ran, resets labels"() {
         given:
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
-                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4))
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4), "some/path"),
+                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4)))
         manuallyAssignLabel("initial-label-1", "some-id-1")
         manuallyAssignLabel("initial-label-2", "some-id-1")
 
-        def updatedChangeSet = new ChangeSet(
-                "some-id-1",
+        def updatedChangeSet = new ChangeSet("some-id-1",
                 "some-author",
                 false,
                 false,
@@ -1097,8 +986,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 null,
-                null
-        )
+                null)
         updatedChangeSet.setLabels(new Labels("new-label-1", "new-label-2"))
 
         when:
@@ -1117,8 +1005,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     def "rejects change sets with several tag changes (XML schema only allows one)"() {
         given:
-        def newChangeSet = new ChangeSet(
-                "some-id",
+        def newChangeSet = new ChangeSet("some-id",
                 "some-author",
                 false,
                 false,
@@ -1126,8 +1013,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 null,
-                null
-        )
+                null)
         newChangeSet.addChange(tagChange("tag-1"))
         newChangeSet.addChange(tagChange("tag-2"))
 
@@ -1143,13 +1029,10 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     def "updates change set when re-ran, resets tag connections to any change sets, and change set connections to any tag"() {
         given:
         manuallyUpsertDisconnectedTag("unrelated-tag")
-        manuallyCreateOrderedChangesets(
-                ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4)),
-                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4), "some/path")
-        )
+        manuallyCreateOrderedChangesets(ranChangeSet("some-id-1", "some-author", CheckSum.compute("MATCH (n) SET n.foo = true"), date(2020, 1, 4)),
+                ranChangeSet("some-id-2", "some-author", CheckSum.compute("MATCH (n) SET n.foo = false"), date(2020, 1, 4), "some/path"))
         manuallyAssignTag("tag", "some-id-1", 1986, 3, 4)
-        def updatedChangeSet = new ChangeSet(
-                "some-id-2",
+        def updatedChangeSet = new ChangeSet("some-id-2",
                 "some-author",
                 false,
                 false,
@@ -1157,8 +1040,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 null,
-                null
-        )
+                null)
         updatedChangeSet.addChange(tagChange("tag"))
 
         when:
@@ -1192,13 +1074,12 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
 
     private manuallyCreateOrderedChangesets(RanChangeSet... changeSets) {
         def queries =
-                ["CREATE (changeLog:__LiquibaseChangeLog)"] + (
-                        changeSets.toList()
-                                .withIndex()
-                                .collect { RanChangeSet changeSet, Integer index ->
-                                    def checkSumLine = changeSet.lastCheckSum == null ? "" : """
+                ["CREATE (changeLog:__LiquibaseChangeLog)"] + (changeSets.toList()
+                        .withIndex()
+                        .collect { RanChangeSet changeSet, Integer index ->
+                            def checkSumLine = changeSet.lastCheckSum == null ? "" : """
                                         |    checkSum: "${changeSet.lastCheckSum.toString()}","""
-                                    return """
+                            return """
                                         | CREATE (changeSet_$index:__LiquibaseChangeSet {
                                         |    changeLog: "${changeSet.changeLog}",
                                         |    storedChangeLog: "${changeSet.storedChangeLog}",
@@ -1215,7 +1096,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                                         |    orderExecuted: ${index}
                                         | }]-(changeSet_$index)
                                     """.stripMargin().trim()
-                                })
+                        })
         queryRunner.run(queries.join("\n"))
     }
 
@@ -1290,8 +1171,7 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
     }
 
     private static RanChangeSet ranChangeSet(String id, String author, CheckSum checkSum = null, Date date, String logicalChangeLogPath = "some/logical/path", String physicalChangeLogPath = "some/physical/path") {
-        def ranChangeSet = new RanChangeSet(
-                logicalChangeLogPath,
+        def ranChangeSet = new RanChangeSet(logicalChangeLogPath,
                 id,
                 author,
                 checkSum,
@@ -1303,16 +1183,14 @@ class Neo4jChangelogHistoryServiceIT extends Specification {
                 null,
                 null,
                 "some deployment ID",
-                physicalChangeLogPath
-        )
+                physicalChangeLogPath)
         ranChangeSet.liquibaseVersion = "4.1.1"
         return ranChangeSet
     }
 
     private static ChangeSet changeSet(String id, String author, String changeLogPath, boolean runOnChange = false, String contexts = null, Change... changes) {
         def changeSet = new ChangeSet(id, author, false, runOnChange, changeLogPath, contexts, null, new DatabaseChangeLog(changeLogPath))
-        changes.each { change ->
-            changeSet.addChange(change)
+        changes.each { change -> changeSet.addChange(change)
         }
         return changeSet
     }

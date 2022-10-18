@@ -6,7 +6,6 @@ import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -27,7 +26,7 @@ public class NodeMerger {
         this.database = database;
     }
 
-    public SqlStatement[] merge(MergePattern pattern, List<PropertyMergePolicy> policies) throws LiquibaseException {
+    public SqlStatement[] merge(MatchPattern pattern, List<PropertyMergePolicy> policies) throws LiquibaseException {
         List<Long> ids = getNodeIds(pattern);
         if (ids.size() < 2) {
             return new SqlStatement[0];
@@ -40,7 +39,7 @@ public class NodeMerger {
         return statements.toArray(new SqlStatement[0]);
     }
 
-    private List<Long> getNodeIds(MergePattern pattern) throws LiquibaseException {
+    private List<Long> getNodeIds(MatchPattern pattern) throws LiquibaseException {
         String query = String.format("MATCH %s RETURN id(%s) AS ID", pattern.cypherFragment(), pattern.outputVariable());
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(query));
         return rows.stream().map(row -> (Long) row.get("ID")).collect(Collectors.toList());

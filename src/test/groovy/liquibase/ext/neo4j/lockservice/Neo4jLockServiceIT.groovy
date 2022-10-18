@@ -1,76 +1,27 @@
 package liquibase.ext.neo4j.lockservice
 
-import liquibase.database.Database
-import liquibase.database.DatabaseFactory
-import liquibase.ext.neo4j.CypherRunner
-import liquibase.ext.neo4j.DockerNeo4j
-import liquibase.ext.neo4j.ReflectionUtils
-import org.neo4j.driver.AuthTokens
-import org.neo4j.driver.GraphDatabase
-import org.neo4j.driver.exceptions.ClientException
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
 
-import java.time.ZoneId
+import liquibase.ext.neo4j.Neo4jContainerSpec
+import liquibase.ext.neo4j.ReflectionUtils
+import org.neo4j.driver.exceptions.ClientException
+
 import java.time.ZonedDateTime
-import java.util.logging.LogManager
 
 import static java.time.temporal.ChronoUnit.MINUTES
 import static liquibase.ext.neo4j.DateUtils.date
 import static liquibase.ext.neo4j.DateUtils.nowMinus
-import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 import static liquibase.ext.neo4j.lockservice.Neo4jLockService.LOCK_CONSTRAINT_NAME
 
-class Neo4jLockServiceIT extends Specification {
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    private static final String PASSWORD = "s3cr3t"
-
-    static final TIMEZONE = ZoneId.of("Europe/Paris")
-
-    @Shared
-    GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE)
-
-    @Shared
-    CypherRunner queryRunner
-
-    Database database
+class Neo4jLockServiceIT extends Neo4jContainerSpec {
 
     def neo4jLockService = new Neo4jLockService()
 
-    def setupSpec() {
-        neo4jContainer.start()
-        queryRunner = new CypherRunner(
-                GraphDatabase.driver(neo4jContainer.getBoltUrl(),
-                        AuthTokens.basic("neo4j", PASSWORD)),
-                neo4jVersion())
-    }
-
-    def cleanupSpec() {
-        queryRunner.close()
-        neo4jContainer.stop()
-    }
-
     def setup() {
-        database = DatabaseFactory.instance.openDatabase(
-                "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
-                "neo4j",
-                PASSWORD,
-                null,
-                null
-        )
         neo4jLockService.setDatabase(database)
     }
 
     def cleanup() {
-        queryRunner.run("MATCH (n) DETACH DELETE n")
         queryRunner.dropUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy")
-        database.close()
     }
 
     def "acquires lock from the underlying database"() {

@@ -2,37 +2,14 @@ package liquibase.ext.neo4j.database
 
 import liquibase.database.DatabaseConnection
 import liquibase.database.DatabaseFactory
-import liquibase.ext.neo4j.DockerNeo4j
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
-
-import java.time.ZoneId
-import java.util.logging.LogManager
+import liquibase.ext.neo4j.Neo4jContainerSpec
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
-class Neo4jDatabaseIT extends Specification {
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    private static final String PASSWORD = "sup3rs3cur3"
+class Neo4jDatabaseIT extends Neo4jContainerSpec {
 
     private DatabaseConnection connection
-
-    @Shared
-    GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(
-            PASSWORD,
-            ZoneId.of("Europe/Paris")
-    )
-
-    def setupSpec() {
-        neo4jContainer.start()
-    }
 
     def setup() {
         connection = openConnection()
@@ -40,10 +17,6 @@ class Neo4jDatabaseIT extends Specification {
 
     def cleanup() {
         connection.close()
-    }
-
-    def cleanupSpec() {
-        neo4jContainer.stop()
     }
 
     def "retrieves database version upon connection"() {
