@@ -123,3 +123,138 @@ Once the policy is matched for the property name, one of the following operation
     explicitly order the matched nodes with the `ORDER BY` clause like in the example.
 
 {!includes/_abbreviations.md!}
+
+### Node property extraction
+
+=== "XML"
+
+    === "without relationships"
+        ```xml
+        <neo4j:extractProperty property="genre"
+                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
+                               nodesNamed="m">
+            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true" />
+        </neo4j:extractProperty>
+        ```
+
+    === "with relationships"
+
+        ```xml
+        <neo4j:extractProperty property="genre" 
+                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
+                               nodesNamed="m">
+            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true">
+                <neo4j:linkedFromSource withType="HAS_GENRE" 
+                                        withDirection="OUTGOING"
+                                        merge="true" />
+            </neo4j:toNodes>
+        </neo4j:extractProperty>
+        ```
+
+=== "JSON"
+
+    === "without relationships"
+
+        ```json
+        {
+            "extractProperty": {
+                "property": "genre",
+                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
+                "nodesNamed": "m",
+                "toNodes": {
+                    "withLabel": "Genre",
+                    "withProperty": "genre",
+                    "merge": true
+                }
+            }
+        }
+        ```
+    
+    === "with relationships"
+
+        ```json
+        {
+            "extractProperty": {
+                "property": "genre",
+                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
+                "nodesNamed": "m",
+                "toNodes": {
+                    "withLabel": "Genre",
+                    "withProperty": "genre",
+                    "merge": true,
+                    "extractedNodes": {
+                        "linkedFromSource": {
+                            "extractedRelationships": {
+                                "withDirection": "OUTGOING",
+                                "withType": "HAS_GENRE",
+                                "merge": true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ```
+
+=== "YAML"
+
+    === "without relationships"
+
+        ```yaml
+        - extractProperty:
+            fromNodes: (m:Movie) WITH m ORDER BY id(m) ASC
+            nodesNamed: m
+            property: genre
+            toNodes:
+                withLabel: Genre
+                withProperty: genre
+                merge: true
+        ```
+
+    === "with relationships"
+
+        ```yaml
+        - extractProperty:
+            fromNodes: (m:Movie) WITH m ORDER BY id(m) ASC
+            nodesNamed: m
+            property: genre
+            toNodes:
+                withLabel: Genre
+                withProperty: genre
+                merge: true
+                extractedNodes:
+                    linkedFromSource:
+                        extractedRelationships:
+                            withType: HAS_GENRE
+                            withDirection: !!liquibase.ext.neo4j.change.refactoring.RelationshipDirection 'OUTGOING'
+                            merge: true
+        ```
+
+The node property extraction refactoring allows to extract node properties into their own nodes.
+As for the [node merge refactoring](#node-merge), the nodes to extract properties from are specified as a Cypher
+fragment
+(`fromNodes` attribute) and the variable name (`nodesNamed` attribute) bound to these nodes.
+The property name to extract is specified with the `property` attribute.
+
+The source nodes matched by the Cypher fragment will have their property removed.
+That property will be set on the extracted nodes, with the name described by the `withProperty` attribute.
+The extracted nodes' label is defined with the `withLabel` attribute.
+Set the `merge` property to `true` to avoid duplicates with potentially existing nodes with the same label and property.
+The default behavior is to create extracted nodes every time.
+
+Optionally, the extracted nodes can be linked with the source nodes.
+In that case, a type and a direction need to be specified with respectively the `withType` and `withDirection`
+attributes.
+
+!!! note
+    The relation direction is from the perspective of the source nodes.
+    In the example, `OUTGOING` means the relationship starts from the source node and goes out to the extracted node.
+    Conversely, `INCOMING` would mean the relationship comes in the source node from the extracted node.
+
+It is also possible to avoid relationship duplicates by setting the corresponding `merge`
+attribute to `true`. The default is to always create relationships.
+
+!!!warning
+    `merge=false` on nodes with `merge=true` on relationships will trigger a validation warning.
+    Indeed, creating extracting nodes imply that new relationships will be created as well.
+    Setting `merge=true` on relationships in that case incur an unnecessary execution penalty.

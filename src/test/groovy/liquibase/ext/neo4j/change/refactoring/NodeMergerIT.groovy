@@ -1,74 +1,22 @@
 package liquibase.ext.neo4j.change.refactoring
 
-import liquibase.database.Database
-import liquibase.database.DatabaseFactory
+
 import liquibase.exception.LiquibaseException
-import liquibase.ext.neo4j.CypherRunner
-import liquibase.ext.neo4j.DockerNeo4j
+import liquibase.ext.neo4j.Neo4jContainerSpec
 import liquibase.ext.neo4j.database.Neo4jDatabase
-import org.neo4j.driver.AuthTokens
-import org.neo4j.driver.GraphDatabase
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
 
-import java.time.ZoneId
-import java.util.logging.LogManager
-
-import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
-
-class NodeMergerIT extends Specification {
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    private static final String PASSWORD = "s3cr3t"
-
-    static final TIMEZONE = ZoneId.of("Europe/Paris")
-
-    @Shared
-    GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE)
-
-    @Shared
-    CypherRunner queryRunner
-
-    Database database
+class NodeMergerIT extends Neo4jContainerSpec {
 
     NodeMerger nodeMerger
 
-    def setupSpec() {
-        neo4jContainer.start()
-        queryRunner = new CypherRunner(
-                GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic("neo4j", PASSWORD)),
-                neo4jVersion())
-    }
-
-    def cleanupSpec() {
-        queryRunner.close()
-        neo4jContainer.stop()
-    }
-
     def setup() {
-        database = DatabaseFactory.instance.openDatabase(
-                "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
-                "neo4j",
-                PASSWORD,
-                null,
-                null
-        )
         nodeMerger = new NodeMerger(database as Neo4jDatabase)
-    }
-
-    def cleanup() {
-        queryRunner.run("MATCH (n) DETACH DELETE n")
     }
 
     def "generates statements to merge labels of the matching disconnected nodes"() {
         given:
         queryRunner.run("CREATE (:Label1:Label3), (:Label2:`Label Oops`), (:Label1:`Label Oops`)")
-        def pattern = MergePattern.of("(p)", "p")
+        def pattern = MatchPattern.of("(p)", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [])
@@ -92,7 +40,7 @@ class NodeMergerIT extends Specification {
         }
 
         expect:
-        def statements = nodeMerger.merge(MergePattern.of(fragment, outputVariable), [])
+        def statements = nodeMerger.merge(MatchPattern.of(fragment, outputVariable), [])
         statements.length == 0
 
         where:
@@ -108,7 +56,7 @@ class NodeMergerIT extends Specification {
     def "generates statements to merge properties of matching nodes based on each property's policy"(String propertyMatcher, PropertyMergeStrategy strategy, Object result) {
         given:
         queryRunner.run("CREATE (:Person), (:Person {name: 'Anastasia'}), (:Unmatched), (:Person {name: 'Zouheir'}), (:Person)")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         and:
         def statements = nodeMerger.merge(pattern, [PropertyMergePolicy.of(propertyMatcher, strategy)])
@@ -134,7 +82,7 @@ class NodeMergerIT extends Specification {
         def unusedPolicy = PropertyMergePolicy.of("nom", PropertyMergeStrategy.KEEP_ALL)
 
         when:
-        nodeMerger.merge(MergePattern.of("(p:Person)", "p"), [unusedPolicy])
+        nodeMerger.merge(MatchPattern.of("(p:Person)", "p"), [unusedPolicy])
 
         then:
         def exc = thrown(LiquibaseException)
@@ -144,7 +92,7 @@ class NodeMergerIT extends Specification {
     def "generates statements to merge incoming relationships"() {
         given:
         queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})<-[:MAINTAINED_BY]-(:Project {name: 'Secret'}), (:Person {name: 'Zouheir'})<-[:FOUNDED_BY {year: 2012}]-(:Conference {name: 'Devoxx France'})")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [
@@ -173,7 +121,7 @@ RETURN person AS p, collect(incoming) AS allIncoming
     def "generates statements to merge outgoing relationships"() {
         given:
         queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 22})-[:MAINTAINS]->(:Project {name: 'Secret'}), (:Person {name: 'Zouheir'})-[:FOUNDED {year: 2012}]->(:Conference {name: 'Devoxx France'})")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [
@@ -202,7 +150,7 @@ RETURN person AS p, collect(outgoing) AS allOutgoing
     def "escapes relationship types proper"() {
         given:
         queryRunner.run("CREATE (:Person {name: 'Anastasia', age: 42})<-[:MAINTAINED_BY]-(:Project {name: 'Secret'}), (:Conference {name: 'JavaLand'}) <-[:`HAT BESUCHT`]- (m:Person {name: 'Michael'})<-[:`FOUNDED BY` {year: 2015}]-(:JUG {name: 'EuregJUG'}), (m)-[:`DAS IST` {offensichtlich: true}]->(m)")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [
@@ -233,7 +181,7 @@ RETURN person AS p, collect(rel) AS rels
     def "generates statements that preserve existing self-relationships"() {
         given:
         queryRunner.run("CREATE (anastasia:Person {name: 'Anastasia', age: 22})-[:IS {obviously: true}]->(anastasia), (zouheir:Person {name: 'Zouheir'})-[:IS_SAME_AS {evidently: true}]->(zouheir)")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [
@@ -261,7 +209,7 @@ RETURN collect(rel) AS rels
                 "(zouheir)-[:FOLLOWS_2 {direction: 'z to a'}]->(anastasia)," +
                 "(zouheir)-[:FOLLOWS_3 {direction: 'z to z'}]->(zouheir)," +
                 "(zouheir)-[:FOLLOWS_4 {direction: 'z to m'}]->(:Person {name: 'Marouane'}) ")
-        def pattern = MergePattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
+        def pattern = MatchPattern.of("(p:Person) WITH p ORDER BY p.name ASC", "p")
 
         when:
         def statements = nodeMerger.merge(pattern, [

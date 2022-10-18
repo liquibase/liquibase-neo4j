@@ -1,61 +1,25 @@
 package liquibase.ext.neo4j
 
 import liquibase.integration.commandline.Main
-import org.neo4j.driver.AuthTokens
-import org.neo4j.driver.GraphDatabase
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
 
 import java.nio.file.Files
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.util.logging.LogManager
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
-import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_SET_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
 
-class Neo4jPluginIT extends Specification {
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    private static final String PASSWORD = "s3cr3t"
-
-    private static final TIMEZONE = ZoneId.of("Europe/Paris")
-
-    @Shared
-    GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE)
-
-    @Shared
-    CypherRunner queryRunner
+class Neo4jPluginIT extends Neo4jContainerSpec {
 
     private PrintStream stdout
 
     private PrintStream stderr
-
-    def setupSpec() {
-        neo4jContainer.start()
-        queryRunner = new CypherRunner(
-                GraphDatabase.driver(neo4jContainer.getBoltUrl(),
-                        AuthTokens.basic("neo4j", PASSWORD)),
-                neo4jVersion())
-    }
-
-    def cleanupSpec() {
-        queryRunner.close()
-        neo4jContainer.stop()
-    }
 
     def setup() {
         stdout = System.out
@@ -64,7 +28,6 @@ class Neo4jPluginIT extends Specification {
     }
 
     def cleanup() {
-        queryRunner.run("MATCH (n) DETACH DELETE n")
         queryRunner.dropUniqueConstraint(TAG_CONSTRAINT_NAME, "__LiquibaseTag", "tag")
         queryRunner.dropUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label")
         queryRunner.dropUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context")
@@ -92,7 +55,7 @@ class Neo4jPluginIT extends Specification {
 
         then:
         def output = buffer.toString()
-        output.contains("MERGE (:Movie {title: 'My Life'})")
+        output.contains("MERGE (:Movie {title: 'My Life', genre: 'Horror'})")
         output.contains("MATCH (m:Movie) WITH COUNT(m) AS count MERGE (c:Count) SET c.value = count")
         output.contains("""
 MERGE (m:Movie {title: 'My Life'})
@@ -110,10 +73,15 @@ MATCH (a:Person {name: 'Hater'})
 MATCH (a)-[r:RATED {rating: 0}]->(m) SET r.rating = 5
 """.trim())
         if (definesExtraNode(queryRunner)) {
-            output.concat("""
+            output.contains("""
 CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
 """)
         }
+        output.contains("CREATE (:Movie {title: 'My Life', genre: 'Horror'});")
+        output.contains("UNWIND \$0 AS row CREATE (n:`CsvPerson`) SET n += row;")
+        output.contains("""
+MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`genre`: m.`genre`}) CREATE (m)-[:`HAS_GENRE`]->(_____n_____) REMOVE m.`genre`;
+""".trim())
     }
 
     def "runs migrations"() {
@@ -148,7 +116,7 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
         """))
 
         def hasExtraNodeFromConditionalChangeSet = definesExtraNode(queryRunner)
-        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 9 : 8)
+        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 10 : 9)
         rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
         rows[1] == [labels       : ["CsvPerson"], properties: [
                 "first_name"  : "Andrea",
@@ -179,11 +147,12 @@ CREATE (:SecretMovie {title: 'Neo4j 4.4 EE: A life story'});
                 "uuid"        : "9986a49a-0cce-4982-b491-b8177fd0ef81",
                 "wisdom_index": 36L,
         ], outgoing_relationships: []]
-        rows[5] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: []]
-        rows[6] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
-        rows[7] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
+        rows[5] == [labels: ["Genre"], properties: [genre: "Horror"], outgoing_relationships: []]
+        rows[6] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: [[type: "HAS_GENRE", properties: [:]]]]
+        rows[7] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
+        rows[8] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
         if (hasExtraNodeFromConditionalChangeSet) {
-            rows[8] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
+            rows[9] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
         }
     }
 

@@ -5,7 +5,7 @@ import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
 import liquibase.exception.LiquibaseException;
-import liquibase.ext.neo4j.change.refactoring.MergePattern;
+import liquibase.ext.neo4j.change.refactoring.MatchPattern;
 import liquibase.ext.neo4j.change.refactoring.NodeMerger;
 import liquibase.ext.neo4j.change.refactoring.PropertyMergePolicy;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
@@ -58,7 +58,7 @@ public class MergeNodesChange extends AbstractChange {
     @Override
     public SqlStatement[] generateStatements(Database database) {
         try {
-            MergePattern pattern = MergePattern.of(fragment, outputVariable);
+            MatchPattern pattern = MatchPattern.of(fragment, outputVariable);
             return new NodeMerger((Neo4jDatabase) database).merge(pattern, propertyPolicies);
         } catch (LiquibaseException e) {
             throw new RuntimeException(e);

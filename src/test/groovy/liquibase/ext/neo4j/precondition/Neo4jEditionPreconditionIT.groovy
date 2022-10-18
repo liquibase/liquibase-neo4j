@@ -1,56 +1,19 @@
 package liquibase.ext.neo4j.precondition
 
-import liquibase.database.DatabaseConnection
-import liquibase.database.DatabaseFactory
-import liquibase.database.core.H2Database
+
 import liquibase.exception.PreconditionFailedException
 import liquibase.exception.ValidationErrors
-import liquibase.ext.neo4j.DockerNeo4j
-import liquibase.ext.neo4j.database.Neo4jDatabase
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
+import liquibase.ext.neo4j.Neo4jContainerSpec
 
-import java.time.ZoneId
-import java.util.logging.LogManager
-
-class Neo4jEditionPreconditionIT extends Specification {
-
-    private static final String PASSWORD = "s3cr3t"
-
-    @Shared
-    private GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(
-            PASSWORD,
-            ZoneId.of("Europe/Paris"),
-            "4.4-enterprise"
-    ).withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
-
-    @Shared
-    private Neo4jDatabase database
+class Neo4jEditionPreconditionIT extends Neo4jContainerSpec {
 
     private Neo4jEditionPrecondition precondition
-
-    static {
-        LogManager.getLogManager().reset()
-    }
-
-    def setupSpec() {
-        neo4jContainer.start()
-        database = new Neo4jDatabase()
-        database.setConnection(openConnection())
-    }
 
     def setup() {
         precondition = new Neo4jEditionPrecondition()
     }
 
-    def cleanupSpec() {
-        database.close()
-        neo4jContainer.stop()
-    }
-
-    def "passes validation with Neo4j databases"() {
+    def "passes validation only with Neo4j databases"() {
         expect:
         precondition.validate(db) == expected
 
@@ -79,14 +42,8 @@ class Neo4jEditionPreconditionIT extends Specification {
         ex.failedPreconditions.iterator().next().message == "expected community edition but got enterprise edition"
     }
 
-    private DatabaseConnection openConnection() {
-        return DatabaseFactory.instance.openConnection(
-                "jdbc:neo4j:" + neo4jContainer.getBoltUrl(),
-                "neo4j",
-                PASSWORD,
-                null,
-                null
-        )
+    protected neo4jImageVersion() {
+        return "4.4-enterprise"
     }
 
     private static ValidationErrors noErrors() {

@@ -1,14 +1,14 @@
 package liquibase.ext.neo4j.change.refactoring;
 
-public final class MergePattern {
+public final class MatchPattern {
     private final String cypherFragment;
     private final String outputVariable;
 
-    public static MergePattern of(String cypherFragment, String variable) {
-        return new MergePattern(cypherFragment, variable);
+    public static MatchPattern of(String cypherFragment, String variable) {
+        return new MatchPattern(cypherFragment, variable);
     }
 
-    private MergePattern(String cypherFragment, String outputVariable) {
+    private MatchPattern(String cypherFragment, String outputVariable) {
         this.cypherFragment = cypherFragment;
         this.outputVariable = outputVariable;
     }
