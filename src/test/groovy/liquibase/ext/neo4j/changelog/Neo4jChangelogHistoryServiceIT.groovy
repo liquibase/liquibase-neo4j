@@ -47,9 +47,9 @@ import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
-import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceTest.TIMEZONE
+import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceIT.TIMEZONE
 
-class Neo4jChangelogHistoryServiceTest extends Specification {
+class Neo4jChangelogHistoryServiceIT extends Specification {
 
     static {
         LogManager.getLogManager().reset()

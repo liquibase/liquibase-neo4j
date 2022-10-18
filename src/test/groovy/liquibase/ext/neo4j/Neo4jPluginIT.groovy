@@ -24,7 +24,7 @@ import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
 import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
 
-class Neo4jPluginTest extends Specification {
+class Neo4jPluginIT extends Specification {
 
     static {
         LogManager.getLogManager().reset()
