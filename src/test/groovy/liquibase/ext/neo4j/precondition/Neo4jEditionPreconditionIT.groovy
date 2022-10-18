@@ -15,9 +15,7 @@ import spock.lang.Specification
 import java.time.ZoneId
 import java.util.logging.LogManager
 
-class Neo4jVersionPreconditionTest extends Specification {
-
-    private static final String VERSION = "4.4.4"
+class Neo4jEditionPreconditionIT extends Specification {
 
     private static final String PASSWORD = "s3cr3t"
 
@@ -25,13 +23,13 @@ class Neo4jVersionPreconditionTest extends Specification {
     private GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(
             PASSWORD,
             ZoneId.of("Europe/Paris"),
-            "4.4.4"
-    )
+            "4.4-enterprise"
+    ).withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
 
     @Shared
     private Neo4jDatabase database
 
-    private Neo4jVersionPrecondition precondition
+    private Neo4jEditionPrecondition precondition
 
     static {
         LogManager.getLogManager().reset()
@@ -44,7 +42,7 @@ class Neo4jVersionPreconditionTest extends Specification {
     }
 
     def setup() {
-        precondition = new Neo4jVersionPrecondition()
+        precondition = new Neo4jEditionPrecondition()
     }
 
     def cleanupSpec() {
@@ -52,51 +50,35 @@ class Neo4jVersionPreconditionTest extends Specification {
         neo4jContainer.stop()
     }
 
-    def "passes validation only with Neo4j databases and non-blank versions"() {
+    def "passes validation only with Neo4j databases"() {
         expect:
-        precondition.setMatches(version)
         precondition.validate(db) == expected
 
         where:
-        version | db               | expected
-        null    | database         | withErrors("version must be set and not blank")
-        ""      | database         | withErrors("version must be set and not blank")
-        " "     | database         | withErrors("version must be set and not blank")
-        "foo"   | database         | noErrors()
-        null    | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        ""      | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        " "     | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        "foo"   | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2")
-        null    | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        ""      | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        " "     | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        "foo"   | null             | withErrors("this precondition applies only to Neo4j but got ")
+        db               | expected
+        database         | noErrors()
+        new H2Database() | withErrors("this precondition applies only to Neo4j but got h2")
+        null             | withErrors("this precondition applies only to Neo4j but got ")
     }
 
-    def "successfully runs only if version matches"() {
+    def "successfully runs only if edition matches"() {
         when:
-        precondition.setMatches(version)
+        precondition.setEnterprise(true)
         precondition.check(database, null, null, null)
 
         then:
         noExceptionThrown()
-
-        where:
-        version << ["4", "4.4", "4.4.4"]
     }
 
-    def "fails if version does not match"() {
+    def "fails if edition does not match"() {
         when:
-        precondition.setMatches(version)
+        precondition.setEnterprise(false)
         precondition.check(database, null, null, null)
 
         then:
         def ex = thrown(PreconditionFailedException)
         ex.failedPreconditions.size() == 1
-        ex.failedPreconditions.iterator().next().message == "expected ${version} version but got ${VERSION}"
-
-        where:
-        version << ["3", "4.5", "4.4.5"]
+        ex.failedPreconditions.iterator().next().message == "expected community edition but got enterprise edition"
     }
 
     private DatabaseConnection openConnection() {

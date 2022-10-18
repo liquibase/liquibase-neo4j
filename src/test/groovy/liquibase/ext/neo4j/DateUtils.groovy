@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 import java.time.temporal.TemporalUnit
 
 import static java.time.ZonedDateTime.now
-import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceTest.TIMEZONE
+import static liquibase.ext.neo4j.lockservice.Neo4jLockServiceIT.TIMEZONE
 
 class DateUtils {
 

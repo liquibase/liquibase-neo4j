@@ -23,7 +23,7 @@ import static liquibase.ext.neo4j.DateUtils.nowMinus
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 import static liquibase.ext.neo4j.lockservice.Neo4jLockService.LOCK_CONSTRAINT_NAME
 
-class Neo4jLockServiceTest extends Specification {
+class Neo4jLockServiceIT extends Specification {
 
     static {
         LogManager.getLogManager().reset()
