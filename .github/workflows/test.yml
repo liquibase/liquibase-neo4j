@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-test:
-    uses: liquibase/build-logic/.github/workflows/os-extension-test.yml@v0.2.0
+    uses: liquibase/build-logic/.github/workflows/os-extension-test.yml@v0.2.1
     secrets: inherit
 
   integration-test:
