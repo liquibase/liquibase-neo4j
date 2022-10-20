@@ -18,7 +18,7 @@ import java.util.logging.LogManager
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
 
-class NodeMergerTest extends Specification {
+class NodeMergerIT extends Specification {
 
     static {
         LogManager.getLogManager().reset()
