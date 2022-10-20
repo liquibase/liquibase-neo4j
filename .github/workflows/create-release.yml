@@ -1,0 +1,12 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    uses: liquibase/build-logic/.github/workflows/create-release.yml@v0.2.0
+    secrets: inherit
+
