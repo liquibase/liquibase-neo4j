@@ -50,15 +50,13 @@ class Neo4jEditionPreconditionIT extends Specification {
         neo4jContainer.stop()
     }
 
-    def "passes validation only with Neo4j databases"() {
+    def "passes validation with Neo4j databases"() {
         expect:
         precondition.validate(db) == expected
 
         where:
         db               | expected
         database         | noErrors()
-        new H2Database() | withErrors("this precondition applies only to Neo4j but got h2")
-        null             | withErrors("this precondition applies only to Neo4j but got ")
     }
 
     def "successfully runs only if edition matches"() {
@@ -89,14 +87,6 @@ class Neo4jEditionPreconditionIT extends Specification {
                 null,
                 null
         )
-    }
-
-    private static ValidationErrors withErrors(String... errors) {
-        def result = new ValidationErrors()
-        for (def error in errors) {
-            result.addError(error)
-        }
-        return result
     }
 
     private static ValidationErrors noErrors() {

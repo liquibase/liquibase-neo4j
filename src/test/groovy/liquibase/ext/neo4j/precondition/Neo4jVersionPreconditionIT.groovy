@@ -63,14 +63,6 @@ class Neo4jVersionPreconditionIT extends Specification {
         ""      | database         | withErrors("version must be set and not blank")
         " "     | database         | withErrors("version must be set and not blank")
         "foo"   | database         | noErrors()
-        null    | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        ""      | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        " "     | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2", "version must be set and not blank")
-        "foo"   | new H2Database() | withErrors("this precondition applies only to Neo4j but got h2")
-        null    | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        ""      | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        " "     | null             | withErrors("this precondition applies only to Neo4j but got ", "version must be set and not blank")
-        "foo"   | null             | withErrors("this precondition applies only to Neo4j but got ")
     }
 
     def "successfully runs only if version matches"() {
