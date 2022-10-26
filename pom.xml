@@ -383,58 +383,6 @@
                     </plugin>
 
                     <plugin>
-                        <groupId>org.jreleaser</groupId>
-                        <artifactId>jreleaser-maven-plugin</artifactId>
-                        <version>1.2.0</version>
-                        <configuration>
-                            <jreleaser>
-                                <project>
-                                    <name>liquibase-neo4j</name>
-                                    <version>${version.to.release}</version>
-                                    <copyright>Liquibase Inc.</copyright>
-                                </project>
-                                <release>
-                                    <github>
-                                        <update>
-                                            <enabled>true</enabled>
-                                            <sections>
-                                                <section>BODY</section>
-                                            </sections>
-                                        </update>
-                                        <skipTag>true</skipTag>
-                                        <tagName>liquibase-neo4j-{{projectVersion}}</tagName>
-                                        <releaseName>liquibase-neo4j-{{projectVersion}}</releaseName>
-                                        <changelog>
-                                            <preset>conventional-commits</preset>
-                                            <formatted>ALWAYS</formatted>
-                                            <labelers>
-                                                <labeler>
-                                                    <label>liquibot</label>
-                                                    <title>regex:(Version Bumped to.*|.*next release.*)</title>
-                                                </labeler>
-                                            </labelers>
-                                            <categories>
-                                                <category>
-                                                    <title>ignored</title>
-                                                    <key>liquibot</key>
-                                                    <labels>liquibot</labels>
-                                                </category>
-                                            </categories>
-                                            <hide>
-                                                <categories>liquibot</categories>
-                                                <contributors>
-                                                    <contributor>GitHub</contributor>
-                                                    <contributor>bot</contributor>
-                                                </contributors>
-                                            </hide>
-                                        </changelog>
-                                    </github>
-                                </release>
-                            </jreleaser>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
                         <groupId>com.coderplus.maven.plugins</groupId>
                         <artifactId>copy-rename-maven-plugin</artifactId>
                         <version>1.0</version>
