@@ -369,7 +369,7 @@
                             <quiet>true</quiet>
                             <doclint>none</doclint>
                             <encoding>UTF-8</encoding>
-                            <jarOutputDirectory>${project.basedir}/target</jarOutputDirectory>
+                            <jarOutputDirectory>${project.build.directory}</jarOutputDirectory>
                         </configuration>
                         <executions>
                             <execution>
@@ -397,7 +397,7 @@
                                     <fileSets>
                                         <fileSet>
                                             <sourceFile>${project.basedir}/pom.xml</sourceFile>
-                                            <destinationFile>${project.basedir}/target/${project.artifactId}-${project.version}.pom</destinationFile>
+                                            <destinationFile>${project.build.directory}/${project.artifactId}-${project.version}.pom</destinationFile>
                                         </fileSet>
                                     </fileSets>
                                 </configuration>
