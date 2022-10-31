@@ -126,8 +126,17 @@
     </dependencies>
 
     <build>
-        <plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.8</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
+        <plugins>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>
@@ -175,22 +184,6 @@
                         </goals>
                     </execution>
                 </executions>
-          </plugin>
-          
-          <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
-                <configuration>
-                    <fileSets>
-                        <fileSet>
-                            <directory>target</directory>
-                            <includes>
-                                <include>**/jacoco.exec</include>
-                            </includes>
-                        </fileSet>
-                    </fileSets>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -338,13 +331,26 @@
         <profile>
             <id>coverage</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env.CI</name>
+                    <value>true</value>
+                </property>
             </activation>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>target</directory>
+                                    <includes>
+                                        <include>**/jacoco.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>prepare-agent</id>
