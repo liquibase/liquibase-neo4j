@@ -259,7 +259,7 @@
 
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <id>über-jar</id>
