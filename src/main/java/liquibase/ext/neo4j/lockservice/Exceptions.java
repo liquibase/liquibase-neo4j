@@ -14,11 +14,15 @@ public class Exceptions {
             statement.run();
         } catch (Exception e) {
             if (!predicate.test(e)) {
-                if (e instanceof RuntimeException) {
-                    throw (RuntimeException) e;
-                }
-                throw new RuntimeException(e.getMessage(), e);
+                throw convertToRuntimeException(e);
             }
         }
+    }
+
+    public static RuntimeException convertToRuntimeException(Exception e) {
+        if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
+        }
+        return new RuntimeException(e.getMessage(), e);
     }
 }
