@@ -25,7 +25,9 @@ class CypherRunner implements AutoCloseable {
 
     void createUniqueConstraint(String name, String label, String property) {
         ignoring(exceptionMessageContaining("constraint already exists"), {
-            def query = neo4jVersion().startsWith("4") ?
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "CREATE CONSTRAINT $name IF NOT EXISTS FOR (c:$label) REQUIRE c.$property IS UNIQUE" : neo4jVersion.startsWith("4") ?
                     "CREATE CONSTRAINT $name ON (c:$label) ASSERT c.$property IS UNIQUE" :
                     "CREATE CONSTRAINT ON (c:$label) ASSERT c.$property IS UNIQUE"
             this.run(query)
@@ -34,7 +36,9 @@ class CypherRunner implements AutoCloseable {
 
     void createNodeKeyConstraint(String name, String label, String... properties) {
         ignoring(exceptionMessageContaining("constraint already exists"), {
-            def query = neo4jVersion().startsWith("4") ?
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "CREATE CONSTRAINT $name IF NOT EXISTS FOR (c:$label) REQUIRE (${properties.collect { "c.`$it`" }.join(", ")}) IS NODE KEY" : neo4jVersion.startsWith("4") ?
                     "CREATE CONSTRAINT $name ON (c:$label) ASSERT (${properties.collect { "c.`$it`" }.join(", ")}) IS NODE KEY" :
                     "CREATE CONSTRAINT ON (c:$label) ASSERT (${properties.collect { "c.`$it`" }.join(", ")}) IS NODE KEY"
             this.run(query)
@@ -42,6 +46,14 @@ class CypherRunner implements AutoCloseable {
     }
 
     List<String> listExistingConstraints() {
+        if (neo4jVersion().startsWith("5")) {
+            def descriptions = (String[]) this.getSingleRow(
+                    """
+                    | SHOW CONSTRAINTS YIELD name, labelsOrTypes
+                    | RETURN COLLECT(name + ":" + reduce(str = "", l IN labelsOrTypes | str+l+",")) AS descriptions
+                    """.stripMargin())["descriptions"]
+            return Arrays.asList(descriptions)
+        }
         // names are not available before Neo4j 4.x
         def descriptions = (String[]) this.getSingleRow("CALL db.constraints() YIELD description RETURN COLLECT(description) AS descriptions")["descriptions"]
         return Arrays.asList(descriptions)
@@ -49,7 +61,9 @@ class CypherRunner implements AutoCloseable {
 
     void dropUniqueConstraint(String name, String label, String property) {
         ignoring(exceptionMessageContaining("no such constraint"), {
-            def query = neo4jVersion().startsWith("4") ?
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "DROP CONSTRAINT $name IF EXISTS" : neo4jVersion.startsWith("4") ?
                     "DROP CONSTRAINT $name" :
                     "DROP CONSTRAINT ON (c:$label) ASSERT c.$property IS UNIQUE"
             this.run(query)
@@ -58,9 +72,11 @@ class CypherRunner implements AutoCloseable {
 
     void dropNodeKeyConstraint(String name, String label, String... properties) {
         ignoring(exceptionMessageContaining("no such constraint"), {
-            def query = neo4jVersion().startsWith("4") ?
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "DROP CONSTRAINT $name IF EXISTS" : neo4jVersion.startsWith("4") ?
                     "DROP CONSTRAINT $name" :
-                    "DROP CONSTRAINT ON (c:$label) ASSERT (${properties.collect {"c.`$it`"}.join(", ")}) IS NODE KEY"
+                    "DROP CONSTRAINT ON (c:$label) ASSERT (${properties.collect { "c.`$it`" }.join(", ")}) IS NODE KEY"
             this.run(query)
         })
     }

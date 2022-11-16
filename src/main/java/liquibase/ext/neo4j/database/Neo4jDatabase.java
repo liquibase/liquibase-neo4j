@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 import static liquibase.ext.neo4j.lockservice.Exceptions.ignoring;
 import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
+import static liquibase.ext.neo4j.lockservice.Exceptions.convertToRuntimeException;
 
 public class Neo4jDatabase extends AbstractJdbcDatabase {
 
@@ -91,7 +92,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        return neo4jVersion.startsWith("4");
+        return neo4jVersion.startsWith("4") || neo4jVersion.startsWith("5");
     }
 
     @Override
@@ -105,6 +106,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             createUniqueConstraintForNeo4j4(name, label, property);
+        } else if (neo4jVersion.startsWith("5")) {
+            createUniqueConstraintForNeo4j5(name, label, property);
         } else {
             throw new DatabaseException(String.format(
                     "Unique constraint creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
@@ -125,6 +128,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             createNodeKeyConstraintForNeo4j4(name, label, properties);
+        } else if (neo4jVersion.startsWith("5")) {
+            createNodeKeyConstraintForNeo4j5(name, label, properties);
         } else {
             throw new DatabaseException(String.format(
                     "Node key constraint creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
@@ -141,6 +146,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
+        } else if (neo4jVersion.startsWith("5")) {
+            dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
                     "Unique constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
@@ -161,6 +168,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
+        } else if (neo4jVersion.startsWith("5")) {
+            dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
                     "Node key constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
@@ -221,6 +230,14 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         );
     }
 
+    private void createUniqueConstraintForNeo4j5(String name, String label, String property) {
+        try {
+            this.execute(new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` IF NOT EXISTS FOR (n:`%s`) REQUIRE n.`%s` IS UNIQUE", name, label, property)));
+        } catch (LiquibaseException e) {
+            throw convertToRuntimeException(e);
+        }
+    }
+
     // before 4.x, constraints cannot be given names
     private void createNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
@@ -235,6 +252,17 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
                 new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT %s IS NODE KEY", name, label, list)))
         );
+    }
+
+    private void createNodeKeyConstraintForNeo4j5(String name, String label, String[] properties) {
+        String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
+        try {
+            this.execute(
+                    new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` IF NOT EXISTS FOR (n:`%s`) REQUIRE %s IS NODE KEY", name, label, list))
+            );
+        } catch (LiquibaseException e) {
+            throw convertToRuntimeException(e);
+        }
     }
 
     // before 4.x, constraints cannot be given names
@@ -257,6 +285,16 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
                 new RawSqlStatement(String.format("DROP CONSTRAINT `%s`", name)))
         );
+    }
+
+    private void dropConstraintForNeo4j5(String name) {
+        try {
+            this.execute(
+                    new RawSqlStatement(String.format("DROP CONSTRAINT `%s` IF EXISTS", name))
+            );
+        } catch (LiquibaseException e) {
+            throw convertToRuntimeException(e);
+        }
     }
 
     private Executor jdbcExecutor() {

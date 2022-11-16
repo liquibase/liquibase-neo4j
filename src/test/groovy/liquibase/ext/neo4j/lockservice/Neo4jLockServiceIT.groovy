@@ -210,7 +210,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
         neo4jLockService.hasChangeLogLock()
         countLockNodes() == 1L
         def constraints = queryRunner.listExistingConstraints()
-        constraints.findIndexOf { it.contains("__liquibaselock:__LiquibaseLock") } >= 0
+        constraints.findIndexOf { it.contains(":__LiquibaseLock") } >= 0
     }
 
     private Object countLockNodes() {

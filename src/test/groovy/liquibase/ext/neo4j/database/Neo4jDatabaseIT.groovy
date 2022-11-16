@@ -38,7 +38,7 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         database.setConnection(connection)
 
         then:
-        database.supportsCatalogs() == neo4jVersion().startsWith("4")
+        database.supportsCatalogs() == Integer.parseInt(neo4jVersion().substring(0, 1), 10) >= 4
     }
 
     def "detects server edition"() {

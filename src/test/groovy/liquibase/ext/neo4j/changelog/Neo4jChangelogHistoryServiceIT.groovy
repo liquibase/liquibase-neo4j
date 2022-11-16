@@ -415,7 +415,8 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         def row = queryRunner.getSingleRow("""
             MATCH (tag:__LiquibaseTag {tag: 'guten-tag'})
             OPTIONAL MATCH (tag)-[r]->()
-            RETURN tag {.tag, .dateCreated, .dateUpdated, relationCount: SIZE(COLLECT(r))}
+            WITH tag, size(collect(r)) AS relationCount
+            RETURN tag {.tag, .dateCreated, .dateUpdated, relationCount: relationCount}
         """)["tag"] as Map<String, Object>
         containsAll(row, [tag: "guten-tag", relationCount: 0L])
         date(row["dateCreated"] as ZonedDateTime) > nowMinus(1, MINUTES)
@@ -450,7 +451,8 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         def row = queryRunner.getSingleRow("""
             MATCH (tag:__LiquibaseTag {tag: 'guten-tag'})
             OPTIONAL MATCH (tag)-[r]->()
-            RETURN tag {.tag, .dateCreated, .dateUpdated, relationCount: SIZE(COLLECT(r))}
+            WITH tag, size(collect(r)) AS relationCount
+            RETURN tag {.tag, .dateCreated, .dateUpdated, relationCount: relationCount}
         """)["tag"] as Map<String, Object>
         containsAll(row, [tag: "guten-tag", relationCount: 0L])
         date(row["dateCreated"] as ZonedDateTime) == date(2020, 12, 25)
@@ -780,7 +782,11 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
         then:
         getField("ranChangeSets", historyService) == null
-        def row = queryRunner.getSingleRow("MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) RETURN changeLog {.dateUpdated, changeSetIds: COLLECT(changeSet.id)}")["changeLog"]
+        def row = queryRunner.getSingleRow("""
+            MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog)
+            WITH changeLog, collect(changeSet.id) AS changeSetIds
+            RETURN changeLog {.dateUpdated, changeSetIds: changeSetIds}
+        """)["changeLog"]
         date(row["dateUpdated"] as ZonedDateTime) > nowMinus(1, MINUTES)
         row["changeSetIds"] == ["some ID 2"]
     }
@@ -904,9 +910,10 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:CONTEXTUALIZES]-(context:__LiquibaseContext)
+            WITH changeSet, collect(context.context) AS contexts
             RETURN changeSet {
                 .id, 
-                contexts: COLLECT(context.context)
+                contexts: contexts
             }""")["changeSet"] as Map<String, Object>
         row["id"] == "some-id"
         row["contexts"] as Set == ["context1", "context2"] as Set
@@ -935,9 +942,10 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:CONTEXTUALIZES]-(context:__LiquibaseContext)
+            WITH changeSet, collect(context.context) AS contexts
             RETURN changeSet {
                 .id, 
-                contexts: COLLECT(context.context)
+                contexts: contexts
             }""")["changeSet"] as Map<String, Object>
         row["id"] == "some-id-1"
         row["contexts"] as Set == ["new-context-1", "new-context-2"] as Set
@@ -963,9 +971,10 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:LABELS]-(label:__LiquibaseLabel)
+            WITH changeSet, collect(label.label) AS labels
             RETURN changeSet {
                 .id, 
-                labels: COLLECT(label.label)
+                labels: labels
             }""")["changeSet"] as Map<String, Object>
         row["id"] == "some-id"
         row["labels"] as Set == ["label1", "label2"] as Set
@@ -995,9 +1004,10 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:LABELS]-(label:__LiquibaseLabel)
+            WITH changeSet, COLLECT(label.label) AS labels
             RETURN changeSet {
                 .id, 
-                labels: COLLECT(label.label)
+                labels: labels
             }""")["changeSet"] as Map<String, Object>
         row["id"] == "some-id-1"
         row["labels"] as Set == ["new-label-1", "new-label-2"] as Set
@@ -1049,9 +1059,10 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:TAGS]-(tag:__LiquibaseTag)
+            WITH changeSet, collect(tag {.tag, .dateCreated, .dateUpdated}) AS tags
             RETURN changeSet {
                 .id, 
-                tags: COLLECT(tag {.tag, .dateCreated, .dateUpdated})
+                tags: tags
             }""")["changeSet"] as Map<String, Object>
         row["id"] == "some-id-2"
         def tags = row["tags"] as Set
