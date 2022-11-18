@@ -2,6 +2,7 @@
 *[JAR]: Java ARchive
 *[JRE]: Java Runtime Environment
 *[MD5]: Message Digest algorithm version 5
+*[OOM]: Out Of Memory error
 *[PGP]: Pretty Good Privacy encryption program
 *[POM]: Project Object Model
 *[RDBMS]: Relational Database Management System

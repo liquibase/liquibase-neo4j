@@ -9,7 +9,6 @@ import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
-import liquibase.util.StringUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -18,9 +17,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
-import static liquibase.ext.neo4j.lockservice.Exceptions.ignoring;
-import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
+import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.IS_SUPPORTED_JDBC_URL;
 import static liquibase.ext.neo4j.lockservice.Exceptions.convertToRuntimeException;
+import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
+import static liquibase.ext.neo4j.lockservice.Exceptions.onThrow;
 
 public class Neo4jDatabase extends AbstractJdbcDatabase {
 
@@ -60,12 +60,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public String getDefaultDriver(String url) {
-        String connectionUrl = StringUtil.trimToEmpty(url);
-        if (connectionUrl.startsWith("jdbc:neo4j:neo4j") || connectionUrl.startsWith("jdbc:neo4j:bolt+routing")) {
-            return "org.neo4j.jdbc.boltrouting.BoltRoutingNeo4jDriver";
-        }
-        if (connectionUrl.startsWith("jdbc:neo4j:bolt")) {
-            return "org.neo4j.jdbc.bolt.BoltDriver";
+        if (IS_SUPPORTED_JDBC_URL.test(url)) {
+            return "liquibase.ext.neo4j.database.jdbc.Neo4jDriver";
         }
         return null;
     }
@@ -218,86 +214,138 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     // before 4.x, constraints cannot be given names
     private void createUniqueConstraintForNeo4j3(String label, String property) {
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property)))
+        onThrow(this::rollbackIfConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
 
     private void createUniqueConstraintForNeo4j4(String name, String label, String property) {
         // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", name, label, property)))
+        onThrow(this::rollbackIfConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", name, label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
 
     private void createUniqueConstraintForNeo4j5(String name, String label, String property) {
         try {
             this.execute(new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` IF NOT EXISTS FOR (n:`%s`) REQUIRE n.`%s` IS UNIQUE", name, label, property)));
+            this.commit();
         } catch (LiquibaseException e) {
-            throw convertToRuntimeException(e);
+            rollbackOnError(e);
         }
     }
 
     // before 4.x, constraints cannot be given names
+
     private void createNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list)))
+        onThrow(this::rollbackIfConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
-
     private void createNodeKeyConstraintForNeo4j4(String name, String label, String[] properties) {
         // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(CONSTRAINT_ALREADY_EXISTS_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT %s IS NODE KEY", name, label, list)))
+        onThrow(this::rollbackIfConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT %s IS NODE KEY", name, label, list));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
 
     private void createNodeKeyConstraintForNeo4j5(String name, String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
         try {
-            this.execute(
-                    new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` IF NOT EXISTS FOR (n:`%s`) REQUIRE %s IS NODE KEY", name, label, list))
-            );
+            RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` IF NOT EXISTS FOR (n:`%s`) REQUIRE %s IS NODE KEY", name, label, list));
+            this.execute(sql);
+            this.commit();
         } catch (LiquibaseException e) {
-            throw convertToRuntimeException(e);
+            rollbackOnError(e);
         }
     }
 
+
     // before 4.x, constraints cannot be given names
     private void dropUniqueConstraintForNeo4j3(String label, String property) {
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property)))
+        onThrow(this::rollbackIfNoSuchConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
 
     // before 4.x, constraints cannot be given names
     private void dropNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list)))
+        onThrow(this::rollbackIfNoSuchConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT ON (n:`%s`) ASSERT %s IS NODE KEY", label, list));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
 
     private void dropConstraintForNeo4j4(String name) {
         // `DROP CONSTRAINT IF EXISTS` is only available with Neo4j 4.2+
-        ignoring(NO_SUCH_CONSTRAINT_ERROR, () -> this.execute(
-                new RawSqlStatement(String.format("DROP CONSTRAINT `%s`", name)))
+        onThrow(this::rollbackIfNoSuchConstraintExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT `%s`", name));
+                    this.execute(sql);
+                    this.commit();
+                }
         );
     }
-
     private void dropConstraintForNeo4j5(String name) {
         try {
-            this.execute(
-                    new RawSqlStatement(String.format("DROP CONSTRAINT `%s` IF EXISTS", name))
-            );
+            RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT `%s` IF EXISTS", name));
+            this.execute(sql);
+            this.commit();
         } catch (LiquibaseException e) {
-            throw convertToRuntimeException(e);
+            rollbackOnError(e);
         }
     }
 
     private Executor jdbcExecutor() {
         return Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
+    }
+
+    private void rollbackIfConstraintExists(Exception ex) throws DatabaseException {
+        if (!CONSTRAINT_ALREADY_EXISTS_ERROR.test(ex)) {
+            return;
+        }
+        this.rollback();
+    }
+
+    private void rollbackIfNoSuchConstraintExists(Exception ex) throws DatabaseException {
+        if (!NO_SUCH_CONSTRAINT_ERROR.test(ex)) {
+            return;
+        }
+        this.rollback();
+    }
+
+    private void rollbackOnError(LiquibaseException le) {
+        try {
+            this.rollback();
+        } catch (DatabaseException ex) {
+            le.addSuppressed(ex);
+        }
+        throw convertToRuntimeException(le);
     }
 }

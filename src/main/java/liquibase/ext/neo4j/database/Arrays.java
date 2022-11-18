@@ -2,7 +2,7 @@ package liquibase.ext.neo4j.database;
 
 import java.lang.reflect.Array;
 
-public class Arrays {
+class Arrays {
 
     public static <T> T[] prepend(T head, T[] tail, Class<T> type) {
         @SuppressWarnings("unchecked")
