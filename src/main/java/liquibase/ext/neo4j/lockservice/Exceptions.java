@@ -1,6 +1,7 @@
 package liquibase.ext.neo4j.lockservice;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class Exceptions {
@@ -9,12 +10,15 @@ public class Exceptions {
         return (e) -> e.getMessage().toLowerCase(Locale.ENGLISH).contains(message.toLowerCase(Locale.ENGLISH));
     }
 
-    public static void ignoring(Predicate<Exception> predicate, ThrowingRunnable statement) {
+    public static void onThrow(ThrowingConsumer<Exception> action, ThrowingRunnable runner) {
         try {
-            statement.run();
-        } catch (Exception e) {
-            if (!predicate.test(e)) {
-                throw convertToRuntimeException(e);
+            runner.run();
+        } catch (Exception runnableException) {
+            try {
+                action.accept(runnableException);
+            } catch (Exception consumerException) {
+                runnableException.addSuppressed(consumerException);
+                throw convertToRuntimeException(runnableException);
             }
         }
     }
