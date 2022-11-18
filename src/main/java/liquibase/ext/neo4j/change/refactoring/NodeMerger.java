@@ -164,14 +164,8 @@ public class NodeMerger {
         return policies.stream().filter(policy -> policy.getPropertyNamePattern().matcher(propertyName).find()).findFirst();
     }
 
-    private static Map<String, Object> relProperties(Map<String, Object> incoming) {
-        Map<String, Object> result = new HashMap<>(incoming.size() - 4);
-        for (Map.Entry<String, Object> entry : incoming.entrySet()) {
-            if (entry.getKey().startsWith("_")) {
-                continue;
-            }
-            result.put(entry.getKey(), entry.getValue());
-        }
-        return result;
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> relProperties(Map<String, Object> relationship) {
+        return (Map<String, Object>) relationship.get("_properties");
     }
 }

@@ -15,6 +15,7 @@ import java.util.logging.LogManager
 import static liquibase.ext.neo4j.DockerNeo4j.dockerTag
 
 abstract class Neo4jContainerSpec extends Specification {
+
    static {
       LogManager.getLogManager().reset()
    }
@@ -24,7 +25,7 @@ abstract class Neo4jContainerSpec extends Specification {
    static final TIMEZONE = ZoneId.of("Europe/Paris")
 
    @Shared
-   GenericContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE, neo4jImageVersion())
+   Neo4jContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE, neo4jImageVersion())
            .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
 
    @Shared
@@ -36,8 +37,7 @@ abstract class Neo4jContainerSpec extends Specification {
    def setupSpec() {
       neo4jContainer.start()
       queryRunner = new CypherRunner(
-            GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic("neo4j", PASSWORD)),
-              dockerTag())
+            GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic("neo4j", PASSWORD)), dockerTag())
       database = DatabaseFactory.instance.openDatabase(
               "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
               "neo4j",
@@ -55,6 +55,17 @@ abstract class Neo4jContainerSpec extends Specification {
 
    def cleanup() {
       queryRunner.run("MATCH (n) DETACH DELETE n")
+   }
+
+   def jdbcUrl() {
+      return "jdbc:neo4j:${neo4jContainer.getBoltUrl()}"
+   }
+
+   def authenticationProperties() {
+      def properties = new Properties()
+      properties.setProperty("user", "neo4j")
+      properties.setProperty("password", neo4jContainer.getAdminPassword())
+      return properties
    }
 
    protected neo4jImageVersion() {

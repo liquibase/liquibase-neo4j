@@ -133,18 +133,21 @@ public class Neo4jLockService implements LockService {
     @Override
     public void init() throws DatabaseException {
         database.createUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
-        database.commit();
     }
 
     @Override
     public void destroy() throws DatabaseException {
         database.dropUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
-        database.commit();
         try {
             forceReleaseLock();
         } catch (LockException e) {
-            database.rollback();
-            throw new DatabaseException("Could not release lock upon destroy", e);
+            DatabaseException databaseException = new DatabaseException("Could not release lock upon destroy", e);
+            try {
+                database.rollback();
+            } catch (DatabaseException de) {
+                databaseException.addSuppressed(de);
+            }
+            throw databaseException;
         }
     }
 
@@ -205,9 +208,11 @@ public class Neo4jLockService implements LockService {
     }
 
     private DatabaseChangeLogLock mapRow(Map<String, Object> row) {
-        int id = UUID.fromString(row.get("id").toString()).hashCode();
-        Timestamp grantDate = (Timestamp) row.get("grantDate");
-        String lockedBy = row.get("lockedBy").toString();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties = (Map<String, Object>) row.get("_properties");
+        int id = UUID.fromString(properties.get("id").toString()).hashCode();
+        Timestamp grantDate = (Timestamp) properties.get("grantDate");
+        String lockedBy = properties.get("lockedBy").toString();
         return new DatabaseChangeLogLock(id, grantDate, lockedBy);
     }
 }
