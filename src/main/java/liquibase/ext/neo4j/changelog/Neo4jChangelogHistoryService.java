@@ -18,6 +18,7 @@ import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 import liquibase.util.LiquibaseUtil;
 
+import java.sql.Timestamp;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
@@ -431,7 +432,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 (String) row.get("id"),
                 (String) row.get("author"),
                 CheckSum.parse((String) row.get("checkSum")),
-                Date.from(((ZonedDateTime) row.get("dateExecuted")).toInstant()),
+                Date.from(((Timestamp) row.get("dateExecuted")).toInstant()),
                 (String) row.get("tag"),
                 ChangeSet.ExecType.valueOf((String) row.get("execType")),
                 (String) row.get("description"),
@@ -452,7 +453,6 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         database.createUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context");
         database.createUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label");
         database.createNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog");
-        database.commit();
     }
 
     private void initializeHistory() throws DatabaseException {

@@ -133,18 +133,21 @@ public class Neo4jLockService implements LockService {
     @Override
     public void init() throws DatabaseException {
         database.createUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
-        database.commit();
     }
 
     @Override
     public void destroy() throws DatabaseException {
         database.dropUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy");
-        database.commit();
         try {
             forceReleaseLock();
         } catch (LockException e) {
-            database.rollback();
-            throw new DatabaseException("Could not release lock upon destroy", e);
+            DatabaseException databaseException = new DatabaseException("Could not release lock upon destroy", e);
+            try {
+                database.rollback();
+            } catch (DatabaseException de) {
+                databaseException.addSuppressed(de);
+            }
+            throw databaseException;
         }
     }
 
