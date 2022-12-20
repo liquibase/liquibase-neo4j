@@ -16,8 +16,8 @@ plugins:
 extra:
   maven_central: https://repo1.maven.org/maven2
   github_repo: https://github.com/liquibase/liquibase-neo4j
-  liquibase_version: 4.17.0
-  version: 4.17.2.1
+  liquibase_version: 4.18.0
+  version: 4.18.0
 markdown_extensions:
   - abbr
   - admonition
