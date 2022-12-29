@@ -9,6 +9,7 @@ import liquibase.parser.core.xml.XMLChangeLogSAXParser;
 import liquibase.resource.ResourceAccessor;
 import liquibase.serializer.ChangeLogSerializer;
 import liquibase.serializer.core.json.JsonChangeLogSerializer;
+import liquibase.serializer.core.yaml.YamlChangeLogSerializer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -64,7 +65,7 @@ public class ChangeLogFormatConverter {
             case "json":
                 return new Serialization(new JsonChangeLogSerializer(), inputPath.replaceAll("\\.xml$", ".json"));
             case "yaml":
-                return new Serialization(new JsonChangeLogSerializer(), inputPath.replaceAll("\\.xml$", ".yaml"));
+                return new Serialization(new YamlChangeLogSerializer(), inputPath.replaceAll("\\.xml$", ".yaml"));
         }
         throw new RuntimeException("unsupported output format: " + format);
     }
