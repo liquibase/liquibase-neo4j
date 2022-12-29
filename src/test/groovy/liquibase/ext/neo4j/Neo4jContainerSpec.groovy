@@ -19,7 +19,7 @@ abstract class Neo4jContainerSpec extends Specification {
       LogManager.getLogManager().reset()
    }
 
-   static final String PASSWORD = "s3cr3t"
+   static final String PASSWORD = "supers3cr3t"
 
    static final TIMEZONE = ZoneId.of("Europe/Paris")
 
