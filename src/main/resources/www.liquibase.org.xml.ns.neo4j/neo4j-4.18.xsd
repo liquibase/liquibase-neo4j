@@ -1,0 +1,151 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.liquibase.org/xml/ns/neo4j"
+            xmlns="http://www.liquibase.org/xml/ns/neo4j"
+            xmlns:core="http://www.liquibase.org/xml/ns/dbchangelog"
+            elementFormDefault="qualified">
+
+    <xsd:import namespace="https://www.liquibase.org/xml/ns/dbchangelog"
+                schemaLocation="https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd"/>
+
+    <xsd:element name="cypher" substitutionGroup="core:sql">
+        <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+                <xsd:minLength value="1"/>
+            </xsd:restriction>
+        </xsd:simpleType>
+    </xsd:element>
+    <xsd:element name="cypherCheck" substitutionGroup="core:sqlCheck">
+        <xsd:complexType mixed="true">
+            <xsd:attribute name="expectedResult" type="xsd:string" use="required">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="1"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="edition">
+        <xsd:complexType>
+            <xsd:attribute name="enterprise" type="xsd:boolean" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="version">
+        <xsd:complexType>
+            <xsd:attribute name="matches" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="mergeNodes" type="mergeNodesType"/>
+    <xsd:complexType name="propertyPolicyType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute type="xsd:string" name="nameMatcher" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:minLength value="1"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute type="xsd:string" name="mergeStrategy" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="KEEP_ALL"/>
+                            <xsd:enumeration value="KEEP_FIRST"/>
+                            <xsd:enumeration value="KEEP_LAST"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <xsd:complexType name="mergeNodesType">
+        <xsd:sequence>
+            <xsd:element type="propertyPolicyType" name="propertyPolicy" maxOccurs="unbounded" minOccurs="1"/>
+        </xsd:sequence>
+        <xsd:attribute type="xsd:string" name="fragment" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="outputVariable" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:element name="extractProperty" type="extractPropertyType"/>
+    <xsd:complexType name="linkedFromSourceType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute type="xsd:string" name="withType" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:minLength value="1"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute type="xsd:string" name="withDirection" use="required">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="INCOMING"/>
+                            <xsd:enumeration value="OUTGOING"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <xsd:complexType name="toNodesType">
+        <xsd:sequence>
+            <xsd:element type="linkedFromSourceType" name="linkedFromSource" minOccurs="0" />
+        </xsd:sequence>
+        <xsd:attribute type="xsd:string" name="withLabel" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="withProperty" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+    <xsd:complexType name="extractPropertyType">
+        <xsd:sequence>
+            <xsd:element type="toNodesType" name="toNodes" />
+        </xsd:sequence>
+        <xsd:attribute type="xsd:string" name="property" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="fromNodes" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="nodesNamed" use="required">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+</xsd:schema>
