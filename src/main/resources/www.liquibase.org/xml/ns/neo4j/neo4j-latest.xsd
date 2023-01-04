@@ -7,22 +7,10 @@
     <xsd:import namespace="https://www.liquibase.org/xml/ns/dbchangelog"
                 schemaLocation="https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd"/>
 
-    <xsd:element name="cypher" substitutionGroup="core:sql">
-        <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-                <xsd:minLength value="1"/>
-            </xsd:restriction>
-        </xsd:simpleType>
-    </xsd:element>
+    <xsd:element name="cypher" substitutionGroup="core:sql"/>
     <xsd:element name="cypherCheck" substitutionGroup="core:sqlCheck">
         <xsd:complexType mixed="true">
-            <xsd:attribute name="expectedResult" type="xsd:string" use="required">
-                <xsd:simpleType>
-                    <xsd:restriction base="xsd:string">
-                        <xsd:minLength value="1"/>
-                    </xsd:restriction>
-                </xsd:simpleType>
-            </xsd:attribute>
+            <xsd:attribute name="expectedResult" type="xsd:string" use="required"/>
         </xsd:complexType>
     </xsd:element>
 
@@ -42,13 +30,7 @@
     <xsd:complexType name="propertyPolicyType">
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
-                <xsd:attribute type="xsd:string" name="nameMatcher" use="required">
-                    <xsd:simpleType>
-                        <xsd:restriction base="xsd:string">
-                            <xsd:minLength value="1"/>
-                        </xsd:restriction>
-                    </xsd:simpleType>
-                </xsd:attribute>
+                <xsd:attribute type="xsd:string" name="nameMatcher" use="required"/>
                 <xsd:attribute type="xsd:string" name="mergeStrategy" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:string">
@@ -65,33 +47,15 @@
         <xsd:sequence>
             <xsd:element type="propertyPolicyType" name="propertyPolicy" maxOccurs="unbounded" minOccurs="1"/>
         </xsd:sequence>
-        <xsd:attribute type="xsd:string" name="fragment" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute type="xsd:string" name="outputVariable" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="fragment" use="required"/>
+        <xsd:attribute type="xsd:string" name="outputVariable" use="required"/>
     </xsd:complexType>
 
     <xsd:element name="extractProperty" type="extractPropertyType"/>
     <xsd:complexType name="linkedFromSourceType">
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
-                <xsd:attribute type="xsd:string" name="withType" use="required">
-                    <xsd:simpleType>
-                        <xsd:restriction base="xsd:string">
-                            <xsd:minLength value="1"/>
-                        </xsd:restriction>
-                    </xsd:simpleType>
-                </xsd:attribute>
+                <xsd:attribute type="xsd:string" name="withType" use="required"/>
                 <xsd:attribute type="xsd:string" name="withDirection" use="required">
                     <xsd:simpleType>
                         <xsd:restriction base="xsd:string">
@@ -107,45 +71,15 @@
         <xsd:sequence>
             <xsd:element type="linkedFromSourceType" name="linkedFromSource" minOccurs="0" />
         </xsd:sequence>
-        <xsd:attribute type="xsd:string" name="withLabel" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute type="xsd:string" name="withProperty" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="withLabel" use="required"/>
+        <xsd:attribute type="xsd:string" name="withProperty" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="extractPropertyType">
         <xsd:sequence>
             <xsd:element type="toNodesType" name="toNodes" />
         </xsd:sequence>
-        <xsd:attribute type="xsd:string" name="property" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute type="xsd:string" name="fromNodes" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute type="xsd:string" name="nodesNamed" use="required">
-            <xsd:simpleType>
-                <xsd:restriction base="xsd:string">
-                    <xsd:minLength value="1"/>
-                </xsd:restriction>
-            </xsd:simpleType>
-        </xsd:attribute>
+        <xsd:attribute type="xsd:string" name="property" use="required"/>
+        <xsd:attribute type="xsd:string" name="fromNodes" use="required"/>
+        <xsd:attribute type="xsd:string" name="nodesNamed" use="required"/>
     </xsd:complexType>
 </xsd:schema>
