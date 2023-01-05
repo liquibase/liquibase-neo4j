@@ -93,8 +93,8 @@ The executed change sets need to be persisted.
     **`liquibase-neo4j` makes no guarantee** that the history graph schema remains unchanged from version to version, even 
     during a non-major version upgrade.
     Users are not expected to manipulate the history graph directly.
-    If the schema changes, `liquibase-neo4j` will automatically internal migrations against the history graph persisted
-    by a former version.
+    If the schema changes, `liquibase-neo4j` will automatically run internal migrations against the history graph
+    persisted by a former version.
 
 ## Concurrency
 
