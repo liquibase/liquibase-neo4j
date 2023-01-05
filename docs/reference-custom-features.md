@@ -2,6 +2,8 @@
 
 ## Cypher change log format
 
+|Required plugin version|4.9.0.1|
+
 The extension supports [polyglot](https://docs.liquibase.com/concepts/basic/other-formats.html) change logs (XML, SQL,
 YAML ...).
 The SQL format has been aliased to the more idiomatic Cypher format.
@@ -24,6 +26,8 @@ The extension supports change log [file](https://docs.liquibase.com/concepts/adv
 and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion.
 
 ## Cypher and rollback changes
+
+|Required plugin version (Cypher alias) |4.7.1.1|
 
 The built-in [SQL](https://docs.liquibase.com/change-types/community/sql.html)
 and [rollback](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html) changes are supported.
@@ -48,6 +52,8 @@ The SQL change is also aliased to `cypher`.
 
 ## Neo4j preconditions
 
+|Required plugin version|4.9.0|
+
 The extension defines three Neo4j-specific preconditions:
 
 - `version` which asserts the expected Neo4j version
@@ -57,7 +63,7 @@ The extension defines three Neo4j-specific preconditions:
 It also supports some
 built-in [preconditions](https://docs.liquibase.com/concepts/changelogs/preconditions.html#available-preconditions):
 
-- `dbms` (restricting to `neo4j`)
+- `dbms` (restricting to `neo4j`), which is supported since the very first release of the plugin
 
 !!! warning
     When using XML change logs, the `cypherCheck`, `version` and `edition` tags need to be prepended with the corresponding extension namespace prefix.
@@ -94,6 +100,8 @@ All boolean operators are supported.
 
 ### Node Merge
 
+|Required plugin version|4.13.0|
+
 ```xml
 
 <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
@@ -125,6 +133,8 @@ Once the policy is matched for the property name, one of the following operation
 {!includes/_abbreviations.md!}
 
 ### Node property extraction
+
+|Required plugin version|4.17.2|
 
 === "XML"
 

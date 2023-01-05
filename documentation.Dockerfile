@@ -3,7 +3,7 @@ FROM python:3
 WORKDIR /usr/src/app
 
 RUN apt update -yq && \
-    pip3 install mkdocs mkdocs-material markdown-include mkdocs-markdownextradata-plugin
+    pip3 install mkdocs mkdocs-material markdown-include mkdocs-markdownextradata-plugin mkdocs-badges
 
 EXPOSE 8000
 
