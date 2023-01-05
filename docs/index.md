@@ -1,5 +1,7 @@
 # Neo4j Plugin for Liquibase
 
+|Current version|{{ version }}|
+
 Database refactoring automation for [Neo4j](https://neo4j.com), the leading graph database.
 
 ## About

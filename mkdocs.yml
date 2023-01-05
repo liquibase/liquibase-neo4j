@@ -13,6 +13,7 @@ theme:
   name: material
 plugins:
   - markdownextradata: { }
+  - badges
 extra:
   maven_central: https://repo1.maven.org/maven2
   github_repo: https://github.com/liquibase/liquibase-neo4j
