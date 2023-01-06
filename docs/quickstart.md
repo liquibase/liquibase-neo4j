@@ -1,4 +1,4 @@
-# Quick start
+# Quick Start
 
 If you are not familiar with Liquibase concepts, please start [here](https://docs.liquibase.com/concepts/home.html).
 
@@ -17,7 +17,7 @@ There are several ways to install Neo4j:
 From now on, the tutorial assumes Neo4j runs at the URI `bolt://localhost`, with the user `neo4j` and the very (not)
 secure password `changeme`.
 
-## Change log
+## Change Log
 
 The rest of the tutorial assumes the change log is written in the XML file `changeLog.xml`, here are some of the
 [supported formats](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html):
@@ -50,7 +50,7 @@ This creates a node with the label `Movie` and one property, whose key is `title
 !!! tip
     If you are not familiar with these graph concepts, learn more [here](https://neo4j.com/docs/getting-started/current/graphdb-concepts/).
 
-## Dry run
+## Dry Run
 
 This is the `updateSQL` command (a less RDBMS-centric name is [under consideration]({{ github_repo }}/liquibase-neo4j/issues/159)).
 Executing a dry run is a good way to detect errors early, before the changes are persisted to the database.
