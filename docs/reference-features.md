@@ -112,7 +112,7 @@ The table below details how each supported data type is mapped to its Neo4j coun
 |----------------|----------------------------------------------|---------------------------------------------|---------------------------|
 | `BLOB`         | `String`                                     | `DLxmEfVUC9CAmjiNyVphWw==` (base64-encoded) | `byte[]`                  |
 | `BOOLEAN`      | `Boolean`                                    | `true` or `false`                           | `Boolean`                 |
-| `BLOB`         | `String`                                     |                                             | `String`                  |
+| `CLOB`         | `String`                                     |                                             | `String`                  |
 | `DATE`         | `java.sql.Timestamp`                         | `2018-02-01T12:13:14`                       | `java.time.LocalDateTime` |
 | `DATE`         | `java.sql.Date`                              | `2018-02-01`                                | `java.time.LocalDate`     |
 | `DATE`         | `java.sql.Time`                              | `12:13:14`                                  | `java.time.LocalTime`     |
