@@ -204,7 +204,7 @@ That is how Liquibase remembers not to re-run an incremental change set.
 Avid readers may also have noticed a `checkSum` attribute on the `__LiquibaseChangeSet` node.
 That attribute makes sure its change set has not changed since the last run.
 
-Learn more by reading the [reference documentation](../reference).
+Learn more by reading the [reference documentation](../reference-intro).
 
 
 {!includes/_abbreviations.md!}
