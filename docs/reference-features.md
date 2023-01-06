@@ -1,6 +1,6 @@
 # Custom Features
 
-## Cypher change log format
+## Cypher Change Log Format
 
 |Required plugin version|4.9.0.1|
 
@@ -25,7 +25,7 @@ and **no** comment directive.
 The extension supports change log [file](https://docs.liquibase.com/concepts/advanced/include.html)
 and [folder](https://docs.liquibase.com/concepts/advanced/includeall.html) inclusion.
 
-## Cypher and rollback changes
+## Cypher and Rollback Changes
 
 |Required plugin version (Cypher alias) |4.7.1.1|
 
@@ -50,7 +50,7 @@ The SQL change is also aliased to `cypher`.
         </changeSet>
         ```
 
-## Neo4j preconditions
+## Neo4j Preconditions
 
 |Required plugin version|4.9.0|
 
@@ -99,7 +99,7 @@ built-in [preconditions](https://docs.liquibase.com/concepts/changelogs/precondi
 
 All boolean operators are supported.
 
-## Load data
+## Load Data
 
 |Required Liquibase core version|4.11.0|
 |Required plugin version|4.16.1.1|
@@ -163,7 +163,7 @@ Once the policy is matched for the property name, one of the following operation
 
 {!includes/_abbreviations.md!}
 
-### Node property extraction
+### Node Property Extraction
 
 |Required plugin version|4.17.2|
 
