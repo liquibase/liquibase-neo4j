@@ -1,3 +1,4 @@
+*[API]: Application Programming Interface
 *[CLI]: Command Line Application
 *[JAR]: Java ARchive
 *[JRE]: Java Runtime Environment
