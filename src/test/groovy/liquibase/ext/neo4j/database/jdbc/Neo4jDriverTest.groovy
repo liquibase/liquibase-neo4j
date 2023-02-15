@@ -3,6 +3,9 @@ package liquibase.ext.neo4j.database.jdbc
 
 import spock.lang.Specification
 
+import java.sql.Driver
+import java.sql.DriverManager
+
 class Neo4jDriverTest extends Specification {
 
     def "accepts JDBC Neo4j URL"() {
@@ -22,5 +25,16 @@ class Neo4jDriverTest extends Specification {
         "jdbc:mysql://localhost/db"                 | false
         ""                                          | false
         null                                        | false
+    }
+
+    def "finds registered driver"() {
+        given:
+        Class.forName("liquibase.ext.neo4j.database.jdbc.Neo4jDriver")
+
+        when:
+        def driver = DriverManager.getDriver("jdbc:neo4j:neo4j://example.com")
+
+        then:
+        driver != null
     }
 }

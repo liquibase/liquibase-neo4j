@@ -2,13 +2,24 @@ package liquibase.ext.neo4j.database.jdbc;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.IS_SUPPORTED_JDBC_URL;
 
 public class Neo4jDriver implements Driver {
+
+    static {
+        try {
+            Driver driver = new Neo4jDriver();
+            DriverManager.registerDriver(driver);
+        } catch (SQLException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     static final ProjectVersion VERSION = ProjectVersion.parse();
 
