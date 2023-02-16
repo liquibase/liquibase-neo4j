@@ -27,7 +27,8 @@ class Neo4jDriverTest extends Specification {
         null                                        | false
     }
 
-    def "finds registered driver"() {
+    // see section 9.2 of JDBC 4.2 spec
+    def "finds registered driver via static initializer"() {
         given:
         Class.forName("liquibase.ext.neo4j.database.jdbc.Neo4jDriver")
 
@@ -36,5 +37,14 @@ class Neo4jDriverTest extends Specification {
 
         then:
         driver != null
+    }
+
+    // see section 9.2.1 of JDBC 4.2 spec
+    def "finds registered driver via serviceloader declaration"() {
+        when:
+        def drivers = ServiceLoader.load(Driver.class)
+
+        then:
+        drivers.find { it instanceof Neo4jDriver } != null
     }
 }
