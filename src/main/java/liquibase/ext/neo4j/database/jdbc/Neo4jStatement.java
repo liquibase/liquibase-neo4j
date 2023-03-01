@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.database.jdbc;
 
+import org.neo4j.driver.QueryRunner;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
@@ -613,11 +614,11 @@ class Neo4jStatement implements Statement, PreparedStatement {
         throw new SQLFeatureNotSupportedException();
     }
 
-    private BiFunction<String, Map<String, Object>, Result> queryRunner() {
+    private QueryRunner queryRunner() {
         if (isAutocommit()) {
-            return connection.getSession()::run;
+            return connection.getSession();
         }
-        return connection.getOrBeginTransaction()::run;
+        return connection.getOrBeginTransaction();
     }
 
     boolean isAutocommit() {
@@ -652,7 +653,7 @@ class Neo4jStatement implements Statement, PreparedStatement {
         return new Neo4jResultSet(
                 this,
                 this.connection.getTypeSystem(),
-                queryRunner().apply(cypher, parameters)
+                queryRunner().run(cypher, parameters)
         );
     }
 
