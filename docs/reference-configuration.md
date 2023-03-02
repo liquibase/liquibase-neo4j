@@ -1,8 +1,8 @@
-# Neo4j Connection URI
+# Neo4j Configuration
 
-`liquibase-neo4j` accepts only URI in the JDBC format.
+## Supported URIs
 
-## Supported schemes
+`liquibase-neo4j` accepts only URIs in the JDBC format.
 
 Only connections through the Bolt protocol variants are supported.
 Connections through HTTP or embedded are not supported by the extension.
@@ -17,26 +17,53 @@ Connections through HTTP or embedded are not supported by the extension.
 - ❌ `jdbc:neo4j:https://host:port` is NOT supported
 - ❌ `jdbc:neo4j:file:///path/to/neo4j` is NOT supported
 
-Read more about what each URI scheme means in the [Neo4j driver manual](https://neo4j.com/docs/driver-manual/4.0/client-applications/#driver-configuration-examples).
+Read more about what each URI scheme means in the [Neo4j driver manual](https://neo4j.com/docs/java-manual/current/client-applications/#_examples).
 
-## Detailed configuration
+## JDBC connectivity
 
-### Until version 4.18.0.1 included
+For versions 4.18.0.1 and earlier, the Neo4j extension relied on a [third-party JDBC connector](https://github.com/neo4j-contrib/neo4j-jdbc).
+Configuration parameters for this connector can be found in [this link](https://github.com/neo4j-contrib/neo4j-jdbc#list-of-supported-neo4j-configuration-parameters).
 
-Until version 4.18.0.1 (included), this plugin relied on the
-external [JDBC connector](https://github.com/neo4j-contrib/neo4j-jdbc).
-Its configuration parameters are
-detailed [here](https://github.com/neo4j-contrib/neo4j-jdbc#list-of-supported-neo4j-configuration-parameters).
+Starting from version 4.19.0, the extension has its own built-in JDBC connector.
 
-### After version 4.18.0.1
+The built-in connector is simpler and easier to reason about because Liquibase only needs one connection for a single execution and relies on a specific, finite set of JDBC APIs.
 
-The plugin now relies on its own purpose-built JDBC connector.
-Its configuration parameters are compatible with the ones linked above.
+This new connector has a few key differences from the third-party connector.
+
+The serialization and deserialization logic of the built-in connector is stricter.
+
+!!! warning
+    [This issue](https://github.com/neo4j-contrib/neo4j-jdbc/issues/412) may arise if you try to use the third-party connector with recent versions of the extension.
+
+Since it is tailored towards Liquibase use only, the new connector is not registered through the standard JDBC mechanisms.
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+// [...]
+Connection connection = DriverManager.getConnection("jdbc:neo4j:neo4j://localhost", "neo4j", "<redacted>");
+// this will not work! see below
+```
+
+If you need access to a JDBC `Connection` instance to programmatically configure Liquibase, the code to run is as follows:
+```java
+import liquibase.ext.neo4j.database.jdbc.Neo4jDriver;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+// [...]
+Properties properties = new Properties();
+properties.setProperty("user", "neo4j");
+properties.setProperty("password", "<redacted>");
+Connection connection = new Neo4jDriver().connect("jdbc:neo4j:neo4j://localhost", properties);
+```
+
+#### Configuration
 
 !!! important
-    Some of the above settings are not supported yet. If you happen to need one of them, please
-    [open an issue](https://github.com/liquibase/liquibase-neo4j/issues/new) and describe why it is needed in your
-    situation.
+    Some settings supported by the third-party JDBC connector are not supported yet. If you happen to need one of them, please
+    [open an issue](https://github.com/liquibase/liquibase-neo4j/issues/new) and describe why it is needed in your situation.
 
 | Setting&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description                                                                                                        | Allowed values&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | URL? | Properties? | Remarks                                                                                                                                                                                             |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

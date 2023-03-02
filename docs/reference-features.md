@@ -295,7 +295,7 @@ attributes.
 It is also possible to avoid relationship duplicates by setting the corresponding `merge`
 attribute to `true`. The default is to always create relationships.
 
-!!!warning
+!!! warning
     `merge=false` on nodes with `merge=true` on relationships will trigger a validation warning.
     Indeed, creating extracting nodes imply that new relationships will be created as well.
     Setting `merge=true` on relationships in that case incur an unnecessary execution penalty.

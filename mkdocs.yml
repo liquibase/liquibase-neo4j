@@ -5,7 +5,7 @@ nav:
   - Quick start: quickstart.md
   - 'Reference':
     - 'Introduction': reference-intro.md
-    - 'Connection URI': reference-connection-uri.md
+    - 'Configuration': reference-configuration.md
     - 'Features': reference-features.md
 repo_name: 'liquibase-neo4j'
 repo_url: 'https://github.com/liquibase/liquibase-neo4j'
