@@ -124,7 +124,7 @@ The table below details how each supported data type is mapped to its Neo4j coun
 `SKIP` is also supported: the value will be ignored.
 
 !!!warning
-    `BLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `CLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `SEQUENCE`, `COMPUTER`, `OTHER` and `UNKNOWN`
+    `BLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `CLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `SEQUENCE`, `COMPUTED`, `OTHER` and `UNKNOWN`
     load data types are currently unsupported.
 
 ## Graph refactorings
