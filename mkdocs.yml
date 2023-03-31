@@ -16,6 +16,7 @@ theme:
   name: material
   features:
     - content.action.edit
+    - content.code.copy
   icon:
     edit: material/pencil
     view: material/eye
