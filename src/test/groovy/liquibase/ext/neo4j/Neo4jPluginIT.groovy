@@ -111,21 +111,22 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
             ORDER BY labels ASC, key ASC, n[key] ASC
             WITH n, labels, collect(property) AS properties
             OPTIONAL MATCH (n)-[r]->()
-            WITH labels, properties, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
+            WITH labels, properties, collect(r {type: type(r), properties: properties(r)}) AS outgoing_relationships
             RETURN labels, properties, outgoing_relationships
         """))
 
         def hasExtraNodeFromConditionalChangeSet = definesExtraNode(queryRunner)
-        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 10 : 9)
-        rows[0] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
-        rows[1] == [labels       : ["CsvPerson"], properties: [
+        rows.size() == (hasExtraNodeFromConditionalChangeSet ? 11 : 10)
+        rows[0] == [labels: ["Baz"], properties: [name: "no-name"], outgoing_relationships: []]
+        rows[1] == [labels: ["Count"], properties: [value: 1], outgoing_relationships: []]
+        rows[2] == [labels       : ["CsvPerson"], properties: [
                 "first_name"  : "Andrea",
                 "polite"      : true,
                 "some_date"   : ZonedDateTime.of(LocalDateTime.of(2020, 7, 12, 22, 23, 24), ZoneOffset.ofHours(2)),
                 "uuid"        : "1bc59ddb-8d4d-41d0-9c9a-34e837de5678",
                 "wisdom_index": 32L,
         ], outgoing_relationships: []]
-        rows[2] == [labels       : ["CsvPerson"], properties: [
+        rows[3] == [labels       : ["CsvPerson"], properties: [
                 "first_name"  : "Florent",
                 "picture"     : Base64.getDecoder().decode("DLxmEfVUC9CAmjiNyVphWw=="),
                 "polite"      : false,
@@ -133,26 +134,26 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
                 "uuid"        : "8d1208fc-f401-496c-9cb8-483fef121234",
                 "wisdom_index": 30.5D,
         ], outgoing_relationships: []]
-        rows[3] == [labels       : ["CsvPerson"], properties: [
+        rows[4] == [labels       : ["CsvPerson"], properties: [
                 "first_name"  : "Nathan",
                 "polite"      : true,
                 "some_date"   : LocalDateTime.of(2018, 2, 1, 12, 13, 14),
                 "uuid"        : "123e4567-e89b-12d3-a456-426614174000",
                 "wisdom_index": 34L,
         ], outgoing_relationships: []]
-        rows[4] == [labels       : ["CsvPerson"], properties: [
+        rows[5] == [labels       : ["CsvPerson"], properties: [
                 "first_name"  : "Robert",
                 "polite"      : true,
                 "some_date"   : LocalTime.of(22, 23, 24),
                 "uuid"        : "9986a49a-0cce-4982-b491-b8177fd0ef81",
                 "wisdom_index": 36L,
         ], outgoing_relationships: []]
-        rows[5] == [labels: ["Genre"], properties: [genre: "Horror"], outgoing_relationships: []]
-        rows[6] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: [[type: "HAS_GENRE", properties: [:]]]]
-        rows[7] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
-        rows[8] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
+        rows[6] == [labels: ["Genre"], properties: [genre: "Horror"], outgoing_relationships: []]
+        rows[7] == [labels: ["Movie"], properties: [title: "My Life"], outgoing_relationships: [[type: "HAS_GENRE", properties: [:]]]]
+        rows[8] == [labels: ["Person"], properties: [name: "Hater"], outgoing_relationships: [[type: "RATED", properties: ["rating": 5]]]]
+        rows[9] == [labels: ["Person"], properties: [name: "Myself"], outgoing_relationships: [[type: "ACTED_IN", properties: [:]]]]
         if (hasExtraNodeFromConditionalChangeSet) {
-            rows[9] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
+            rows[10] == [labels: ["SecretMovie"], properties: [title: "Neo4j 4.4 EE: A life story"], outgoing_relationships: []]
         }
     }
 
