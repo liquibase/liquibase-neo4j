@@ -17,6 +17,7 @@ import org.asciidoctor.ast.StructuralNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
@@ -91,8 +92,13 @@ public class CypherInAsciidocParser implements ChangeLogParser {
     }
 
     private static String readContents(ResourceAccessor resourceAccessor, String physicalChangeLogLocation) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAccessor.openStream(null, physicalChangeLogLocation)))) {
-            return reader.lines().collect(Collectors.joining("\n"));
+        try (InputStream stream = resourceAccessor.openStream(null, physicalChangeLogLocation)) {
+            if (stream == null) {
+                throw new IOException(String.format("could not find resource %s", physicalChangeLogLocation));
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+                return reader.lines().collect(Collectors.joining("\n"));
+            }
         }
     }
 
