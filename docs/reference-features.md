@@ -37,18 +37,18 @@ The SQL change is also aliased to `cypher`.
     When using XML change logs, the `cypher` tag needs to be prepended with the corresponding extension namespace prefix.
     In the following example, the prefix is `neo4j`:
     
-        ```xml
-        <?xml version="1.0" encoding="UTF-8"?>
-        <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    
-        <changeSet id="my-movie-init" author="fbiville">
-            <neo4j:cypher>MERGE (:Movie {title: 'My Life'})</neo4j:cypher>
-            <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
-        </changeSet>
-        ```
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-movie-init" author="fbiville">
+        <neo4j:cypher>MERGE (:Movie {title: 'My Life'})</neo4j:cypher>
+        <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
+    </changeSet>
+    ```
 
 ## Neo4j Preconditions
 
@@ -72,30 +72,30 @@ built-in [preconditions](https://docs.liquibase.com/concepts/changelogs/precondi
     extension namespace prefix.
     In the following example, the prefix is `neo4j`:
     
-        ```xml
-        <?xml version="1.0" encoding="UTF-8"?>
-        <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    
-        <changeSet id="some-change-set" author="some-author">
-            <preConditions onFail="CONTINUE">
-              <and>
-                <neo4j:cypherCheck expectedResult="0">
-                    MATCH (n)
-                    WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
-                    RETURN COUNT(n)
-                </neo4j:cypherCheck>
-                <or>
-                  <neo4j:edition enterprise="true" />
-                  <neo4j:version matches="4.4" />
-                </or>
-              </and>
-            </preConditions>
-            <!-- [...] -->
-        </changeSet>
-        ```
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="some-change-set" author="some-author">
+        <preConditions onFail="CONTINUE">
+          <and>
+            <neo4j:cypherCheck expectedResult="0">
+                MATCH (n)
+                WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
+                RETURN COUNT(n)
+            </neo4j:cypherCheck>
+            <or>
+              <neo4j:edition enterprise="true" />
+              <neo4j:version matches="4.4" />
+            </or>
+          </and>
+        </preConditions>
+        <!-- [...] -->
+    </changeSet>
+    ```
 
 All boolean operators are supported.
 
@@ -134,7 +134,6 @@ The table below details how each supported data type is mapped to its Neo4j coun
 |Required plugin version|4.13.0|
 
 ```xml
-
 <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
     <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST"/>
     <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST"/>
