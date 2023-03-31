@@ -1,4 +1,5 @@
 site_name: Neo4j Plugin for Liquibase
+edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Download: download.md
@@ -7,10 +8,17 @@ nav:
     - 'Introduction': reference-intro.md
     - 'Configuration': reference-configuration.md
     - 'Features': reference-features.md
+  - 'Presentations': presentations.md
+  - 'Alternatives': alternatives.md
 repo_name: 'liquibase-neo4j'
 repo_url: 'https://github.com/liquibase/liquibase-neo4j'
 theme:
   name: material
+  features:
+    - content.action.edit
+  icon:
+    edit: material/pencil
+    view: material/eye
 plugins:
   - markdownextradata: { }
   - badges
