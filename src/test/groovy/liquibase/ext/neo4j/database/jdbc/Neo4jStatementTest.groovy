@@ -133,25 +133,26 @@ class Neo4jStatementTest extends Specification {
     def "stores time parameters"() {
         given:
         def statement = new Neo4jStatement(Mock(Neo4jConnection.class), "RETURN \$1")
+        def time = new Time(1000)
+
 
         when:
-        statement.setTime(1, new Time(1000))
+        statement.setTime(1, time)
 
 
         then:
-        def localTime = LocalTime.ofSecondOfDay(1 + (int) (Offsets.currentUtcOffsetMillis() / 1000))
-        statement.getParameters() == ["1": localTime]
+        statement.getParameters() == ["1": time.toLocalTime()]
     }
 
     def "stores timestamp parameters"() {
         given:
         def statement = new Neo4jStatement(Mock(Neo4jConnection.class), "RETURN \$1")
+        def timestamp = new Timestamp(1000)
 
         when:
-        statement.setTimestamp(1, new Timestamp(1000))
+        statement.setTimestamp(1, timestamp)
 
         then:
-        def localTime = LocalTime.ofSecondOfDay(1 + (int) (Offsets.currentUtcOffsetMillis() / 1000))
-        statement.getParameters() == ["1": LocalDateTime.of(LocalDate.ofEpochDay(0), localTime)]
+        statement.getParameters() == ["1": timestamp.toLocalDateTime()]
     }
 }

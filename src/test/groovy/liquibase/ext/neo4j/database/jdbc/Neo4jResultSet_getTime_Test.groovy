@@ -11,8 +11,6 @@ import java.sql.SQLException
 import java.sql.Time
 import java.time.LocalTime
 
-import static Offsets.currentUtcOffsetMillis
-
 class Neo4jResultSet_getTime_Test extends Specification {
     Neo4jStatement statement
     Result result
@@ -27,7 +25,8 @@ class Neo4jResultSet_getTime_Test extends Specification {
     def "gets named time value"() {
         given:
         def row = Mock(Record.class)
-        row.get("foo") >> Values.value(LocalTime.of(12, 12, 0))
+        def localTime = LocalTime.of(12, 12, 0)
+        row.get("foo") >> Values.value(localTime)
         row.get("bar") >> Values.NULL
         result.next() >> row
 
@@ -35,14 +34,15 @@ class Neo4jResultSet_getTime_Test extends Specification {
         resultSet.next()
 
         then:
-        resultSet.getTime("foo") == new Time(12 * 60 * 60 * 1000 + 12 * 60 * 1000 + 0 - currentUtcOffsetMillis())
+        resultSet.getTime("foo") == Time.valueOf(localTime)
         resultSet.getTime("bar") == null
     }
 
     def "gets indexed time value"() {
         given:
+        def localTime = LocalTime.of(12, 12, 0)
         def row = Mock(Record.class)
-        row.get(42 - 1) >> Values.value(LocalTime.of(12, 12, 0))
+        row.get(42 - 1) >> Values.value(localTime)
         row.get(44 - 1) >> Values.NULL
         result.next() >> row
 
@@ -50,7 +50,7 @@ class Neo4jResultSet_getTime_Test extends Specification {
         resultSet.next()
 
         then:
-        resultSet.getTime(42) == new Time(12 * 60 * 60 * 1000 + 12 * 60 * 1000 + 0 - currentUtcOffsetMillis())
+        resultSet.getTime(42) == Time.valueOf(localTime)
         resultSet.getTime(44) == null
     }
 
