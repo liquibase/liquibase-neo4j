@@ -8,27 +8,21 @@ First install [Liquibase](https://www.liquibase.org/download).
 
 === "CLI users"
     1. Locate the Liquibase installation folder (subsequently called `LIQUIBASE_HOME`)
-    1. Download the extension JAR (from [GitHub]({{ github_repo }}/releases/download/liquibase-neo4j-{{ version
-    }}/liquibase-neo4j-{{ version }}-full.jar)
-    or [Maven Central]({{ maven_central }}/org/liquibase/ext/liquibase-neo4j/{{ version
-    }}/liquibase-neo4j-{{ version }}-full.jar))
+    1. Download the extension JAR (from [GitHub]({{ github_repo }}/releases/download/{{ artifact_id }}-{{ version
+    }}/{{ artifact_id }}-{{ version }}-full.jar))
     1. Place the JAR in the `lib` folder of `LIQUIBASE_HOME`
     1. Run `liquibase --version`, the Neo4j extension should be listed
-
-    !!! tip
-        Maven Central remains the recommended download location.
-        It includes [PGP]({{ maven_central }}/org/liquibase/ext/liquibase-neo4j/{{ version }}/liquibase-neo4j-{{ version }}-full.jar.asc), [MD5]({{ maven_central }}/org/liquibase/ext/liquibase-neo4j/{{ version }}/liquibase-neo4j-{{ version }}-full.jar.md5) and [SHA-1]({{ maven_central }}/org/liquibase/ext/liquibase-neo4j/{{ version }}/liquibase-neo4j-{{ version }}-full.jar.sha1) files to validate the integrity of the downloadable artefact.
 
 === "Maven users"
 
     === "Regular users"
 
-        Make sure to add the `liquibase-neo4j` dependency as follows, alongside your other dependencies.
+        Make sure to add the `{{ artifact_id }}` dependency as follows, alongside your other dependencies.
 
         ```xml
         <dependency>
-            <groupId>org.liquibase.ext</groupId>
-            <artifactId>liquibase-neo4j</artifactId>
+            <groupId>{{ group_id }}</groupId>
+            <artifactId>{{ artifact_id }}</artifactId>
             <version>{{ version }}</version>
         </dependency>
         ```
@@ -40,7 +34,7 @@ First install [Liquibase](https://www.liquibase.org/download).
 
     === "Liquibase plugin users"
 
-        Make sure to add the `liquibase-neo4j` dependency to the plugin definition.
+        Make sure to add the `{{ artifact_id }}` dependency to the plugin definition.
 
         ```xml
         <plugin>
@@ -49,8 +43,8 @@ First install [Liquibase](https://www.liquibase.org/download).
             <version>{{ liquibase_version }}</version>
             <dependencies>
                 <dependency>
-                    <groupId>org.liquibase.ext</groupId>
-                    <artifactId>liquibase-neo4j</artifactId>
+                    <groupId>{{ group_id }}</groupId>
+                    <artifactId>{{ artifact_id }}</artifactId>
                     <version>{{ version }}</version>
                 </dependency>
             </dependencies>
@@ -61,10 +55,10 @@ First install [Liquibase](https://www.liquibase.org/download).
 
     === "Regular users"
 
-        Make sure to add the `liquibase-neo4j` dependency as follows, alongside your other dependencies.
+        Make sure to add the `{{ artifact_id }}` dependency as follows, alongside your other dependencies.
 
         ```groovy
-        runtimeOnly 'org.liquibase.ext:liquibase-neo4j:{{ version }}'
+        runtimeOnly '{{ group_id }}:{{ artifact_id }}:{{ version }}'
         ```
 
         !!! info
@@ -75,10 +69,10 @@ First install [Liquibase](https://www.liquibase.org/download).
 
     === "Liquibase plugin users"
 
-        Make sure to add the `liquibase-neo4j` dependency as follows.
+        Make sure to add the `{{ artifact_id }}` dependency as follows.
 
         ```groovy
-        liquibaseRuntime 'org.liquibase.ext:liquibase-neo4j:{{ version }}'
+        liquibaseRuntime '{{ group_id }}:{{ artifact_id }}:{{ version }}'
         ```
 
 {!includes/_abbreviations.md!}
