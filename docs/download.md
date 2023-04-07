@@ -12,7 +12,7 @@ First install [Liquibase](https://www.liquibase.org/download).
     }}/liquibase-neo4j-{{ version }}-full.jar)
     or [Maven Central]({{ maven_central }}/org/liquibase/ext/liquibase-neo4j/{{ version
     }}/liquibase-neo4j-{{ version }}-full.jar))
-    1. Place the JAR in the `plugins` folder of `LIQUIBASE_HOME`
+    1. Place the JAR in the `lib` folder of `LIQUIBASE_HOME`
     1. Run `liquibase --version`, the Neo4j extension should be listed
 
     !!! tip
