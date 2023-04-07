@@ -5,7 +5,7 @@ If you are not familiar with Liquibase concepts, please start [here](https://doc
 ## Setup
 
 The rest of this tutorial will assume a CLI installation, as well as a running Neo4j database.
-Please refer to the [download section](../download) to install the CLI.
+Please refer to the [download section](../download) to install the extension.
 
 There are several ways to install Neo4j:
 
