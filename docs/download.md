@@ -64,7 +64,7 @@ First install [Liquibase](https://www.liquibase.org/download).
         Make sure to add the `liquibase-neo4j` dependency as follows, alongside your other dependencies.
 
         ```groovy
-        runtimeOnly 'org.liquibase.ext:liquibase:neo4j:{{ version }}'
+        runtimeOnly 'org.liquibase.ext:liquibase-neo4j:{{ version }}'
         ```
 
         !!! info
@@ -78,7 +78,7 @@ First install [Liquibase](https://www.liquibase.org/download).
         Make sure to add the `liquibase-neo4j` dependency as follows.
 
         ```groovy
-        liquibaseRuntime 'org.liquibase.ext:liquibase:neo4j:{{ version }}'
+        liquibaseRuntime 'org.liquibase.ext:liquibase-neo4j:{{ version }}'
         ```
 
 {!includes/_abbreviations.md!}
