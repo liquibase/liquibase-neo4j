@@ -46,20 +46,55 @@ Connection connection = DriverManager.getConnection("jdbc:neo4j:neo4j://localhos
 ```
 
 If you need access to a JDBC `Connection` instance to programmatically configure Liquibase, the code to run is as follows:
-```java
-import liquibase.ext.neo4j.database.jdbc.Neo4jDriver;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Properties;
-// [...]
-Properties properties = new Properties();
-properties.setProperty("user", "neo4j");
-properties.setProperty("password", "<redacted>");
-Connection connection = new Neo4jDriver().connect("jdbc:neo4j:neo4j://localhost", properties);
-```
+=== "Regular Java users"
+
+    ```java
+    import liquibase.ext.neo4j.database.jdbc.Neo4jDriver;
+
+    import java.sql.Connection;
+    import java.sql.SQLException;
+    import java.util.Properties;
+    // [...]
+    Properties properties = new Properties();
+    properties.setProperty("user", "neo4j");
+    properties.setProperty("password", "<redacted>");
+    Connection connection = new Neo4jDriver().connect(
+        "jdbc:neo4j:neo4j://localhost",
+        properties
+    );
+    ```
+
+=== "Spring Boot users"
+
+    ```java
+    import javax.sql.DataSource;
+    import liquibase.ext.neo4j.database.jdbc.Neo4jDriver;
+    import org.springframework.boot.autoconfigure.liquibase.LiquibaseDataSource;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+    // [...]
+
+    @LiquibaseDataSource
+    @Bean
+    public DataSource liquibaseNeo4jDataSource() {
+        // SimpleDriverDataSource is a great fit for Liquibase
+        // since it does not need any connection pooling
+        // note: you can set properties instead of hardcoding credentials
+        SimpleDriverDataSource dataSource = new SimpleDriverDataSource(
+            new Neo4jDriver(),
+            "jdbc:neo4j:bolt://localhost"
+        );
+        dataSource.setUsername("neo4j");
+        dataSource.setPassword("<redacted>");
+        return dataSource;
+    }
+    ```
 
 #### Configuration
+
+You can fine-tune the behavior of the JDBC driver or the underlying Java Bolt driver by configuring any of the settings
+below.
 
 !!! important
     Some settings supported by the third-party JDBC connector are not supported yet. If you happen to need one of them, please
