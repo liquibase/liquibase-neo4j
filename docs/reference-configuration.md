@@ -47,7 +47,7 @@ Connection connection = DriverManager.getConnection("jdbc:neo4j:neo4j://localhos
 
 If you need access to a JDBC `Connection` instance to programmatically configure Liquibase, the code to run is as follows:
 
-=== "Regular Java users"
+=== "Plain old Java"
 
     ```java
     import liquibase.ext.neo4j.database.jdbc.Neo4jDriver;
@@ -65,7 +65,16 @@ If you need access to a JDBC `Connection` instance to programmatically configure
     );
     ```
 
-=== "Spring Boot users"
+=== "Spring Boot (properties)"
+
+    ```properties
+    spring.liquibase.driver-class-name=liquibase.ext.neo4j.database.jdbc.Neo4jDriver
+    spring.liquibase.url=jdbc:neo4j:bolt://localhost
+    spring.liquibase.user=neo4j
+    spring.liquibase.password=<redacted>
+    ```
+
+=== "Spring Boot (Java Config)"
 
     ```java
     import javax.sql.DataSource;
