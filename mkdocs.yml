@@ -5,7 +5,7 @@ nav:
   - Download: download.md
   - Quick start: quickstart.md
   - 'Reference':
-    - 'Introduction': reference-intro.md
+    - 'Mental Model': reference-intro.md
     - 'Configuration': reference-configuration.md
     - 'Features': reference-features.md
   - 'Presentations': presentations.md
