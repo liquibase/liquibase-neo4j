@@ -1,4 +1,6 @@
-# Introduction
+# Mental Model
+
+Learn the main concepts that describe the execution model of Liquibase.
 
 ## Changes
 
