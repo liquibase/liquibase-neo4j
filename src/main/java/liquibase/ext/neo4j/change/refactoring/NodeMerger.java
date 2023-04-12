@@ -40,9 +40,9 @@ public class NodeMerger {
     }
 
     private List<Long> getNodeIds(MatchPattern pattern) throws LiquibaseException {
-        String query = String.format("MATCH %s RETURN id(%s) AS ID", pattern.cypherFragment(), pattern.outputVariable());
+        String query = String.format("MATCH %s RETURN id(%s) AS id", pattern.cypherFragment(), pattern.outputVariable());
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(query));
-        return rows.stream().map(row -> (Long) row.get("ID")).collect(Collectors.toList());
+        return rows.stream().map(row -> (Long) row.get("id")).collect(Collectors.toList());
     }
 
     private Optional<SqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
@@ -51,13 +51,13 @@ public class NodeMerger {
                         "UNWIND labels(n) AS label\n" +
                         "WITH DISTINCT label\n" +
                         "ORDER BY label ASC\n" +
-                        "RETURN collect(label) AS LABELS",
+                        "RETURN collect(label) AS labels",
                 tailOf(ids)));
 
         StringJoiner labelLiterals = new StringJoiner("`:`", ":`", "`");
         Map<String, ?> row = rows.get(0);
         @SuppressWarnings("unchecked")
-        List<String> labels = (List<String>) row.get("LABELS");
+        List<String> labels = (List<String>) row.get("labels");
         for (String label : labels) {
             labelLiterals.add(label);
         }
@@ -105,9 +105,9 @@ public class NodeMerger {
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
                 "MATCH (n) WHERE id(n) IN $0\n" +
                         "WITH [ (n)-[r]-() | r ] AS rels\n" +
-                        "UNWIND rels AS REL\n" +
-                        "RETURN DISTINCT REL\n" +
-                        "ORDER BY type(REL) ASC, id(REL) ASC",
+                        "UNWIND rels AS rel\n" +
+                        "RETURN DISTINCT rel\n" +
+                        "ORDER BY type(rel) ASC, id(rel) ASC",
                 nodeIdTail
         ));
         if (rows.isEmpty()) {
@@ -121,7 +121,7 @@ public class NodeMerger {
         parameterIndex++;
         for (Map<String, ?> row : rows) {
             @SuppressWarnings("unchecked")
-            Map<String, Object> relation = (Map<String, Object>) row.get("REL");
+            Map<String, Object> relation = (Map<String, Object>) row.get("rel");
             parameters.add(parameterIndex, relProperties(relation));
             long startId = (long) relation.get("_startId");
             long endId = (long) relation.get("_endId");
