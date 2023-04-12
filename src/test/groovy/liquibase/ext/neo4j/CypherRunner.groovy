@@ -50,12 +50,12 @@ class CypherRunner implements AutoCloseable {
             def descriptions = (String[]) this.getSingleRow(
                     """
                     | SHOW CONSTRAINTS YIELD name, labelsOrTypes
-                    | RETURN COLLECT(name + ":" + reduce(str = "", l IN labelsOrTypes | str+l+",")) AS descriptions
+                    | RETURN collect(name + ":" + reduce(str = "", l IN labelsOrTypes | str+l+",")) AS descriptions
                     """.stripMargin())["descriptions"]
             return Arrays.asList(descriptions)
         }
         // names are not available before Neo4j 4.x
-        def descriptions = (String[]) this.getSingleRow("CALL db.constraints() YIELD description RETURN COLLECT(description) AS descriptions")["descriptions"]
+        def descriptions = (String[]) this.getSingleRow("CALL db.constraints() YIELD description RETURN collect(description) AS descriptions")["descriptions"]
         return Arrays.asList(descriptions)
     }
 

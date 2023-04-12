@@ -57,7 +57,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         existingConstraints.findIndexOf { it.contains(":__LiquibaseLabel") } >= 0
         !enterpriseEdition() || existingConstraints.findIndexOf { it.contains(":__LiquibaseChangeSet") } >= 0
         def row = queryRunner.getSingleRow("""
-            MATCH (n) RETURN LABELS(n) AS labels, n.dateCreated AS dateCreated, n.dateUpdated as dateUpdated
+            MATCH (n) RETURN labels(n) AS labels, n.dateCreated AS dateCreated, n.dateUpdated as dateUpdated
         """)
         row["labels"] == ["__LiquibaseChangeLog"]
         date(row["dateCreated"] as ZonedDateTime) > nowMinus(1, MINUTES)
@@ -129,7 +129,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
         then:
         def row = queryRunner.getSingleRow("""
-            MATCH (n) RETURN LABELS(n) AS labels, n.dateCreated AS dateCreated, n.dateUpdated as dateUpdated
+            MATCH (n) RETURN labels(n) AS labels, n.dateCreated AS dateCreated, n.dateUpdated as dateUpdated
         """)
         def creationDate = date(row["dateCreated"] as ZonedDateTime)
         row["labels"] == ["__LiquibaseChangeLog"]
@@ -174,7 +174,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         getField("ranChangeSets", historyService) == null
         historyService.deploymentId == null
         queryRunner.listExistingConstraints().isEmpty()
-        queryRunner.getSingleRow("MATCH (n) RETURN COUNT(n) AS count")["count"] == 0L
+        queryRunner.getSingleRow("MATCH (n) RETURN count(n) AS count")["count"] == 0L
     }
 
     def "does not fail upon destroy call before database and service are initialized"() {
@@ -435,7 +435,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
             MATCH (tag:__LiquibaseTag)
             WITH tag
             ORDER BY tag.tag ASC
-            RETURN COLLECT(tag.tag) AS tags
+            RETURN collect(tag.tag) AS tags
         """)
         row["tags"] == ["guten-tag", "guten-tag-2"]
     }
@@ -812,7 +812,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         historyService.setExecType(changeSet("some-id", "some-author", "some/path"), SKIPPED)
 
         then:
-        queryRunner.getSingleRow("MATCH (c:__LiquibaseChangeSet) RETURN COUNT(c) AS count")["count"] == 0L
+        queryRunner.getSingleRow("MATCH (c:__LiquibaseChangeSet) RETURN count(c) AS count")["count"] == 0L
     }
 
     def "updates change set when re-ran, including execution order"() {
@@ -1004,7 +1004,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         def row = queryRunner.getSingleRow("""
             MATCH (changeSet:__LiquibaseChangeSet)<-[:LABELS]-(label:__LiquibaseLabel)
-            WITH changeSet, COLLECT(label.label) AS labels
+            WITH changeSet, collect(label.label) AS labels
             RETURN changeSet {
                 .id, 
                 labels: labels
@@ -1103,7 +1103,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
                                         |    liquibaseVersion: "${changeSet.liquibaseVersion}"
                                         | }),
                                         | (changeLog)<-[:IN_CHANGELOG {
-                                        |    dateExecuted: DATETIME({epochMillis:${changeSet.dateExecuted.time}}),
+                                        |    dateExecuted: datetime({epochMillis:${changeSet.dateExecuted.time}}),
                                         |    orderExecuted: ${index}
                                         | }]-(changeSet_$index)
                                     """.stripMargin().trim()
@@ -1131,7 +1131,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
     private manuallyUpsertDisconnectedTag(String tag, int year, int month, int day) {
         queryRunner.run("""
-            MERGE (t:__LiquibaseTag {tag: "$tag"}) ON CREATE SET t.dateCreated = DATETIME({year:$year, month:$month, day:$day})
+            MERGE (t:__LiquibaseTag {tag: "$tag"}) ON CREATE SET t.dateCreated = datetime({year:$year, month:$month, day:$day})
         """)
     }
 
@@ -1154,7 +1154,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
     private manuallyUpsertDisconnectedLabel(String label, int year, int month, int day) {
         queryRunner.run("""
-            MERGE (l:__LiquibaseLabel {label: "$label"}) ON CREATE SET l.dateCreated = DATETIME({year:$year, month:$month, day:$day})
+            MERGE (l:__LiquibaseLabel {label: "$label"}) ON CREATE SET l.dateCreated = datetime({year:$year, month:$month, day:$day})
         """)
     }
 
@@ -1177,7 +1177,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
     private manuallyUpsertDisconnectedContext(String context, int year, int month, int day) {
         queryRunner.run("""
-            MERGE (c:__LiquibaseContext {context: "$context"}) ON CREATE SET c.dateCreated = DATETIME({year:$year, month:$month, day:$day})
+            MERGE (c:__LiquibaseContext {context: "$context"}) ON CREATE SET c.dateCreated = datetime({year:$year, month:$month, day:$day})
         """)
     }
 
@@ -1222,7 +1222,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
             MATCH (c:__LiquibaseChangeSet)-[exec:IN_CHANGELOG]->(:__LiquibaseChangeLog) 
             WITH c, exec 
             ORDER BY exec.dateExecuted ASC, exec.orderExecuted ASC
-            RETURN COLLECT(COALESCE(c.checkSum, "")) AS checkSums
+            RETURN collect(coalesce(c.checkSum, "")) AS checkSums
         """)["checkSums"]
         checkSums
     }

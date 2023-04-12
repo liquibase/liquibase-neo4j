@@ -15,7 +15,7 @@ Here is an example of a supported Cypher file:
 ```cypher
 --liquibase formatted cypher
 --changeset fbiville:count-movies runAlways:true
-MATCH (m:Movie) WITH COUNT(m) AS count MERGE (c:Count) SET c.value = count
+MATCH (m:Movie) WITH count(m) AS count MERGE (c:Count) SET c.value = count
 --rollback MATCH (c:Count) DETACH DELETE c
 ```
 
@@ -84,8 +84,8 @@ built-in [preconditions](https://docs.liquibase.com/concepts/changelogs/precondi
           <and>
             <neo4j:cypherCheck expectedResult="0">
                 MATCH (n)
-                WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
-                RETURN COUNT(n)
+                WHERE none(label IN labels(n) WHERE label STARTS WITH '__Liquibase')
+                RETURN count(n)
             </neo4j:cypherCheck>
             <or>
               <neo4j:edition enterprise="true" />

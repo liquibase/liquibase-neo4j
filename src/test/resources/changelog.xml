@@ -10,8 +10,8 @@
             <and>
                 <neo4j:cypherCheck expectedResult="0">
                     MATCH (n)
-                    WHERE NONE(label IN LABELS(n) WHERE label STARTS WITH '__Liquibase')
-                    RETURN COUNT(n)
+                    WHERE none(label IN labels(n) WHERE label STARTS WITH '__Liquibase')
+                    RETURN count(n)
                 </neo4j:cypherCheck>
                 <neo4j:cypherCheck expectedResult="0">RETURN 0</neo4j:cypherCheck>
             </and>
