@@ -27,7 +27,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     // field name are set to upper case, just to align on the behavior of liquibase.executor.Executor.queryForList(liquibase.statement.SqlStatement)
     // which populates the Map for each row with upper case Strings anyway
     private static final String SERVER_VERSION_QUERY =
-            "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition AS EDITION, versions[0] AS VERSION LIMIT 1";
+            "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition, versions[0] AS version LIMIT 1";
 
     private static final Predicate<Exception> CONSTRAINT_ALREADY_EXISTS_ERROR = messageContaining("constraint already exists");
 
@@ -94,6 +94,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     @Override
     public boolean supportsSchemas() {
         return false;
+    }
+
+    @Override
+    public boolean isCaseSensitive() {
+        return true;
     }
 
     public void createUniqueConstraint(String name, String label, String property) throws DatabaseException {
@@ -194,8 +199,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     private void initializeServerAttributes() {
         Map<String, ?> components = readComponents();
-        this.neo4jVersion = (String) components.get("VERSION");
-        this.neo4jEdition = ((String) components.get("EDITION")).toLowerCase(Locale.ENGLISH);
+        this.neo4jVersion = (String) components.get("version");
+        this.neo4jEdition = ((String) components.get("edition")).toLowerCase(Locale.ENGLISH);
     }
 
     private Map<String, ?> readComponents() {
