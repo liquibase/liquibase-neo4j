@@ -109,7 +109,7 @@ public class Neo4jLockService implements LockService {
             init();
             UUID newLockId = UUID.randomUUID();
             database.execute(new RawParameterizedSqlStatement(
-                    "CREATE (lock:__LiquibaseLock {id: $0, grantDate: DATETIME(), lockedBy: $1})",
+                    "CREATE (lock:__LiquibaseLock {id: $0, grantDate: datetime(), lockedBy: $1})",
                     newLockId.toString(),
                     Neo4jLockService.class.getSimpleName()
             ));
@@ -178,7 +178,7 @@ public class Neo4jLockService implements LockService {
     public DatabaseChangeLogLock[] listLocks() throws LockException {
         Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
         try {
-            RawSqlStatement cypher = new RawSqlStatement("MATCH (lock:__LiquibaseLock) WITH lock ORDER BY lock.grantDate ASC RETURN COLLECT(lock) AS locks");
+            RawSqlStatement cypher = new RawSqlStatement("MATCH (lock:__LiquibaseLock) WITH lock ORDER BY lock.grantDate ASC RETURN collect(lock) AS locks");
             List<Map<String, Object>> results = executor.queryForObject(cypher, List.class);
             return results.stream().map(this::mapRow).toArray(DatabaseChangeLogLock[]::new);
         } catch (DatabaseException e) {

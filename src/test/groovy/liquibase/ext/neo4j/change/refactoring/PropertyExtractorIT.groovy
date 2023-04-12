@@ -143,7 +143,7 @@ class PropertyExtractorIT extends Neo4jContainerSpec {
 
         def countries = getCountries()
 
-        def countriesCount = queryRunner.getSingleRow("MATCH (c:`My Country`) RETURN COUNT(c) as countries")
+        def countriesCount = queryRunner.getSingleRow("MATCH (c:`My Country`) RETURN count(c) as countries")
 
         persons == [[p: ["name": "Chaibia"], c: ["country": "MA"], "relationship": "BELONGS TO", "startNode": "Chaibia"],
                     [p: ["name": "Chaibia"], c: ["country": "MA"], "relationship": "BELONGS TO", "startNode": "Chaibia"],

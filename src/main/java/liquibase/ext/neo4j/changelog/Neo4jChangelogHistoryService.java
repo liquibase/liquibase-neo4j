@@ -98,7 +98,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         try {
             database.execute(new RawParameterizedSqlStatement(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2})-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                            "SET changeLog.dateUpdated = DATETIME() SET changeSet.checkSum = $3",
+                            "SET changeLog.dateUpdated = datetime() SET changeSet.checkSum = $3",
                     changeSet.getId(),
                     changeSet.getAuthor(),
                     changeSet.getFilePath(),
@@ -143,7 +143,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         try {
             database.execute(new RawParameterizedSqlStatement(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 })-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                    "SET changeLog.dateUpdated = DATETIME() DETACH DELETE changeSet",
+                    "SET changeLog.dateUpdated = datetime() DETACH DELETE changeSet",
                     changeSet.getId(),
                     changeSet.getAuthor(),
                     changeSet.getFilePath()
@@ -188,7 +188,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     @Override
     public boolean tagExists(String tag) throws DatabaseException {
         Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
-        long count = executor.queryForLong(new RawParameterizedSqlStatement("MATCH (t:__LiquibaseTag {tag: $0}) RETURN COUNT(t) AS count", tag));
+        long count = executor.queryForLong(new RawParameterizedSqlStatement("MATCH (t:__LiquibaseTag {tag: $0}) RETURN count(t) AS count", tag));
         database.rollback();
         return count > 0;
     }
@@ -197,7 +197,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     public void clearAllCheckSums() throws LiquibaseException {
         database.execute(new RawSqlStatement(
                 "MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                "SET changeLog.dateUpdated = DATETIME() " +
+                "SET changeLog.dateUpdated = datetime() " +
                 "REMOVE changeSet.checkSum"));
         database.commit();
     }
@@ -215,7 +215,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                                 "OPTIONAL MATCH (tag:__LiquibaseTag)-[:TAGS]->(changeSet) " +
                                 "OPTIONAL MATCH (label:__LiquibaseLabel)-[:LABELS]->(changeSet) " +
                                 "OPTIONAL MATCH (context:__LiquibaseContext)-[:CONTEXTUALIZES]->(changeSet) " +
-                                "WITH changeSet, changeSetExecution, tag.tag AS tag, COLLECT(label.label) AS labels, COLLECT(context.context) AS contexts " +
+                                "WITH changeSet, changeSetExecution, tag.tag AS tag, collect(label.label) AS labels, collect(context.context) AS contexts " +
                                 "ORDER BY changeSetExecution.dateExecuted ASC, changeSetExecution.orderExecuted ASC " +
                                 "RETURN changeSet { " +
                                 "   .changeLog, " +
@@ -242,10 +242,10 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     private void updateChangeSet(ChangeSet changeSet, ChangeSet.ExecType execType, int nextSequenceValue) throws LiquibaseException {
         database.execute(new RawParameterizedSqlStatement(
                 "MATCH (changeLog:__LiquibaseChangeLog) " +
-                        "SET changeLog.dateUpdated = DATETIME() " +
+                        "SET changeLog.dateUpdated = datetime() " +
                         "WITH changeLog " +
                         "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 })-[changeSetExecution:IN_CHANGELOG]->(changeLog) " +
-                        "SET changeSetExecution.dateExecuted = DATETIME() " +
+                        "SET changeSetExecution.dateExecuted = datetime() " +
                         "SET changeSetExecution.orderExecuted = $3 " +
                         "SET changeSet.checkSum = $4 " +
                         "SET changeSet.execType = $5 " +
@@ -263,7 +263,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     private void insertChangeSet(ChangeSet changeSet, ChangeSet.ExecType execType, int nextSequenceValue) throws LiquibaseException {
         database.execute(new RawParameterizedSqlStatement(
                 "MATCH (changeLog:__LiquibaseChangeLog) " +
-                        "SET changeLog.dateUpdated = DATETIME() " +
+                        "SET changeLog.dateUpdated = datetime() " +
                         "CREATE (changeSet:__LiquibaseChangeSet {" +
                         "   changeLog: $0, " +
                         "   id: $1," +
@@ -276,7 +276,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                         "   storedChangeLog: $8, " +
                         "   liquibaseVersion: $9 " +
                         "})-[:IN_CHANGELOG {" +
-                        "   dateExecuted: DATETIME(), " +
+                        "   dateExecuted: datetime(), " +
                         "   orderExecuted: $10 " +
                         "}]->(changeLog)",
                 changeSet.getFilePath(),
@@ -317,8 +317,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
             database.execute(new RawParameterizedSqlStatement(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 }) " +
                             "MERGE (context:__LiquibaseContext{ context: $3 }) " +
-                            "   ON CREATE SET context.dateCreated = DATETIME() " +
-                            "   ON MATCH SET context.dateUpdated = DATETIME() " +
+                            "   ON CREATE SET context.dateCreated = datetime() " +
+                            "   ON MATCH SET context.dateUpdated = datetime() " +
                             "CREATE (context)-[:CONTEXTUALIZES]->(changeSet)",
                     changeSet.getId(),
                     changeSet.getAuthor(),
@@ -337,8 +337,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
             database.execute(new RawParameterizedSqlStatement(
                     "MATCH (changeSet:__LiquibaseChangeSet {id: $0, author: $1, changeLog: $2 }) " +
                             "MERGE (label:__LiquibaseLabel{ label: $3 }) " +
-                            "   ON CREATE SET label.dateCreated = DATETIME() " +
-                            "   ON MATCH SET label.dateUpdated = DATETIME() " +
+                            "   ON CREATE SET label.dateCreated = datetime() " +
+                            "   ON MATCH SET label.dateUpdated = datetime() " +
                             "CREATE (label)-[:LABELS]->(changeSet)",
                     changeSet.getId(),
                     changeSet.getAuthor(),
@@ -370,8 +370,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         String tag = tagValues.iterator().next();
         database.execute(new RawParameterizedSqlStatement(
                 "MERGE (tag:__LiquibaseTag {tag: $0}) " +
-                        "   ON CREATE SET tag.dateCreated = DATETIME()" +
-                        "   ON MATCH SET tag.dateUpdated = DATETIME() " +
+                        "   ON CREATE SET tag.dateCreated = datetime()" +
+                        "   ON MATCH SET tag.dateUpdated = datetime() " +
                         "WITH tag " +
                         "OPTIONAL MATCH (tag)-[r:TAGS]->(:__LiquibaseChangeSet) DELETE r " +
                         "WITH tag " +
@@ -400,13 +400,13 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> changeSetIds = executor.queryForList(new RawParameterizedSqlStatement(
                     "MERGE (tag:__LiquibaseTag {tag: $0}) " +
-                            "   ON CREATE SET tag.dateCreated = DATETIME() " +
-                            "   ON MATCH SET tag.dateUpdated = DATETIME() " +
+                            "   ON CREATE SET tag.dateCreated = datetime() " +
+                            "   ON MATCH SET tag.dateUpdated = datetime() " +
                             "WITH tag " +
                             "OPTIONAL MATCH (tag)-[r:TAGS]->(:__LiquibaseChangeSet) DELETE r " +
                             "WITH tag " +
                             "MATCH (changeSet:__LiquibaseChangeSet)-[execution:IN_CHANGELOG]->(changeLog:__LiquibaseChangeLog) " +
-                            "SET changeLog.dateUpdated = DATETIME() " +
+                            "SET changeLog.dateUpdated = datetime() " +
                             "WITH tag, changeSet " +
                             "ORDER BY execution.dateExecuted DESC, execution.orderExecuted DESC " +
                             "LIMIT 1 " +
@@ -458,8 +458,8 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     private void initializeHistory() throws DatabaseException {
         try {
             database.execute(new RawSqlStatement("MERGE (changeLog:__LiquibaseChangeLog) " +
-                    "   ON CREATE SET changeLog.dateCreated = DATETIME() " +
-                    "   ON MATCH SET changeLog.dateUpdated = DATETIME()"));
+                    "   ON CREATE SET changeLog.dateCreated = datetime() " +
+                    "   ON MATCH SET changeLog.dateUpdated = datetime()"));
             database.commit();
         } catch (LiquibaseException e) {
             database.rollback();

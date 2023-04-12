@@ -133,7 +133,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
         given:
         queryRunner.createUniqueConstraint(LOCK_CONSTRAINT_NAME, "__LiquibaseLock", "lockedBy")
         manuallyRegisterLock()
-        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, name: 'ExtraFakeLock', lockedBy: 'ExtraFakeLock', grantDate: DATETIME() })''',
+        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, name: 'ExtraFakeLock', lockedBy: 'ExtraFakeLock', grantDate: datetime() })''',
                 [id: UUID.randomUUID().toString()])
 
         when:
@@ -161,7 +161,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
     def "forcibly releases all locks"() {
         given:
         manuallyRegisterLock()
-        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, lockedBy: 'ExtraFakeLock', grantDate: DATETIME() })''',
+        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, lockedBy: 'ExtraFakeLock', grantDate: datetime() })''',
                 [id: UUID.randomUUID().toString()])
 
         expect:
@@ -179,7 +179,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
         given:
         manuallyRegisterLock()
         def extraLockId = UUID.randomUUID()
-        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, lockedBy: 'ExtraFakeLock', grantDate: DATETIME({year:1986, month:3, day:4})})''',
+        queryRunner.run('''CREATE (:__LiquibaseLock { id: $id, lockedBy: 'ExtraFakeLock', grantDate: datetime({year:1986, month:3, day:4})})''',
                 [id: extraLockId.toString()])
 
         when:
@@ -214,7 +214,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
     }
 
     private Object countLockNodes() {
-        def row = queryRunner.getSingleRow("MATCH (l:__LiquibaseLock) RETURN COUNT(l) AS count")
+        def row = queryRunner.getSingleRow("MATCH (l:__LiquibaseLock) RETURN count(l) AS count")
         return row["count"]
     }
 
@@ -222,7 +222,7 @@ class Neo4jLockServiceIT extends Neo4jContainerSpec {
         def lockId = UUID.randomUUID()
         ReflectionUtils.setField("lockId", neo4jLockService, lockId)
         queryRunner.run(
-                '''CREATE (:__LiquibaseLock { id: $uuid, lockedBy: 'Neo4jLockService', grantDate: DATETIME() })''',
+                '''CREATE (:__LiquibaseLock { id: $uuid, lockedBy: 'Neo4jLockService', grantDate: datetime() })''',
                 [uuid: lockId.toString()]
         )
     }

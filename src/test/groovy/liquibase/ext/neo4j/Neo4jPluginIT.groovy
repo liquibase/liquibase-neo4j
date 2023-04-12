@@ -56,7 +56,7 @@ class Neo4jPluginIT extends Neo4jContainerSpec {
         then:
         def output = buffer.toString()
         output.contains("MERGE (:Movie {title: 'My Life', genre: 'Horror'})")
-        output.contains("MATCH (m:Movie) WITH COUNT(m) AS count MERGE (c:Count) SET c.value = count")
+        output.contains("MATCH (m:Movie) WITH count(m) AS count MERGE (c:Count) SET c.value = count")
         output.contains("""
 MERGE (m:Movie {title: 'My Life'})
             MERGE (a:Person {name: 'Myself'})
@@ -111,7 +111,7 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
             ORDER BY labels ASC, key ASC, n[key] ASC
             WITH n, labels, collect(property) AS properties
             OPTIONAL MATCH (n)-[r]->()
-            WITH labels, properties, COLLECT(r {type: TYPE(r), properties: PROPERTIES(r)}) AS outgoing_relationships
+            WITH labels, properties, collect(r {type: type(r), properties: properties(r)}) AS outgoing_relationships
             RETURN labels, properties, outgoing_relationships
         """))
 
