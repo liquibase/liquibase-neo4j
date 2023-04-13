@@ -1,6 +1,9 @@
 package liquibase.ext.neo4j
 
-import liquibase.integration.commandline.Main
+import liquibase.command.CommandScope
+import liquibase.command.core.UpdateCommandStep
+import liquibase.command.core.UpdateSqlCommandStep
+import liquibase.command.core.helpers.DbUrlConnectionCommandStep
 
 import java.nio.file.Files
 import java.time.LocalDate
@@ -42,16 +45,15 @@ class Neo4jPluginIT extends Neo4jContainerSpec {
         given:
         def buffer = new ByteArrayOutputStream()
         System.out = new PrintStream(buffer)
-        String[] arguments = [
-                "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
-                "--username", "neo4j",
-                "--password", PASSWORD,
-                "--changeLogFile", "/changelog.xml",
-                "updateSQL"
-        ].toArray()
+        def command = new CommandScope(UpdateSqlCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(UpdateSqlCommandStep.CHANGELOG_FILE_ARG, "/changelog.xml")
+                .setOutput(buffer)
 
         when:
-        Main.run(arguments)
+        command.execute()
 
         then:
         def output = buffer.toString()
@@ -86,17 +88,17 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
 
     def "runs migrations"() {
         given:
-        System.out = mute()
-        String[] arguments = [
-                "--url", "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
-                "--username", "neo4j",
-                "--password", PASSWORD,
-                "--changeLogFile", "/changelog.xml",
-                "update"
-        ].toArray()
+        def output = mute()
+        System.out = output
+        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "/changelog.xml")
+                .setOutput(output)
 
         when:
-        Main.run(arguments)
+        command.execute();
 
         then:
         def rows = fixUpProperties(queryRunner.getRows("""
