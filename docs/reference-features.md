@@ -133,13 +133,64 @@ The table below details how each supported data type is mapped to its Neo4j coun
 
 |Required plugin version|4.13.0|
 
-```xml
-<neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
-    <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST"/>
-    <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST"/>
-    <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_ALL"/>
-</neo4j:mergeNodes>
-```
+=== "XML"
+
+    ```xml
+    <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
+        <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST"/>
+        <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST"/>
+        <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_ALL"/>
+    </neo4j:mergeNodes>
+    ```
+
+=== "JSON"
+
+    ```json
+    {
+        "mergeNodes": {
+            "fragment": "(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC",
+            "outputVariable": "m",
+            "propertyPolicies": [
+                {
+                    "propertyPolicy": {
+                        "mergeStrategy": "KEEP_FIRST",
+                        "nameMatcher": "name"
+                    }
+                },
+                {
+                    "propertyPolicy": {
+                        "mergeStrategy": "KEEP_LAST",
+                        "nameMatcher": "par.*"
+                    }
+                },
+                {
+                    "propertyPolicy": {
+                        "mergeStrategy": "KEEP_ALL",
+                        "nameMatcher": ".*"
+                    }
+                }
+            ]
+        }
+    }
+    ```
+
+=== "YAML"
+
+    ```yaml
+    - mergeNodes:
+        fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY id(m) ASC'
+        outputVariable: m
+        propertyPolicies:
+        - propertyPolicy:
+            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_FIRST'
+            nameMatcher: name
+        - propertyPolicy:
+            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_LAST'
+            nameMatcher: par.*
+        - propertyPolicy:
+            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_ALL'
+            nameMatcher: .*
+    ```
 
 Specify a Cypher query fragment, which defines the nodes to match for the merge operation. If fewer than two nodes are
 matched, the merge is a no-op.
