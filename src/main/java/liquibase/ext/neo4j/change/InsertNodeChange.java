@@ -24,16 +24,15 @@ public class InsertNodeChange extends InsertDataChange {
     private String labelName = "";
 
     @Override
+    public boolean supports(Database database) {
+        return database instanceof Neo4jDatabase;
+    }
+
+    @Override
     public ValidationErrors validate(Database database) {
         ValidationErrors errors = new ValidationErrors(this);
-        if (!(database instanceof Neo4jDatabase)) {
-            errors.addError(String.format(
-                    "unsupported database %s, expected Neo4j",
-                    database == null ? "null" : database.getShortName()
-            ));
-        }
-        if (labelName.isEmpty()) {
-            errors.addError("missing label name for insert");
+        if (Strings.isNullOrEmpty(labelName)) {
+            errors.addError("label name for insert must be specified and not blank");
         }
         return errors;
     }
