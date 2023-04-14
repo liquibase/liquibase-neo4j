@@ -1,6 +1,6 @@
 package liquibase.ext.neo4j.change
 
-
+import liquibase.database.core.MySQLDatabase
 import liquibase.ext.neo4j.change.refactoring.ExtractedNodes
 import liquibase.ext.neo4j.change.refactoring.ExtractedRelationships
 import liquibase.ext.neo4j.change.refactoring.RelationshipDirection
@@ -10,6 +10,17 @@ import spock.lang.Specification
 import static liquibase.ext.neo4j.change.refactoring.RelationshipDirection.OUTGOING
 
 class ExtractPropertyChangeTest extends Specification {
+
+    def "supports only Neo4j targets"() {
+        expect:
+        new ExtractPropertyChange().supports(database) == result
+
+        where:
+        database            | result
+        new Neo4jDatabase() | true
+        null                | false
+        new MySQLDatabase() | false
+    }
 
     def "rejects missing mandatory fields"() {
         given:
