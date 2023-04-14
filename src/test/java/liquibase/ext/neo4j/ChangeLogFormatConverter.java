@@ -11,10 +11,9 @@ import liquibase.serializer.ChangeLogSerializer;
 import liquibase.serializer.core.json.JsonChangeLogSerializer;
 import liquibase.serializer.core.yaml.YamlChangeLogSerializer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Locale;
 
 /**
@@ -25,17 +24,18 @@ public class ChangeLogFormatConverter {
 
     static class Serialization {
         private final ChangeLogSerializer serializer;
-        private final String targetPath;
+        private final String format;
 
-        public Serialization(ChangeLogSerializer serializer, String targetPath) {
+        public Serialization(ChangeLogSerializer serializer, String format) {
             this.serializer = serializer;
-            this.targetPath = targetPath;
+            this.format = format;
         }
 
         void serialize(DatabaseChangeLog changeLog) throws IOException {
-            try (OutputStream outputStream = Files.newOutputStream(Paths.get(targetPath))) {
-                serializer.write(changeLog.getChangeSets(), outputStream);
-            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            serializer.write(changeLog.getChangeSets(), output);
+            System.out.format("%s output:\n\n", format);
+            System.out.println(output.toString("UTF-8"));
         }
     }
 
@@ -61,11 +61,13 @@ public class ChangeLogFormatConverter {
     }
 
     private static Serialization resolveSerializer(String inputPath, String format) {
+        File file = new File(inputPath);
+        String fileName = file.getName();
         switch (format.toLowerCase(Locale.ENGLISH)) {
             case "json":
-                return new Serialization(new JsonChangeLogSerializer(), inputPath.replaceAll("\\.xml$", ".json"));
+                return new Serialization(new JsonChangeLogSerializer(), "json");
             case "yaml":
-                return new Serialization(new YamlChangeLogSerializer(), inputPath.replaceAll("\\.xml$", ".yaml"));
+                return new Serialization(new YamlChangeLogSerializer(), "yaml");
         }
         throw new RuntimeException("unsupported output format: " + format);
     }
