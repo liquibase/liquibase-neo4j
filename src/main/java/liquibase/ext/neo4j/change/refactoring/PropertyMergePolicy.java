@@ -4,6 +4,7 @@ import liquibase.serializer.AbstractLiquibaseSerializable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class PropertyMergePolicy extends AbstractLiquibaseSerializable {
@@ -71,5 +72,12 @@ public class PropertyMergePolicy extends AbstractLiquibaseSerializable {
     @Override
     public String getSerializedObjectNamespace() {
         return GENERIC_CHANGELOG_EXTENSION_NAMESPACE;
+    }
+
+    @Override
+    public Set<String> getSerializableFields() {
+        Set<String> fields = super.getSerializableFields();
+        fields.remove("pattern");
+        return fields;
     }
 }
