@@ -1,4 +1,4 @@
-# Custom Features
+# Features
 
 ## Cypher Change Log Format
 
@@ -349,3 +349,23 @@ attribute to `true`. The default is to always create relationships.
     `merge=false` on nodes with `merge=true` on relationships will trigger a validation warning.
     Indeed, creating extracting nodes imply that new relationships will be created as well.
     Setting `merge=true` on relationships in that case incur an unnecessary execution penalty.
+
+## Change Set's `runInTransaction`
+
+|Required plugin version|4.19.0|
+
+Setting `runInTransaction` to `false` on a change set means that all its changes are going to run **in their own
+auto-commit transaction**.
+
+The default value of `runInTransaction` is `true`. This means that all changes of a given change set run in a single transaction.
+
+The following Cypher constructs can **only** work in auto-commit transactions:
+
+- [since Neo4j 4.4]  [`CALL {} IN TRANSACTIONS`](https://neo4j.com/docs/cypher-manual/current/clauses/call-subquery/#subquery-call-in-transactions)
+- [until Neo4j 4.4]  [`PERIODIC COMMIT`](https://neo4j.com/docs/cypher-manual/4.4/query-tuning/using/#query-using-periodic-commit-hint)
+
+Apart from this kind of queries, it is strongly advised to **not** change the `runInTransaction` attribute.
+Indeed, when the execution of a change fails, the enclosing change set is not going to be persisted into the history graph.
+Moreover, previous changes of the same change set have run and been committed.
+Re-running Liquibase in such a situation may lead to integrity issues if any of the changes are not idempotent, since
+Liquibase will run the change set again.
