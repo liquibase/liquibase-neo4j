@@ -24,8 +24,6 @@ import static liquibase.ext.neo4j.lockservice.Exceptions.onThrow;
 
 public class Neo4jDatabase extends AbstractJdbcDatabase {
 
-    // field name are set to upper case, just to align on the behavior of liquibase.executor.Executor.queryForList(liquibase.statement.SqlStatement)
-    // which populates the Map for each row with upper case Strings anyway
     private static final String SERVER_VERSION_QUERY =
             "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition, versions[0] AS version LIMIT 1";
 
