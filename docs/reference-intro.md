@@ -30,7 +30,12 @@ Changes of a single change set are run in a single transaction by default. Eithe
 
 !!! important
     Neo4j [schema operations](https://neo4j.com/docs/getting-started/current/cypher-intro/schema/)
-    and data operations cannot be part of the same transaction. They must be defined in different change sets.
+    and data operations cannot be part of the same transaction. They are better defined in different change sets.
+
+You can disable this behavior by setting the change set `runInTransaction` attribute to `false`.
+In that case, each change of the change set runs in its own auto-commit transaction.
+
+Learn more about the best practice around [the `runInTransaction` usage](/reference-features/#change-sets-runintransaction).
  
 ## Change Logs and Consistency
 
