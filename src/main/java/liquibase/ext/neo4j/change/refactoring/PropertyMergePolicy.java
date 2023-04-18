@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.change.refactoring;
 
+import liquibase.exception.ValidationErrors;
 import liquibase.serializer.AbstractLiquibaseSerializable;
 
 import java.util.List;
@@ -26,6 +27,9 @@ public class PropertyMergePolicy extends AbstractLiquibaseSerializable {
     }
 
     public void setNameMatcher(String nameMatcher) {
+        if (nameMatcher == null) {
+            throw new IllegalArgumentException("property matcher of property merge policy cannot be null");
+        }
         this.nameMatcher = nameMatcher;
         this.pattern = Pattern.compile(nameMatcher);
     }
@@ -79,5 +83,15 @@ public class PropertyMergePolicy extends AbstractLiquibaseSerializable {
         Set<String> fields = super.getSerializableFields();
         fields.remove("pattern");
         return fields;
+    }
+
+    public ValidationErrors validate() {
+        if (mergeStrategy == null) {
+            return new ValidationErrors().addError("missing merge strategy of property merge policy");
+        }
+        if (nameMatcher == null || nameMatcher.trim().isEmpty()) {
+            return new ValidationErrors().addError("missing property matcher of property merge policy");
+        }
+        return new ValidationErrors();
     }
 }

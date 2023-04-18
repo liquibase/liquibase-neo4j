@@ -5,6 +5,7 @@ import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
 import liquibase.exception.LiquibaseException;
+import liquibase.exception.ValidationErrors;
 import liquibase.ext.neo4j.change.refactoring.MatchPattern;
 import liquibase.ext.neo4j.change.refactoring.NodeMerger;
 import liquibase.ext.neo4j.change.refactoring.PropertyMergePolicy;
@@ -13,6 +14,8 @@ import liquibase.statement.SqlStatement;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static liquibase.ext.neo4j.change.Sequences.isNullOrEmpty;
 
 @DatabaseChange(name = "mergeNodes", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
         "The 'mergeNodes' tag allows you to merge nodes matching a given pattern described by the tag 'fragment' attribute." +
@@ -49,6 +52,33 @@ public class MergeNodesChange extends AbstractChange {
     private String fragment;
     private String outputVariable;
     private List<PropertyMergePolicy> propertyPolicies = new ArrayList<>();
+
+    @Override
+    public ValidationErrors validate(Database database) {
+        if (isNullOrEmpty(fragment)) {
+            return new ValidationErrors(this)
+                    .addError("missing Cypher fragment");
+        }
+        if (isNullOrEmpty(outputVariable)) {
+            return new ValidationErrors(this)
+                    .addError("missing Cypher output variable");
+        }
+        if (isNullOrEmpty(propertyPolicies)) {
+            return new ValidationErrors(this)
+                    .addError("missing property merge policy");
+        }
+        for (PropertyMergePolicy policy : propertyPolicies) {
+            if (policy == null) {
+                return new ValidationErrors(this)
+                        .addError("property merge policy cannot be null");
+            }
+            ValidationErrors errors = policy.validate();
+            if (errors.hasErrors()) {
+                return errors;
+            }
+        }
+        return super.validate(database);
+    }
 
     @Override
     public String getConfirmationMessage() {
