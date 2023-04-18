@@ -354,18 +354,73 @@ attribute to `true`. The default is to always create relationships.
 
 |Required plugin version|4.19.0|
 
-Setting `runInTransaction` to `false` on a change set means that all its changes are going to run **in their own
-auto-commit transaction**.
+The default value of `runInTransaction` is `true`. This means that all changes of a given change set run in a single,
+explicit transaction.
 
-The default value of `runInTransaction` is `true`. This means that all changes of a given change set run in a single transaction.
-
-The following Cypher constructs can **only** work in auto-commit transactions:
+This is the right default and should be changed only if you need any of the following two Cypher constructs:
 
 - [since Neo4j 4.4]  [`CALL {} IN TRANSACTIONS`](https://neo4j.com/docs/cypher-manual/current/clauses/call-subquery/#subquery-call-in-transactions)
 - [until Neo4j 4.4]  [`PERIODIC COMMIT`](https://neo4j.com/docs/cypher-manual/4.4/query-tuning/using/#query-using-periodic-commit-hint)
 
-Apart from this kind of queries, it is strongly advised to **not** change the `runInTransaction` attribute.
-Indeed, when the execution of a change fails, the enclosing change set is not going to be persisted into the history graph.
-Moreover, previous changes of the same change set have run and been committed.
-Re-running Liquibase in such a situation may lead to integrity issues if any of the changes are not idempotent, since
-Liquibase will run the change set again.
+Indeed, using those constructs without disabling `runInTransaction` fails:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="my-movie-init" author="fbiville">
+    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
+  </changeSet>
+</databaseChangeLog>
+```
+
+The error message after executing the change set is similar to:
+
+```
+A query with 'CALL { ... } IN TRANSACTIONS' can only be executed in an implicit transaction, but tried to execute in an explicit transaction.
+```
+
+Setting `runInTransaction` to `false` on a change set means that all its changes are going to run **in their own
+auto-commit (or implicit) transaction**.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
+    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
+  </changeSet>
+</databaseChangeLog>
+```
+
+`runInTransaction` is a sharp tool and can lead to unintended consequences, as illustrated below:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
+    <neo4j:cypher>CREATE (:Movie {title: "Me, Myself and I"})</neo4j:cypher> <!-- this is going to run -->
+    <neo4j:cypher>this is not valid cypher</neo4j:cypher><!-- this is going to fail -->
+  </changeSet>
+</databaseChangeLog>
+```
+
+The first change of the change set successfully runs, but the second fails.
+More importantly, the enclosing change set `"my-movie-init"` is **not** stored in the history graph.
+
+Re-running this change set results in the `Movie` node being inserted again, since Liquibase has no knowledge of the
+change set having run before.
+
+In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
+idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
+set and using Cypher's `MERGE` instead of `CREATE` usually helps).
