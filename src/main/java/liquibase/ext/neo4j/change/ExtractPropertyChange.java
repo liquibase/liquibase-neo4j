@@ -15,7 +15,7 @@ import liquibase.ext.neo4j.change.refactoring.PropertyExtractor;
 import liquibase.ext.neo4j.change.refactoring.RelationshipDirection;
 import liquibase.statement.SqlStatement;
 
-import static liquibase.ext.neo4j.change.Strings.isNullOrEmpty;
+import static liquibase.ext.neo4j.change.Sequences.isNullOrEmpty;
 import static liquibase.ext.neo4j.change.refactoring.PropertyExtractor.NODE_VARIABLE;
 
 @DatabaseChange(name = "extractProperty", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
