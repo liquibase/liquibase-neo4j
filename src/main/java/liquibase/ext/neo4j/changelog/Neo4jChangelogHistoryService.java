@@ -65,6 +65,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     @Override
     public void init() throws DatabaseException {
+        cleanUpGraph();
         createConstraints();
         initializeHistory();
     }
@@ -464,6 +465,35 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         } catch (LiquibaseException e) {
             database.rollback();
             throw new DatabaseException("Could not upsert changelog", e);
+        }
+    }
+
+    private void cleanUpGraph() throws DatabaseException {
+        removeDisconnectedLabels();
+        removeDisconnectedContexts();
+    }
+
+    private void removeDisconnectedLabels() throws DatabaseException {
+        try {
+            database.execute(new RawSqlStatement("MATCH (label:__LiquibaseLabel) " +
+                    "WHERE NOT (label)--() " +
+                    "DELETE label"));
+            database.commit();
+        } catch (LiquibaseException e) {
+            database.rollback();
+            throw new DatabaseException("Could not delete disconnected labels", e);
+        }
+    }
+
+    private void removeDisconnectedContexts() throws DatabaseException {
+        try {
+            database.execute(new RawSqlStatement("MATCH (context:__LiquibaseContext) " +
+                    "WHERE NOT (context)--() " +
+                    "DELETE context"));
+            database.commit();
+        } catch (LiquibaseException e) {
+            database.rollback();
+            throw new DatabaseException("Could not delete disconnected labels", e);
         }
     }
 

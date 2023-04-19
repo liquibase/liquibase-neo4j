@@ -64,6 +64,34 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         row["dateUpdated"] == null
     }
 
+    def "cleans up disconnected labels upon initialization"() {
+        given:
+        manuallyCreateOrderedChangesets(ranChangeSet("some-change-set", "me", date(2000, 1, 1)))
+        manuallyAssignLabel("label-one", "some-change-set")
+        manuallyUpsertDisconnectedLabel("garbage-collected-label")
+
+        when:
+        historyService.init()
+
+        then:
+        def row = queryRunner.getSingleRow("MATCH (label:__LiquibaseLabel) RETURN label.label AS label")
+        row["label"] == "label-one"
+    }
+
+    def "cleans up disconnected contexts upon initialization"() {
+        given:
+        manuallyCreateOrderedChangesets(ranChangeSet("some-change-set", "me", date(2000, 1, 1)))
+        manuallyAssignContext("context-one", "some-change-set")
+        manuallyUpsertDisconnectedContext("garbage-collected-context")
+
+        when:
+        historyService.init()
+
+        then:
+        def row = queryRunner.getSingleRow("MATCH (context:__LiquibaseContext) RETURN context.context AS context")
+        row["context"] == "context-one"
+    }
+
     def "ensures tag node uniqueness after initialization"() {
         given:
         historyService.init()
