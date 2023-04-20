@@ -99,6 +99,86 @@ built-in [preconditions](https://docs.liquibase.com/concepts/changelogs/precondi
 
 All boolean operators are supported.
 
+
+## Insert Change
+
+|Required plugin version|4.22.0|
+
+The change allows to define the creation of individual nodes, with a single label specified with `labelName`.
+
+=== "XML"
+
+    ```xml
+    <neo4j:insert labelName="Person">
+        <column name="id" value="8987212b-a6ff-48a1-901f-8c4b39bd6d9e" type="uuid"/>
+        <column name="first_name" value="Florent"/>
+        <column name="last_name" value="Biville"/>
+        <column name="birth_date" valueDate="1950-01-01T22:23:24+02:00" type="date"/>
+        <column name="picture" value="DLxmEfVUC9CAmjiNyVphWw==" type="blob"/>
+    </neo4j:insert>
+    ```
+
+=== "JSON"
+
+    ```json
+    {"insert": {
+        "labelName": "Person",
+        "columns": [
+            {"column": {
+                "name": "id",
+                "type": "uuid",
+                "value": "8987212b-a6ff-48a1-901f-8c4b39bd6d9e"
+            }},
+            {"column": {
+                "name": "first_name",
+                "value": "Florent"
+            }},
+            {"column": {
+                "name": "last_name",
+                "value": "Biville"
+            }},
+            {"column": {
+                "name": "birth_date",
+                "type": "date",
+                "valueDate": "1950-01-01T22:23:24+02:00"
+            }},
+            {"column": {
+                "name": "picture",
+                "type": "blob",
+                "value": "DLxmEfVUC9CAmjiNyVphWw=="
+            }}
+        ]
+    }}
+    ```
+
+=== "YAML"
+
+    ```yaml
+    - insert:
+        labelName: Person
+        columns:
+        - column:
+            name: id
+            type: uuid
+            value: 8987212b-a6ff-48a1-901f-8c4b39bd6d9e
+        - column:
+            name: first_name
+            value: Florent
+        - column:
+            name: last_name
+            value: Biville
+        - column:
+            name: birth_date
+            type: date
+            valueDate: 1950-01-01T22:23:24+02:00
+        - column:
+            name: picture
+            type: blob
+            value: DLxmEfVUC9CAmjiNyVphWw==
+    ```
+
+Please refer to the [Load Data](#load-data) documentation for the supported value types for each column.
+
 ## Load Data
 
 |Required Liquibase core version|4.11.0|
@@ -126,6 +206,13 @@ The table below details how each supported data type is mapped to its Neo4j coun
 !!!warning
     `BLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `CLOB` files (see [issue](https://github.com/liquibase/liquibase-neo4j/issues/304)), `SEQUENCE`, `COMPUTED`, `OTHER` and `UNKNOWN`
     load data types are currently unsupported.
+
+Make sure to use the right `valueXxx` attribute:
+
+- `valueBoolean` for boolean values
+- `valueDate` for date/time values
+- `valueNumeric` for numeric values
+- `value` for everything else
 
 ## Graph refactorings
 

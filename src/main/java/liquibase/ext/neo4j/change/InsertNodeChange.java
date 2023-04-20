@@ -12,8 +12,10 @@ import liquibase.statement.core.RawParameterizedSqlStatement;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static liquibase.ext.neo4j.change.ColumnMapper.mapValue;
 
@@ -59,6 +61,13 @@ public class InsertNodeChange extends InsertDataChange {
                         propertyMap(this.getColumns())
                 )
         };
+    }
+
+    @Override
+    public Set<String> getSerializableFields() {
+        Set<String> fields = new HashSet<>(super.getSerializableFields());
+        fields.remove("tableName");
+        return fields;
     }
 
     private Map<String, Object> propertyMap(List<ColumnConfig> columns) {
