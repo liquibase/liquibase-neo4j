@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11, 17, 18]
+        java: [8, 11, 17, 20]
         neo4j_version:
           - "3.5"
           - "4.0"
@@ -38,6 +38,7 @@ jobs:
           - "5.4"
           - "5.5"
           - "5.6"
+          - "5.7"
         enterprise:
           - "true"
           - "false"
