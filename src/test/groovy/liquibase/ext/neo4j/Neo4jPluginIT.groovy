@@ -166,13 +166,12 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
                 .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "/changelog-insert.xml")
+                .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "/insert/changelog.${format}".toString())
                 .setOutput(output)
 
-        when:
         command.execute()
 
-        then:
+        expect:
         def row = queryRunner.getSingleRow("""
             MATCH (p:Person)
             RETURN properties(p) AS props
@@ -189,6 +188,9 @@ MATCH (m:Movie) WITH m ORDER BY id(m) ASC WITH m MERGE (_____n_____:`Genre` {`ge
         props["polite"] == true
         props["picture"] == Base64.getDecoder().decode("DLxmEfVUC9CAmjiNyVphWw==")
         props["bio"].startsWith("Lorem ipsum")
+
+        where:
+        format << ["json", "xml", "yaml"]
     }
 
     private static PrintStream mute() {

@@ -7,6 +7,8 @@ import liquibase.change.core.LoadDataColumnConfig;
 import liquibase.ext.neo4j.exception.UnsupportedLoadDataTypeException;
 import liquibase.statement.DatabaseFunction;
 
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Base64;
@@ -79,6 +81,9 @@ class ColumnMapper {
         }
         if (value instanceof java.sql.Time) {
             return ((java.sql.Time) value).toLocalTime();
+        }
+        if (value instanceof java.util.Date) {
+            return ((java.util.Date) value).toInstant().atZone(ZoneOffset.UTC);
         }
         if (value instanceof DatabaseFunction) {
             String rawValue = ((DatabaseFunction) value).getValue();
