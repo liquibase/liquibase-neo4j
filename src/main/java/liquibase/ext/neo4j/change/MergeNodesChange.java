@@ -80,6 +80,10 @@ public class MergeNodesChange extends AbstractChange {
         return super.validate(database);
     }
 
+    public boolean supports(Database database) {
+        return database instanceof Neo4jDatabase;
+    }
+
     @Override
     public String getConfirmationMessage() {
         return String.format("nodes %s have been merged", fragment);

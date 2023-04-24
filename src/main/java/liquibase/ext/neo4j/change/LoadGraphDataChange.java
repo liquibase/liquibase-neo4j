@@ -1,27 +1,22 @@
 package liquibase.ext.neo4j.change;
 
-import liquibase.change.ColumnConfig;
 import liquibase.change.DatabaseChange;
 import liquibase.change.core.LoadDataChange;
 import liquibase.change.core.LoadDataColumnConfig;
 import liquibase.database.Database;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
-import liquibase.ext.neo4j.exception.UnsupportedLoadDataTypeException;
 import liquibase.servicelocator.PrioritizedService;
-import liquibase.statement.DatabaseFunction;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
-import java.time.ZonedDateTime;
-import java.time.temporal.Temporal;
 import java.util.AbstractMap;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
+import static liquibase.ext.neo4j.change.ColumnMapper.mapValue;
 
 @DatabaseChange(name = "loadData", priority = PrioritizedService.PRIORITY_DATABASE, description = "Loads data from a CSV file into a graph. Each row is loaded as a node, whose label is the configured table name.\n" +
         "A value of NULL in a cell will be skipped.\n" +
@@ -55,10 +50,10 @@ public class LoadGraphDataChange extends LoadDataChange {
     @Override
     protected SqlStatement[] generateStatementsFromRows(Database database, List<LoadDataRowConfig> rows) {
         String cypher = String.format("UNWIND $0 AS row CREATE (n:`%s`) SET n += row", escapeLabel(getTableName()));
-        return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, keyValuePairs(database, rows))};
+        return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, keyValuePairs(rows))};
     }
 
-    private List<Map<String, Object>> keyValuePairs(Database database, List<LoadDataRowConfig> rows) {
+    private List<Map<String, Object>> keyValuePairs(List<LoadDataRowConfig> rows) {
         return rows.stream()
                 .map(row -> row.getColumns().stream()
                         .flatMap(LoadGraphDataChange::keyValuePair)
@@ -71,62 +66,8 @@ public class LoadGraphDataChange extends LoadDataChange {
         if (value == null) {
             return Stream.empty();
         }
-        AbstractMap.SimpleEntry<String, Object> entry = new AbstractMap.SimpleEntry<>(column.getName(), mapValue(column, value));
+        AbstractMap.SimpleEntry<String, Object> entry = new AbstractMap.SimpleEntry<>(column.getName(), mapValue(column));
         return Stream.of(entry);
-    }
-
-    private static Object mapValue(LoadDataColumnConfig column, Object value) {
-        LOAD_DATA_TYPE type = column.getTypeEnum();
-        // FIXME: ideally switching on type should cover everything but integers/boolean have a null type
-        if (value instanceof ColumnConfig.ValueNumeric) {
-            return ((ColumnConfig.ValueNumeric) value).getDelegate();
-        }
-        if (type != null) {
-            switch (type) {
-                case DATE:
-                    return mapTemporal(value);
-                case BLOB:
-                    if (column.getValueBlobFile() != null) {
-                        throw new UnsupportedLoadDataTypeException(
-                                "Loading BLOB files is not supported (see https://github.com/neo4j-contrib/neo4j-jdbc/issues/347)"
-                        );
-                    }
-                    value = Base64.getDecoder().decode((String) value);
-                    break;
-                case CLOB:
-                    if (column.getValueClobFile() != null) {
-                        throw new UnsupportedLoadDataTypeException(
-                                "Loading CLOB files is not supported (see https://github.com/neo4j-contrib/neo4j-jdbc/issues/348)"
-                        );
-                    }
-                    break;
-                case SEQUENCE:
-                case COMPUTED:
-                case OTHER:
-                case UNKNOWN:
-                    throw new IllegalArgumentException(
-                            String.format("value type %s is currently not supported by the Neo4j plugin", type)
-                    );
-            }
-        }
-        return value;
-    }
-
-    private static Temporal mapTemporal(Object value) {
-        if (value instanceof java.sql.Timestamp) {
-            return ((java.sql.Timestamp) value).toLocalDateTime();
-        }
-        if (value instanceof java.sql.Date) {
-            return ((java.sql.Date) value).toLocalDate();
-        }
-        if (value instanceof java.sql.Time) {
-            return ((java.sql.Time) value).toLocalTime();
-        }
-        if (value instanceof DatabaseFunction) {
-            String rawValue = ((DatabaseFunction) value).getValue();
-            return ZonedDateTime.parse(rawValue);
-        }
-        throw new UnsupportedLoadDataTypeException("Date value type %s is not supported", value.getClass());
     }
 
 

@@ -1,0 +1,94 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "insert-node",
+        "author": "fbiville",
+        "changes": [
+          {
+            "insert": {
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "uuid",
+                    "value": "8987212b-a6ff-48a1-901f-8c4b39bd6d9e"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "age",
+                    "type": "integer",
+                    "valueNumeric": 30
+                  }
+                },
+                {
+                  "column": {
+                    "name": "first_name",
+                    "value": "Florent"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "last_name",
+                    "value": "Biville"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "local_date",
+                    "type": "date",
+                    "valueDate": "2022-12-25"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "local_time",
+                    "type": "date",
+                    "valueDate": "22:23:24"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "local_date_time",
+                    "type": "date",
+                    "valueDate": "2018-02-01T12:13:14"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "zoned_date_time",
+                    "type": "date",
+                    "valueDate": "2020-07-12T22:23:24+02:00"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "polite",
+                    "type": "boolean",
+                    "valueBoolean": true
+                  }
+                },
+                {
+                  "column": {
+                    "name": "picture",
+                    "type": "blob",
+                    "value": "DLxmEfVUC9CAmjiNyVphWw=="
+                  }
+                },
+                {
+                  "column": {
+                    "name": "bio",
+                    "type": "clob",
+                    "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean nisi tellus, elementum id mi vitae, faucibus lacinia purus. Integer nec velit sit amet velit tincidunt ultrices eu eu massa. Vestibulum in libero vel neque interdum blandit in non libero. Aenean iaculis, erat ac molestie laoreet, risus ex faucibus odio, a fermentum turpis elit eget ex. Donec volutpat bibendum enim pretium pulvinar. Proin rutrum neque dui, a suscipit tellus semper suscipit. Praesent lobortis ut lorem vitae volutpat. Pellentesque a lorem eu lacus faucibus facilisis nec sed metus. Aenean lacinia luctus ultricies. Pellentesque cursus justo non iaculis tristique. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Duis tempor nisi ut turpis bibendum facilisis. Donec aliquet porttitor lacus, non rhoncus lectus laoreet et."
+                  }
+                }
+              ],
+              "labelName": "Person"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

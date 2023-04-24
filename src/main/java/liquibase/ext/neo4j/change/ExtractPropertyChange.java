@@ -5,14 +5,15 @@ import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
 import liquibase.exception.ValidationErrors;
-import liquibase.ext.neo4j.change.refactoring.NodeExtraction;
 import liquibase.ext.neo4j.change.refactoring.ExtractedNodes;
-import liquibase.ext.neo4j.change.refactoring.RelationshipExtraction;
 import liquibase.ext.neo4j.change.refactoring.ExtractedRelationships;
 import liquibase.ext.neo4j.change.refactoring.MatchPattern;
+import liquibase.ext.neo4j.change.refactoring.NodeExtraction;
 import liquibase.ext.neo4j.change.refactoring.PropertyExtraction;
 import liquibase.ext.neo4j.change.refactoring.PropertyExtractor;
 import liquibase.ext.neo4j.change.refactoring.RelationshipDirection;
+import liquibase.ext.neo4j.change.refactoring.RelationshipExtraction;
+import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 
 import static liquibase.ext.neo4j.change.Sequences.isNullOrEmpty;
@@ -42,6 +43,11 @@ public class ExtractPropertyChange extends AbstractChange {
     @Override
     public String getConfirmationMessage() {
         return String.format("property \"%s\" of nodes matching \"%s\" has been extracted", property, fromNodes);
+    }
+
+    @Override
+    public boolean supports(Database database) {
+        return database instanceof Neo4jDatabase;
     }
 
     @Override

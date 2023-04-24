@@ -3,6 +3,8 @@ package liquibase.ext.neo4j.change;
 import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.change.core.RawSQLChange;
+import liquibase.database.Database;
+import liquibase.ext.neo4j.database.Neo4jDatabase;
 
 @DatabaseChange(name = "cypher", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
         "The 'cypher' tag allows you to specify whatever cypher you want. It is useful for complex changes " +
@@ -24,4 +26,8 @@ import liquibase.change.core.RawSQLChange;
                 "line or you will get invalid Cypher.")
 public class CypherChange extends RawSQLChange {
 
+    @Override
+    public boolean supports(Database database) {
+        return database instanceof Neo4jDatabase;
+    }
 }

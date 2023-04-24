@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.change
 
+import liquibase.database.core.MySQLDatabase
 import liquibase.ext.neo4j.change.refactoring.PropertyMergePolicy
 import liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy
 import liquibase.ext.neo4j.database.Neo4jDatabase
@@ -9,6 +10,16 @@ import static liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy.KEEP_
 
 class MergeNodesChangeTest extends Specification {
 
+    def "supports only Neo4j targets"() {
+        expect:
+        new MergeNodesChange().supports(database) == result
+
+        where:
+        database            | result
+        new Neo4jDatabase() | true
+        null                | false
+        new MySQLDatabase() | false
+    }
 
     def "rejects missing mandatory fields"() {
         given:
@@ -36,10 +47,8 @@ class MergeNodesChangeTest extends Specification {
         "n"      | "(n)"          | [propertyPolicy(KEEP_ALL, "   ")] | "missing property matcher of property merge policy"
     }
 
-    PropertyMergePolicy aPropertyPolicy() {
-        def strategy = KEEP_ALL
-        def matcher = ".*"
-        return propertyPolicy(strategy, matcher)
+    private PropertyMergePolicy aPropertyPolicy() {
+        return propertyPolicy(KEEP_ALL, ".*")
     }
 
     private PropertyMergePolicy propertyPolicy(PropertyMergeStrategy strategy, String matcher) {
