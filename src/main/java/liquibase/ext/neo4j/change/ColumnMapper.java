@@ -41,8 +41,9 @@ class ColumnMapper {
                 return mapBlobValue(column);
             case "clob":
                 return mapClobValue(column);
+            default:
+                return value;
         }
-        return value;
     }
 
     public static Object mapValue(LoadDataColumnConfig column) {
@@ -68,8 +69,9 @@ class ColumnMapper {
                 throw new IllegalArgumentException(
                         String.format("value type %s is currently not supported by the Neo4j plugin", type)
                 );
+            default:
+                return value;
         }
-        return value;
     }
 
     public static Temporal mapTemporalValue(Object value) {
