@@ -1,0 +1,9 @@
+{
+  "databaseChangeLog": [
+    {
+      "includeAll": {
+        "path": "e2e/include-all/includes/"
+      }
+    }
+  ]
+}

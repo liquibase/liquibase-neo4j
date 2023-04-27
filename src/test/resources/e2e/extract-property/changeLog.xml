@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-movie-init" author="fbiville">
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life', genre: 'Comedy'})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="genre-extraction" author="marouane">
+        <neo4j:extractProperty property="genre" fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC" nodesNamed="m">
+            <neo4j:toNodes withLabel="Genre" withProperty="genre">
+                <neo4j:linkedFromSource withType="HAS_GENRE" withDirection="OUTGOING" />
+            </neo4j:toNodes>
+        </neo4j:extractProperty>
+    </changeSet>
+
+</databaseChangeLog>

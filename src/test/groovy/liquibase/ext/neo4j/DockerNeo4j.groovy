@@ -21,7 +21,7 @@ class DockerNeo4j {
 
     static boolean supportsCypherCallInTransactions() {
         def version = neo4jVersion()
-        return version == "4.4" || Integer.parseInt(version.substring(0, 1)) >= 5
+        return version.startsWith("4.4") || Integer.parseInt(version.substring(0, 1)) >= 5
     }
 
     static String dockerTag() {

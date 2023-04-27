@@ -30,4 +30,12 @@ public class CypherChange extends RawSQLChange {
     public boolean supports(Database database) {
         return database instanceof Neo4jDatabase;
     }
+
+    public void setCypher(String cypher) {
+        setSql(cypher);
+    }
+    public String getCypher() {
+        return getSql();
+    }
+
 }

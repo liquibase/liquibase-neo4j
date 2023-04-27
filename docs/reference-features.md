@@ -269,13 +269,13 @@ Make sure to use the right `valueXxx` attribute:
         outputVariable: m
         propertyPolicies:
         - propertyPolicy:
-            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_FIRST'
+            mergeStrategy: 'KEEP_FIRST'
             nameMatcher: name
         - propertyPolicy:
-            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_LAST'
+            mergeStrategy: 'KEEP_LAST'
             nameMatcher: par.*
         - propertyPolicy:
-            mergeStrategy: !!liquibase.ext.neo4j.change.refactoring.PropertyMergeStrategy 'KEEP_ALL'
+            mergeStrategy: 'KEEP_ALL'
             nameMatcher: .*
     ```
 
@@ -336,9 +336,9 @@ Once the policy is matched for the property name, one of the following operation
         ```json
         {
             "extractProperty": {
-                "property": "genre",
                 "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
                 "nodesNamed": "m",
+                "property": "genre",
                 "toNodes": {
                     "withLabel": "Genre",
                     "withProperty": "genre",
@@ -353,21 +353,17 @@ Once the policy is matched for the property name, one of the following operation
         ```json
         {
             "extractProperty": {
-                "property": "genre",
                 "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
                 "nodesNamed": "m",
+                "property": "genre",
                 "toNodes": {
                     "withLabel": "Genre",
                     "withProperty": "genre",
                     "merge": true,
-                    "extractedNodes": {
-                        "linkedFromSource": {
-                            "extractedRelationships": {
-                                "withDirection": "OUTGOING",
-                                "withType": "HAS_GENRE",
-                                "merge": true
-                            }
-                        }
+                    "linkedFromSource": {
+                        "withDirection": "OUTGOING",
+                        "withType": "HAS_GENRE",
+                        "merge": true
                     }
                 }
             }
@@ -380,32 +376,30 @@ Once the policy is matched for the property name, one of the following operation
 
         ```yaml
         - extractProperty:
-            fromNodes: (m:Movie) WITH m ORDER BY id(m) ASC
-            nodesNamed: m
-            property: genre
+            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
+            nodesNamed: 'm'
+            property: 'genre'
             toNodes:
-                withLabel: Genre
-                withProperty: genre
-                merge: true
+              withLabel: 'Genre'
+              withProperty: 'genre'
+              merge: true
         ```
 
     === "with relationships"
 
         ```yaml
         - extractProperty:
-            fromNodes: (m:Movie) WITH m ORDER BY id(m) ASC
-            nodesNamed: m
-            property: genre
+            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
+            nodesNamed: 'm'
+            property: 'genre'
             toNodes:
-                withLabel: Genre
-                withProperty: genre
+              withLabel: 'Genre'
+              withProperty: 'genre'
+              merge: true
+              linkedFromSource:
+                withDirection: 'OUTGOING'
+                withType: 'HAS_GENRE'
                 merge: true
-                extractedNodes:
-                    linkedFromSource:
-                        extractedRelationships:
-                            withType: HAS_GENRE
-                            withDirection: !!liquibase.ext.neo4j.change.refactoring.RelationshipDirection 'OUTGOING'
-                            merge: true
         ```
 
 The node property extraction refactoring allows to extract node properties into their own nodes.

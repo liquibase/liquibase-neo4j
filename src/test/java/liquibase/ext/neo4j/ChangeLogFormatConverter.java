@@ -2,18 +2,21 @@ package liquibase.ext.neo4j;
 
 import liquibase.Scope;
 import liquibase.changelog.ChangeLogParameters;
+import liquibase.changelog.ChangeSet;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.exception.ChangeLogParseException;
 import liquibase.parser.ChangeLogParser;
 import liquibase.parser.core.xml.XMLChangeLogSAXParser;
 import liquibase.resource.ResourceAccessor;
 import liquibase.serializer.ChangeLogSerializer;
+import liquibase.serializer.core.formattedsql.FormattedSqlChangeLogSerializer;
 import liquibase.serializer.core.json.JsonChangeLogSerializer;
 import liquibase.serializer.core.yaml.YamlChangeLogSerializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -33,7 +36,10 @@ public class ChangeLogFormatConverter {
 
         void serialize(DatabaseChangeLog changeLog) throws IOException {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
-            serializer.write(changeLog.getChangeSets(), output);
+            List<ChangeSet> changeSets = changeLog.getChangeSets();
+            // this is needed for the formatted SQL serializer - does not hurt to do it for all formats
+            changeSets.forEach(c -> c.setFilePath(c.getFilePath().replace(".xml", ".neo4j." + format)));
+            serializer.write(changeSets, output);
             System.out.format("%s output:\n\n", format);
             System.out.println(output.toString("UTF-8"));
         }
@@ -62,12 +68,13 @@ public class ChangeLogFormatConverter {
 
     private static Serialization resolveSerializer(String inputPath, String format) {
         File file = new File(inputPath);
-        String fileName = file.getName();
         switch (format.toLowerCase(Locale.ENGLISH)) {
             case "json":
                 return new Serialization(new JsonChangeLogSerializer(), "json");
             case "yaml":
                 return new Serialization(new YamlChangeLogSerializer(), "yaml");
+            case "sql":
+                return new Serialization(new FormattedSqlChangeLogSerializer(), "sql");
         }
         throw new RuntimeException("unsupported output format: " + format);
     }

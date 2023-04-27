@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init
+      author: fbiville
+      changes:
+        - sql:
+            sql: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+      rollback:
+        - sql:
+            sql: 'MATCH (m:Movie {title: ''My Life''}) DETACH DELETE m'
