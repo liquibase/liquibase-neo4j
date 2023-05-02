@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init
+      author: fbiville
+      runInTransaction: false
+      changes:
+        - sql:
+            sql: 'CALL { CREATE (:Movie {title: ''My Life'', genre: ''Comedy''}) } IN TRANSACTIONS'

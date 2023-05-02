@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init-oops
+      author: fbiville
+      changes:
+        - cypher:
+            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+        - cypher:
+            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Horror''})'
+        - cypher:
+            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Documentary''})'
+  - changeSet:
+      id: my-movie-init-fixed
+      author: fbiville
+      changes:
+        - mergeNodes:
+            fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY m.genre ASC'
+            outputVariable: m
+            propertyPolicies:
+              - propertyPolicy:
+                  mergeStrategy: 'KEEP_FIRST'
+                  nameMatcher: .*

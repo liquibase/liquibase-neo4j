@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: customer-import
+      author: asanturbano
+      changes:
+        - loadData:
+            columns:
+              - column:
+                  header: name
+                  name: first_name
+                  type: string
+              - column:
+                  header: age
+                  name: wisdom_index
+                  type: numeric
+              - column:
+                  index: 2
+                  name: some_date
+                  type: date
+              - column:
+                  header: ignored
+                  name: _
+                  type: skip
+              - column:
+                  header: uuid
+                  name: uuid
+                  type: uuid
+              - column:
+                  header: is_polite
+                  name: polite
+                  type: boolean
+              - column:
+                  header: blob
+                  name: picture
+                  type: blob
+            file: e2e/load-data/data.scsv
+            separator: ;
+            tableName: CsvPerson

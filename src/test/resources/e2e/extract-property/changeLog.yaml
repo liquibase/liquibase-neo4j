@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init
+      author: fbiville
+      changes:
+        - cypher:
+            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+  - changeSet:
+      id: genre-extraction
+      author: marouane
+      changes:
+        - extractProperty:
+            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
+            nodesNamed: 'm'
+            property: 'genre'
+            toNodes:
+              withLabel: 'Genre'
+              withProperty: 'genre'
+              linkedFromSource:
+                withDirection: 'OUTGOING'
+                withType: 'HAS_GENRE'

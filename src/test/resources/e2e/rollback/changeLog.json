@@ -1,0 +1,37 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "my-movie-init",
+        "author": "fbiville",
+        "changes": [
+          {
+            "cypher": {
+              "cypher": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "translate",
+        "author": "fbiville",
+        "changes": [
+          {
+            "cypher": {
+              "cypher": "MATCH (m:Movie {title: 'My Life'}) SET m.genre = 'Comédie'"
+            }
+          }
+        ],
+        "rollback": [
+          {
+            "cypher": {
+              "cypher": "MATCH (m:Movie {title: 'My Life'}) SET m.genre = 'Comedy'"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

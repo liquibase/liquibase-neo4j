@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: e2e/include/includes/changeLog.cypher
