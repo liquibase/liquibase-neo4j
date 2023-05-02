@@ -59,8 +59,8 @@ abstract class Neo4jContainerSpec extends Specification {
     def setup() {
         stdout = System.out
         stderr = System.err
-        System.out = filePrintStream()
-        System.err = filePrintStream()
+        System.out = tempFilePrintStream()
+        System.err = tempFilePrintStream()
     }
 
     def cleanup() {
@@ -96,7 +96,7 @@ abstract class Neo4jContainerSpec extends Specification {
         return dockerTag()
     }
 
-    protected static PrintStream filePrintStream() {
+    private static PrintStream tempFilePrintStream() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
     }
 }
