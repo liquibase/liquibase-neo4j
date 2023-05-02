@@ -28,7 +28,7 @@ class MergeNodesIT extends Neo4jContainerSpec {
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
                 .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(UpdateSqlCommandStep.CHANGELOG_FILE_ARG, "/e2e/merge-nodes/changeLog.${format}".toString())
+                .addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "/e2e/merge-nodes/changeLog.${format}".toString())
                 .setOutput(System.out)
         command.execute()
 
