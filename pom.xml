@@ -161,7 +161,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <optimize>true</optimize>
                     <debug>true</debug>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArgs>
