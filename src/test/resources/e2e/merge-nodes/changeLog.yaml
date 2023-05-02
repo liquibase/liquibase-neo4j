@@ -14,7 +14,7 @@ databaseChangeLog:
       author: fbiville
       changes:
         - mergeNodes:
-            fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY id(m) ASC'
+            fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY m.genre ASC'
             outputVariable: m
             propertyPolicies:
               - propertyPolicy:
