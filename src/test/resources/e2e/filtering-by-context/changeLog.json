@@ -1,0 +1,32 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "my-movie-init",
+        "author": "fbiville",
+        "contextFilter": "mandatory",
+        "changes": [
+          {
+            "cypher": {
+              "cypher": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "oblivion",
+        "author": "fbiville",
+        "contextFilter": "!mandatory",
+        "changes": [
+          {
+            "cypher": {
+              "cypher": "MATCH (n) DETACH DELETE n"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
