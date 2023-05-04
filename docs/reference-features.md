@@ -33,21 +33,58 @@ The built-in [SQL](https://docs.liquibase.com/change-types/community/sql.html)
 and [rollback](https://docs.liquibase.com/workflows/liquibase-community/using-rollback.html) changes are supported.
 The SQL change is also aliased to `cypher`.
 
-!!! warning
-    When using XML change logs, the `cypher` tag needs to be prepended with the corresponding extension namespace prefix.
-    In the following example, the prefix is `neo4j`:
-    
+=== "XML"
+
     ```xml
     <?xml version="1.0" encoding="UTF-8"?>
     <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="my-movie-init" author="fbiville">
-        <neo4j:cypher>MERGE (:Movie {title: 'My Life'})</neo4j:cypher>
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
         <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
     </changeSet>
+    ```
+
+    !!! warning
+         - The `cypher` XML tag needs to be prepended with the corresponding extension namespace prefix.
+         - If the query contains XML special characters such as `<` or `>`, make sure to surround the query content with 
+        `<![CDATA[` at the beginning and `]]>` at the end.
+
+=== "JSON"
+
+    ```json
+    {"databaseChangeLog": [
+        {"changeSet": {
+            "id": "my-movie-init",
+            "author": "fbiville",
+            "changes": [
+                {
+                    "cypher": "CREATE (:Movie {title: 'My Life'})"
+                }
+            ],
+            "rollback": [
+                {
+                    "cypher": "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
+                }
+            ]
+        }}
+    ]}
+    ```
+
+=== "YAML"
+
+    ```yaml
+    databaseChangeLog:
+    - changeSet:
+      id: my-movie-init
+      author: fbiville
+      changes:
+        - cypher: 'CREATE (:Movie {title: ''My Life''})'
+      rollback:
+        - cypher: "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
     ```
 
 ## Neo4j Preconditions
