@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-neo4j-44-deployment" author="fbiville">
+        <preConditions onFail="CONTINUE">
+            <neo4j:version matches="4.4"/>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {neo4j44: true})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="my-neo4j-non44-deployment" author="fbiville">
+        <preConditions onFail="CONTINUE">
+            <not>
+                <neo4j:version matches="4.4"/>
+            </not>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {neo4j44: false})</neo4j:cypher>
+    </changeSet>
+
+</databaseChangeLog>

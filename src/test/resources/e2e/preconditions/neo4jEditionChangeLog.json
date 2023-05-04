@@ -1,0 +1,46 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "my-neo4j-ee-deployment",
+        "author": "fbiville",
+        "preConditions": [
+          {
+            "onFail": "CONTINUE"
+          },
+          {
+            "edition": {
+              "enterprise": true
+            }
+          }
+        ],
+        "changes": [
+          {
+            "cypher": "CREATE (:Neo4j {enterprise: true})"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "my-neo4j-ce-deployment",
+        "author": "fbiville",
+        "preConditions": [
+          {
+            "onFail": "CONTINUE"
+          },
+          {
+            "edition": {
+              "enterprise": false
+            }
+          }
+        ],
+        "changes": [
+          {
+            "cypher": "CREATE (:Neo4j {enterprise: false})"
+          }
+        ]
+      }
+    }
+  ]
+}

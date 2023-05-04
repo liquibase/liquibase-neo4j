@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-neo4j-ee-deployment
+      author: fbiville
+      preConditions:
+        - edition:
+            enterprise: true
+        - onFail: 'CONTINUE'
+      changes:
+        - cypher: 'CREATE (:Neo4j {enterprise: true})'
+  - changeSet:
+      id: my-neo4j-ce-deployment
+      author: fbiville
+      preConditions:
+        - edition:
+            enterprise: false
+        - onFail: 'CONTINUE'
+      changes:
+        - cypher: 'CREATE (:Neo4j {enterprise: false})'
