@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-neo4j-44-deployment
+      author: fbiville
+      preConditions:
+        - onFail: 'CONTINUE'
+        - version:
+            matches: '4.4'
+      changes:
+        - cypher: 'CREATE (:Neo4j {neo4j44: true})'
+  - changeSet:
+      id: my-neo4j-non44-deployment
+      author: fbiville
+      preConditions:
+        - onFail: 'CONTINUE'
+        - not:
+            - version:
+                matches: '4.4'
+      changes:
+        - cypher: 'CREATE (:Neo4j {neo4j44: false})'

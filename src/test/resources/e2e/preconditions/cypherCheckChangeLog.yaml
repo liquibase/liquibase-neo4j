@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-neo4j-deployment
+      author: fbiville
+      preConditions:
+        - onFail: 'CONTINUE'
+        - cypherCheck:
+            expectedResult: '0'
+            sql: MATCH (n:Neo4j) RETURN count(n)
+      changes:
+        - cypher:
+            cypher: CREATE (:Neo4j)
