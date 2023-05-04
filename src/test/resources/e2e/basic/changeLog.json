@@ -6,9 +6,7 @@
         "author": "fbiville",
         "changes": [
           {
-            "sql": {
-              "sql": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
-            }
+            "sql": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
           }
         ]
       }

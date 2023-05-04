@@ -44,6 +44,6 @@ class AutocommitIT extends Neo4jContainerSpec {
         ]
 
         where:
-        format << ["json", "sql", "xml", "yaml"]
+        format << ["cypher", "json", "xml", "yaml"]
     }
 }

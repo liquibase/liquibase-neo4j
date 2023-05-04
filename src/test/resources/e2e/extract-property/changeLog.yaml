@@ -3,8 +3,7 @@ databaseChangeLog:
       id: my-movie-init
       author: fbiville
       changes:
-        - cypher:
-            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
   - changeSet:
       id: genre-extraction
       author: marouane

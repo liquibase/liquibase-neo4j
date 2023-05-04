@@ -3,12 +3,9 @@ databaseChangeLog:
       id: my-movie-init-oops
       author: fbiville
       changes:
-        - cypher:
-            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
-        - cypher:
-            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Horror''})'
-        - cypher:
-            cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Documentary''})'
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Horror''})'
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Documentary''})'
   - changeSet:
       id: my-movie-init-fixed
       author: fbiville

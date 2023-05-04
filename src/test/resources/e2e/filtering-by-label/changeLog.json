@@ -7,9 +7,7 @@
         "labels": "mandatory",
         "changes": [
           {
-            "cypher": {
-              "cypher": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
-            }
+            "cypher": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
           }
         ]
       }
@@ -21,9 +19,7 @@
         "labels": "!mandatory",
         "changes": [
           {
-            "cypher": {
-              "cypher": "MATCH (n) DETACH DELETE n"
-            }
+            "cypher": "MATCH (n) DETACH DELETE n"
           }
         ]
       }
