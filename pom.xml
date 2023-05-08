@@ -102,7 +102,7 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
             <!-- 4.0.6 is the minimum for JDK 20 -->
-            <version>4.0.11</version>
+            <version>4.0.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
