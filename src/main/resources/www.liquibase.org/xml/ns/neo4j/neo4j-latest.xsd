@@ -45,7 +45,7 @@
     </xsd:complexType>
     <xsd:complexType name="mergeNodesType">
         <xsd:sequence>
-            <xsd:element type="propertyPolicyType" name="propertyPolicy" maxOccurs="unbounded" minOccurs="1"/>
+            <xsd:element type="propertyPolicyType" name="propertyPolicy" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute type="xsd:string" name="fragment" use="required"/>
         <xsd:attribute type="xsd:string" name="outputVariable" use="required"/>
@@ -69,17 +69,24 @@
     </xsd:complexType>
     <xsd:complexType name="toNodesType">
         <xsd:sequence>
-            <xsd:element type="linkedFromSourceType" name="linkedFromSource" minOccurs="0" />
+            <xsd:element type="linkedFromSourceType" name="linkedFromSource" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute type="xsd:string" name="withLabel" use="required"/>
         <xsd:attribute type="xsd:string" name="withProperty" use="required"/>
     </xsd:complexType>
     <xsd:complexType name="extractPropertyType">
         <xsd:sequence>
-            <xsd:element type="toNodesType" name="toNodes" />
+            <xsd:element type="toNodesType" name="toNodes"/>
         </xsd:sequence>
         <xsd:attribute type="xsd:string" name="property" use="required"/>
         <xsd:attribute type="xsd:string" name="fromNodes" use="required"/>
         <xsd:attribute type="xsd:string" name="nodesNamed" use="required"/>
+    </xsd:complexType>
+
+    <!-- not using substitutionGroup="core:insert" since that would make tableName mandatory -->
+    <!-- not defining catalogName nor schemaName as attribute at the moment, since that's not supported by the extension yet -->
+    <xsd:element name="insert" type="insertType"/>
+    <xsd:complexType name="insertType">
+        <xsd:attribute type="xsd:string" name="labelName" use="required" />
     </xsd:complexType>
 </xsd:schema>
