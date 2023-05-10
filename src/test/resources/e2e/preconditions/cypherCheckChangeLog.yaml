@@ -6,7 +6,7 @@ databaseChangeLog:
         - onFail: 'CONTINUE'
         - cypherCheck:
             expectedResult: '0'
-            sql: MATCH (n:Neo4j) RETURN count(n)
+            cypher: MATCH (n:Neo4j) RETURN count(n)
       changes:
         - cypher:
             cypher: CREATE (:Neo4j)
