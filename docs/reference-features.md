@@ -322,7 +322,7 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 
 ## Insert Change
 
-|Required plugin version|4.22.0|
+|Required plugin version|4.21.1|
 
 The change allows to define the creation of individual nodes, with a single label specified with `labelName`.
 
