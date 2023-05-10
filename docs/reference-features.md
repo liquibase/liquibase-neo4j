@@ -256,6 +256,9 @@ The `cypherCheck` aliases the existing [`sqlCheck`](https://docs.liquibase.com/c
 Cypher formatted change log files can only use `sqlCheck` at the moment.
 `cypherCheck` can be combined with other preconditions with the standard boolean operators.
 
+!!! warning
+    Before version 4.21.1.2, JSON and YAML change logs had to specify a `sql` attribute instead of `cypher`.
+
 === "XML"
 
     ```xml
@@ -284,15 +287,11 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
                 "id": "my-neo4j-deployment",
                 "author": "fbiville",
                 "preConditions": [
-                    {
-                        "onFail": "CONTINUE"
-                    },
-                    {
-                        "cypherCheck": {
-                            "expectedResult": "0",
-                            "sql": "MATCH (n:Neo4j) RETURN count(n)"
-                        }
-                    }
+                    {"onFail": "CONTINUE"},
+                    {"cypherCheck": {
+                        "expectedResult": "0",
+                        "cypher": "MATCH (n:Neo4j) RETURN count(n)"
+                    }}
                 ],
                 "changes": [
                     {"cypher": {
@@ -315,7 +314,7 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
           - onFail: 'CONTINUE'
           - cypherCheck:
               expectedResult: '0'
-              sql: MATCH (n:Neo4j) RETURN count(n)
+              cypher: MATCH (n:Neo4j) RETURN count(n)
           changes:
           - cypher:
                 cypher: CREATE (:Neo4j)
