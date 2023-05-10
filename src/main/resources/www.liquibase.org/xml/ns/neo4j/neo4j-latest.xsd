@@ -4,9 +4,6 @@
             xmlns:core="http://www.liquibase.org/xml/ns/dbchangelog"
             elementFormDefault="qualified">
 
-    <xsd:import namespace="https://www.liquibase.org/xml/ns/dbchangelog"
-                schemaLocation="https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.18.xsd"/>
-
     <xsd:element name="cypher" substitutionGroup="core:sql"/>
     <xsd:element name="cypherCheck" substitutionGroup="core:sqlCheck">
         <xsd:complexType mixed="true">
