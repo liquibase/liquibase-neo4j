@@ -12,12 +12,9 @@ Cypher file names must end with `.cypher`.
 Cypher change logs must start with the comment `--liquibase formatted cypher`.
 Here is an example of a supported Cypher file:
 
-```cypher
---liquibase formatted cypher
---changeset fbiville:count-movies runAlways:true
-MATCH (m:Movie) WITH count(m) AS count MERGE (c:Count) SET c.value = count
---rollback MATCH (c:Count) DETACH DELETE c
-```
+~~~~cypher
+{! include '../src/test/resources/e2e/cypher-alias/changeLog.cypher' !}
+~~~~
 
 Cypher files that are part of a [folder inclusion](#change-log-inclusion) must only contain a single Cypher query
 and **no** comment directive.
