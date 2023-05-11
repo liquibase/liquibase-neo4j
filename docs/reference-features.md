@@ -343,22 +343,7 @@ This is the right default and should be changed only if you need any of the foll
 - [since Neo4j 4.4]  [`CALL {} IN TRANSACTIONS`](https://neo4j.com/docs/cypher-manual/current/clauses/call-subquery/#subquery-call-in-transactions)
 - [until Neo4j 4.4]  [`PERIODIC COMMIT`](https://neo4j.com/docs/cypher-manual/4.4/query-tuning/using/#query-using-periodic-commit-hint)
 
-Indeed, using those constructs without disabling `runInTransaction` fails:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-  <changeSet id="my-movie-init" author="fbiville">
-    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
-  </changeSet>
-</databaseChangeLog>
-```
-
-The error message after executing the change set is similar to:
+Indeed, using those constructs without disabling `runInTransaction` fails with a similar error message:
 
 ```
 A query with 'CALL { ... } IN TRANSACTIONS' can only be executed in an implicit transaction, but tried to execute in an explicit transaction.
@@ -367,40 +352,34 @@ A query with 'CALL { ... } IN TRANSACTIONS' can only be executed in an implicit 
 Setting `runInTransaction` to `false` on a change set means that all its changes are going to run **in their own
 auto-commit (or implicit) transaction**.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.xml' !}
+    ~~~~
 
-  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
-    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
-  </changeSet>
-</databaseChangeLog>
-```
+=== "JSON"
 
-`runInTransaction` is a sharp tool and can lead to unintended consequences, as illustrated below:
+    ~~~~json
+    {! include '../src/test/resources/e2e/autocommit/changeLog.json' !}
+    ~~~~
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+=== "YAML"
 
-  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
-    <neo4j:cypher>CREATE (:Movie {title: "Me, Myself and I"})</neo4j:cypher> <!-- this is going to run -->
-    <neo4j:cypher>this is not valid cypher</neo4j:cypher><!-- this is going to fail -->
-  </changeSet>
-</databaseChangeLog>
-```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.yaml' !}
+    ~~~~
 
-The first change of the change set successfully runs, but the second fails.
-More importantly, the enclosing change set `"my-movie-init"` is **not** stored in the history graph.
+=== "Cypher"
 
-Re-running this change set results in the `Movie` node being inserted again, since Liquibase has no knowledge of the
-change set having run before.
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.cypher' !}
+    ~~~~
+
+`runInTransaction` is a sharp tool and can lead to unintended consequences.
+
+If any of the change of the enclosing change set fails, the change set is **not** going to be stored in the history graph.
+
+Re-running this change set results in all changes being run again, even the ones that successfully ran before.
 
 In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
 idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
