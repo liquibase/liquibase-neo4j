@@ -239,29 +239,6 @@ Make sure to use the right `valueXxx` attribute:
 - `valueNumeric` for numeric values
 - `value` for everything else
 
-Assuming the following (S)CSV `data.scsv` file:
-
-~~~~csv
-{! include '../src/test/resources/e2e/load-data/data.scsv' !}
-~~~~
-
-=== "XML"
-    ~~~~xml
-    {! include '../src/test/resources/e2e/load-data/changeLog.xml' !}
-    ~~~~
-
-=== "JSON"
-
-    ~~~~json
-    {! include '../src/test/resources/e2e/load-data/changeLog.json' !}
-    ~~~~
-
-=== "YAML"
-
-    ~~~~yaml
-    {! include '../src/test/resources/e2e/load-data/changeLog.yaml' !}
-    ~~~~
-
 ## Graph refactorings
 
 ### Node Merge
@@ -269,63 +246,21 @@ Assuming the following (S)CSV `data.scsv` file:
 |Required plugin version|4.13.0|
 
 === "XML"
-
-    ```xml
-    <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
-        <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST"/>
-        <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST"/>
-        <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_ALL"/>
-    </neo4j:mergeNodes>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {
-        "mergeNodes": {
-            "fragment": "(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC",
-            "outputVariable": "m",
-            "propertyPolicies": [
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_FIRST",
-                        "nameMatcher": "name"
-                    }
-                },
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_LAST",
-                        "nameMatcher": "par.*"
-                    }
-                },
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_ALL",
-                        "nameMatcher": ".*"
-                    }
-                }
-            ]
-        }
-    }
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    - mergeNodes:
-        fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY id(m) ASC'
-        outputVariable: m
-        propertyPolicies:
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_FIRST'
-            nameMatcher: name
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_LAST'
-            nameMatcher: par.*
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_ALL'
-            nameMatcher: .*
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.yaml' !}
+    ~~~~
 
 Specify a Cypher query fragment, which defines the nodes to match for the merge operation. If fewer than two nodes are
 matched, the merge is a no-op.
