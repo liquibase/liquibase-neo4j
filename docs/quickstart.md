@@ -232,4 +232,4 @@ That attribute makes sure its change set has not changed since the last run.
 Learn more by reading the [reference documentation](../reference-intro).
 
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}

@@ -10,4 +10,4 @@
 - [Neo4jRb Migrations](https://neo4jrb.readthedocs.io/en/stable/Migrations.html): A Ruby-specific migration tool for
   Neo4j
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}

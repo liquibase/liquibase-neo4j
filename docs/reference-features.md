@@ -518,8 +518,6 @@ Once the policy is matched for the property name, one of the following operation
     "first" and "last" are defined by the ordering of the specified Cypher query fragment. It is strongly advised to
     explicitly order the matched nodes with the `ORDER BY` clause like in the example.
 
-{!includes/_abbreviations.md!}
-
 ### Node Property Extraction
 
 |Required plugin version|4.17.2|
@@ -725,3 +723,5 @@ change set having run before.
 In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
 idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
 set and using Cypher's `MERGE` instead of `CREATE` usually helps).
+
+{! include-markdown 'includes/_abbreviations.md' !}

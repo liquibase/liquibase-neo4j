@@ -11,4 +11,4 @@
 ### [Liquibase Tech Talk](https://www.meetup.com/liquibase/)
 [![](https://markdown-videos.deta.dev/youtube/EAsj7OPiEFY)](https://youtu.be/EAsj7OPiEFY)
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}
