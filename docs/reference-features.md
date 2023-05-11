@@ -286,102 +286,21 @@ Once the policy is matched for the property name, one of the following operation
 |Required plugin version|4.17.2|
 
 === "XML"
-
-    === "without relationships"
-        ```xml
-        <neo4j:extractProperty property="genre"
-                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
-                               nodesNamed="m">
-            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true" />
-        </neo4j:extractProperty>
-        ```
-
-    === "with relationships"
-
-        ```xml
-        <neo4j:extractProperty property="genre" 
-                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
-                               nodesNamed="m">
-            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true">
-                <neo4j:linkedFromSource withType="HAS_GENRE" 
-                                        withDirection="OUTGOING"
-                                        merge="true" />
-            </neo4j:toNodes>
-        </neo4j:extractProperty>
-        ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/extract-property/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    === "without relationships"
-
-        ```json
-        {
-            "extractProperty": {
-                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
-                "nodesNamed": "m",
-                "property": "genre",
-                "toNodes": {
-                    "withLabel": "Genre",
-                    "withProperty": "genre",
-                    "merge": true
-                }
-            }
-        }
-        ```
-    
-    === "with relationships"
-
-        ```json
-        {
-            "extractProperty": {
-                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
-                "nodesNamed": "m",
-                "property": "genre",
-                "toNodes": {
-                    "withLabel": "Genre",
-                    "withProperty": "genre",
-                    "merge": true,
-                    "linkedFromSource": {
-                        "withDirection": "OUTGOING",
-                        "withType": "HAS_GENRE",
-                        "merge": true
-                    }
-                }
-            }
-        }
-        ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/extract-property/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    === "without relationships"
-
-        ```yaml
-        - extractProperty:
-            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
-            nodesNamed: 'm'
-            property: 'genre'
-            toNodes:
-              withLabel: 'Genre'
-              withProperty: 'genre'
-              merge: true
-        ```
-
-    === "with relationships"
-
-        ```yaml
-        - extractProperty:
-            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
-            nodesNamed: 'm'
-            property: 'genre'
-            toNodes:
-              withLabel: 'Genre'
-              withProperty: 'genre'
-              merge: true
-              linkedFromSource:
-                withDirection: 'OUTGOING'
-                withType: 'HAS_GENRE'
-                merge: true
-        ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/extract-property/changeLog.yaml' !}
+    ~~~~
 
 The node property extraction refactoring allows to extract node properties into their own nodes.
 As for the [node merge refactoring](#node-merge), the nodes to extract properties from are specified as a Cypher
