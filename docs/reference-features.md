@@ -159,6 +159,7 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 The change allows to define the creation of individual nodes, with a single label specified with `labelName`.
 
 === "XML"
+
     ~~~~xml
     {! include '../src/test/resources/e2e/insert/changeLog.xml' !}
     ~~~~
@@ -190,6 +191,7 @@ Assuming the following (S)CSV `data.scsv` file:
 ~~~~
 
 === "XML"
+
     ~~~~xml
     {! include '../src/test/resources/e2e/load-data/changeLog.xml' !}
     ~~~~
@@ -243,6 +245,7 @@ Make sure to use the right `valueXxx` attribute:
 |Required plugin version|4.13.0|
 
 === "XML"
+
     ~~~~xml
     {! include '../src/test/resources/e2e/merge-nodes/changeLog.xml' !}
     ~~~~
