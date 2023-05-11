@@ -162,75 +162,21 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 The change allows to define the creation of individual nodes, with a single label specified with `labelName`.
 
 === "XML"
-
-    ```xml
-    <neo4j:insert labelName="Person">
-        <column name="id" value="8987212b-a6ff-48a1-901f-8c4b39bd6d9e" type="uuid"/>
-        <column name="first_name" value="Florent"/>
-        <column name="last_name" value="Biville"/>
-        <column name="birth_date" valueDate="1950-01-01T22:23:24+02:00" type="date"/>
-        <column name="picture" value="DLxmEfVUC9CAmjiNyVphWw==" type="blob"/>
-    </neo4j:insert>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/insert/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"insert": {
-        "labelName": "Person",
-        "columns": [
-            {"column": {
-                "name": "id",
-                "type": "uuid",
-                "value": "8987212b-a6ff-48a1-901f-8c4b39bd6d9e"
-            }},
-            {"column": {
-                "name": "first_name",
-                "value": "Florent"
-            }},
-            {"column": {
-                "name": "last_name",
-                "value": "Biville"
-            }},
-            {"column": {
-                "name": "birth_date",
-                "type": "date",
-                "valueDate": "1950-01-01T22:23:24+02:00"
-            }},
-            {"column": {
-                "name": "picture",
-                "type": "blob",
-                "value": "DLxmEfVUC9CAmjiNyVphWw=="
-            }}
-        ]
-    }}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/insert/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    - insert:
-        labelName: Person
-        columns:
-        - column:
-            name: id
-            type: uuid
-            value: 8987212b-a6ff-48a1-901f-8c4b39bd6d9e
-        - column:
-            name: first_name
-            value: Florent
-        - column:
-            name: last_name
-            value: Biville
-        - column:
-            name: birth_date
-            type: date
-            valueDate: 1950-01-01T22:23:24+02:00
-        - column:
-            name: picture
-            type: blob
-            value: DLxmEfVUC9CAmjiNyVphWw==
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/insert/changeLog.yaml' !}
+    ~~~~
 
 Please refer to the [Load Data](#load-data) documentation for the supported value types for each column.
 
