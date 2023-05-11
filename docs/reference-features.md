@@ -35,19 +35,9 @@ The SQL change is also aliased to `cypher`.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-movie-init" author="fbiville">
-            <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
-            <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rollback/changeLog.xml' !}
+    ~~~~
 
     !!! warning
          - The `cypher` XML tag needs to be prepended with the corresponding extension namespace prefix.
@@ -56,47 +46,21 @@ The SQL change is also aliased to `cypher`.
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {"changeSet": {
-            "id": "my-movie-init",
-            "author": "fbiville",
-            "changes": [
-                {
-                    "cypher": "CREATE (:Movie {title: 'My Life'})"
-                }
-            ],
-            "rollback": [
-                {
-                    "cypher": "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
-                }
-            ]
-        }}
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/rollback/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-    - changeSet:
-      id: my-movie-init
-      author: fbiville
-      changes:
-        - cypher: 'CREATE (:Movie {title: ''My Life''})'
-      rollback:
-        - cypher: "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rollback/changeLog.yaml' !}
+    ~~~~
 
 === "Cypher"
 
-    ```cypher
-    -- liquibase formatted cypher
-
-    -- changeset fbiville:my-movie-init
-    CREATE (:Movie {title: 'My Life'})
-    -- rollback MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m
-    ```
+    ~~~~cypher
+    {! include '../src/test/resources/e2e/rollback/changeLog.cypher' !}
+    ~~~~
 
 ## Neo4j Preconditions
 

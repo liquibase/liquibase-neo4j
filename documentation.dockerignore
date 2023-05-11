@@ -1,3 +1,4 @@
 *
 !mkdocs.yml
 !docs/*
+!src/test/resources/e2e/
