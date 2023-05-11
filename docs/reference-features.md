@@ -85,64 +85,21 @@ It can be combined with other preconditions with the standard boolean operators.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-neo4j-lts-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:version matches="4.4"/>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j {lts: true})</neo4j:cypher>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-          "changeSet": {
-            "id": "my-neo4j-lts-deployment",
-            "author": "fbiville",
-            "preConditions": [
-              {
-                "onFail": "CONTINUE"
-              },
-              {
-                "version": {
-                  "matches": "4.4"
-                }
-              }
-            ],
-            "changes": [
-              {
-                "cypher": "CREATE (:Neo4j {lts: true})"
-              }
-            ]
-          }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-        - changeSet:
-          id: my-neo4j-44-deployment
-          author: fbiville
-          preConditions:
-          - onFail: 'CONTINUE'
-          - version:
-              matches: '4.4'
-          changes:
-          - cypher: 'CREATE (:Neo4j {lts: true})'
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.yaml' !}
+    ~~~~
 
 ### Edition check
 
@@ -153,64 +110,21 @@ It can be combined with other preconditions with the standard boolean operators.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-neo4j-ee-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:edition enterprise="true"/>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j {enterprise: true})</neo4j:cypher>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-          "changeSet": {
-            "id": "my-neo4j-ee-deployment",
-            "author": "fbiville",
-            "preConditions": [
-              {
-                "onFail": "CONTINUE"
-              },
-              {
-                "edition": {
-                  "enterprise": true
-                }
-              }
-            ],
-            "changes": [
-              {
-                "cypher": "CREATE (:Neo4j {enterprise: true})"
-              }
-            ]
-          }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-        - changeSet:
-          id: my-neo4j-ee-deployment
-          author: fbiville
-          preConditions:
-          - edition:
-          enterprise: true
-          - onFail: 'CONTINUE'
-          changes:
-          - cypher: 'CREATE (:Neo4j {enterprise: true})'
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.yaml' !}
+    ~~~~
 
 ### Cypher check alias
 
@@ -225,64 +139,21 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    
-        <changeSet id="my-neo4j-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:cypherCheck expectedResult="0">MATCH (n:Neo4j) RETURN count(n)</neo4j:cypherCheck>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j)</neo4j:cypher>
-        </changeSet>
-    
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-            "changeSet": {
-                "id": "my-neo4j-deployment",
-                "author": "fbiville",
-                "preConditions": [
-                    {"onFail": "CONTINUE"},
-                    {"cypherCheck": {
-                        "expectedResult": "0",
-                        "cypher": "MATCH (n:Neo4j) RETURN count(n)"
-                    }}
-                ],
-                "changes": [
-                    {"cypher": {
-                        "cypher": "CREATE (:Neo4j)"
-                    }}
-                ]
-            }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-    - changeSet:
-          id: my-neo4j-deployment
-          author: fbiville
-          preConditions:
-          - onFail: 'CONTINUE'
-          - cypherCheck:
-              expectedResult: '0'
-              cypher: MATCH (n:Neo4j) RETURN count(n)
-          changes:
-          - cypher:
-                cypher: CREATE (:Neo4j)
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.yaml' !}
+    ~~~~
 
 ## Insert Change
 
