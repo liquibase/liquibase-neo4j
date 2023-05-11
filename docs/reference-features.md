@@ -185,6 +185,30 @@ Please refer to the [Load Data](#load-data) documentation for the supported valu
 |Required Liquibase core version|4.11.0|
 |Required plugin version|4.16.1.1|
 
+
+Assuming the following (S)CSV `data.scsv` file:
+
+~~~~csv
+{! include '../src/test/resources/e2e/load-data/data.scsv' !}
+~~~~
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/load-data/changeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/load-data/changeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/load-data/changeLog.yaml' !}
+    ~~~~
+
 The general documentation of this change is available [here](https://docs.liquibase.com/change-types/load-data.html).
 
 The table below details how each supported data type is mapped to its Neo4j counterpart:
@@ -214,6 +238,29 @@ Make sure to use the right `valueXxx` attribute:
 - `valueDate` for date/time values
 - `valueNumeric` for numeric values
 - `value` for everything else
+
+Assuming the following (S)CSV `data.scsv` file:
+
+~~~~csv
+{! include '../src/test/resources/e2e/load-data/data.scsv' !}
+~~~~
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/load-data/changeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/load-data/changeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/load-data/changeLog.yaml' !}
+    ~~~~
 
 ## Graph refactorings
 
