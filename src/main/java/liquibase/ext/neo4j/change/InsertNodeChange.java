@@ -10,7 +10,6 @@ import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,8 +72,17 @@ public class InsertNodeChange extends InsertDataChange {
     private Map<String, Object> propertyMap(List<ColumnConfig> columns) {
         Map<String, Object> result = new HashMap<>(columns.size());
         for (ColumnConfig column : columns) {
-            result.put(column.getName(), mapValue(column));
+            result.put(column.getName(), tryMapValue(column));
         }
         return result;
+    }
+
+    private Object tryMapValue(ColumnConfig column) {
+        try {
+            return mapValue(column);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(String.format("could not map value of column %s from change set %s",
+                    column.getName(), this.getChangeSet()), e);
+        }
     }
 }

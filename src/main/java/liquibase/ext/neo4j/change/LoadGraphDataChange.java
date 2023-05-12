@@ -56,18 +56,27 @@ public class LoadGraphDataChange extends LoadDataChange {
     private List<Map<String, Object>> keyValuePairs(List<LoadDataRowConfig> rows) {
         return rows.stream()
                 .map(row -> row.getColumns().stream()
-                        .flatMap(LoadGraphDataChange::keyValuePair)
+                        .flatMap(this::keyValuePair)
                         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .collect(Collectors.toList());
     }
 
-    private static Stream<AbstractMap.SimpleEntry<String, Object>> keyValuePair(LoadDataColumnConfig column) {
+    private Stream<AbstractMap.SimpleEntry<String, Object>> keyValuePair(LoadDataColumnConfig column) {
         Object value = column.getValueObject();
         if (value == null) {
             return Stream.empty();
         }
-        AbstractMap.SimpleEntry<String, Object> entry = new AbstractMap.SimpleEntry<>(column.getName(), mapValue(column));
+        AbstractMap.SimpleEntry<String, Object> entry = new AbstractMap.SimpleEntry<>(column.getName(), tryMapValue(column));
         return Stream.of(entry);
+    }
+
+    private Object tryMapValue(LoadDataColumnConfig column) {
+        try {
+            return mapValue(column);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(String.format("could not map value of column %s from change set %s",
+                    column.getName(), this.getChangeSet()), e);
+        }
     }
 
 
