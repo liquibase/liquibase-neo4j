@@ -23,6 +23,10 @@ theme:
 plugins:
   - markdownextradata: { }
   - badges
+  - include-markdown:
+      opening_tag: "{!"
+      closing_tag: "!}"
+      dedent: true
 extra:
   maven_central: https://repo1.maven.org/maven2
   github_repo: https://github.com/liquibase/liquibase-neo4j
@@ -34,8 +38,6 @@ extra:
 markdown_extensions:
   - abbr
   - admonition
-  - markdown_include.include:
-      base_path: docs
   - pymdownx.highlight:
   - pymdownx.superfences
   - pymdownx.tabbed:

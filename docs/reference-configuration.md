@@ -131,4 +131,4 @@ below.
     - If a setting is expressed both via URL and properties, the setting specified by URL has higher precedence.
     - URL settings without value are considered equivalent to boolean flags with value `true`.
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}

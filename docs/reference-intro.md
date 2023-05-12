@@ -109,4 +109,4 @@ The executed change sets need to be persisted.
 Similar to the [`DATABASECHANGELOGLOCK` table](https://docs.liquibase.com/concepts/tracking-tables/databasechangeloglock-table.html), 
 `liquibase-neo4j` attempts to store a unique `__LiquibaseLock` node. If this fails, this means another execution is going on and the execution stops.
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}

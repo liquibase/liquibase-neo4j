@@ -43,4 +43,4 @@ It may also work with older and newer Liquibase core versions, but that is not a
     [Release notes](https://github.com/liquibase/liquibase-neo4j/releases) detail when a specific version of
     Liquibase core is required.
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}

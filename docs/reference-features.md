@@ -12,12 +12,9 @@ Cypher file names must end with `.cypher`.
 Cypher change logs must start with the comment `--liquibase formatted cypher`.
 Here is an example of a supported Cypher file:
 
-```cypher
---liquibase formatted cypher
---changeset fbiville:count-movies runAlways:true
-MATCH (m:Movie) WITH count(m) AS count MERGE (c:Count) SET c.value = count
---rollback MATCH (c:Count) DETACH DELETE c
-```
+~~~~cypher
+{! include '../src/test/resources/e2e/cypher-alias/changeLog.cypher' !}
+~~~~
 
 Cypher files that are part of a [folder inclusion](#change-log-inclusion) must only contain a single Cypher query
 and **no** comment directive.
@@ -35,19 +32,9 @@ The SQL change is also aliased to `cypher`.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-movie-init" author="fbiville">
-            <neo4j:cypher>CREATE (:Movie {title: 'My Life'})</neo4j:cypher>
-            <rollback>MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m</rollback>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rollback/changeLog.xml' !}
+    ~~~~
 
     !!! warning
          - The `cypher` XML tag needs to be prepended with the corresponding extension namespace prefix.
@@ -56,47 +43,21 @@ The SQL change is also aliased to `cypher`.
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {"changeSet": {
-            "id": "my-movie-init",
-            "author": "fbiville",
-            "changes": [
-                {
-                    "cypher": "CREATE (:Movie {title: 'My Life'})"
-                }
-            ],
-            "rollback": [
-                {
-                    "cypher": "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
-                }
-            ]
-        }}
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/rollback/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-    - changeSet:
-      id: my-movie-init
-      author: fbiville
-      changes:
-        - cypher: 'CREATE (:Movie {title: ''My Life''})'
-      rollback:
-        - cypher: "MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m"
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rollback/changeLog.yaml' !}
+    ~~~~
 
 === "Cypher"
 
-    ```cypher
-    -- liquibase formatted cypher
-
-    -- changeset fbiville:my-movie-init
-    CREATE (:Movie {title: 'My Life'})
-    -- rollback MATCH (m:Movie {title: 'My Life'}) DETACH DELETE m
-    ```
+    ~~~~cypher
+    {! include '../src/test/resources/e2e/rollback/changeLog.cypher' !}
+    ~~~~
 
 ## Neo4j Preconditions
 
@@ -121,64 +82,21 @@ It can be combined with other preconditions with the standard boolean operators.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-neo4j-lts-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:version matches="4.4"/>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j {lts: true})</neo4j:cypher>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-          "changeSet": {
-            "id": "my-neo4j-lts-deployment",
-            "author": "fbiville",
-            "preConditions": [
-              {
-                "onFail": "CONTINUE"
-              },
-              {
-                "version": {
-                  "matches": "4.4"
-                }
-              }
-            ],
-            "changes": [
-              {
-                "cypher": "CREATE (:Neo4j {lts: true})"
-              }
-            ]
-          }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-        - changeSet:
-          id: my-neo4j-44-deployment
-          author: fbiville
-          preConditions:
-          - onFail: 'CONTINUE'
-          - version:
-              matches: '4.4'
-          changes:
-          - cypher: 'CREATE (:Neo4j {lts: true})'
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/neo4jVersionChangeLog.yaml' !}
+    ~~~~
 
 ### Edition check
 
@@ -189,64 +107,21 @@ It can be combined with other preconditions with the standard boolean operators.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-        <changeSet id="my-neo4j-ee-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:edition enterprise="true"/>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j {enterprise: true})</neo4j:cypher>
-        </changeSet>
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-          "changeSet": {
-            "id": "my-neo4j-ee-deployment",
-            "author": "fbiville",
-            "preConditions": [
-              {
-                "onFail": "CONTINUE"
-              },
-              {
-                "edition": {
-                  "enterprise": true
-                }
-              }
-            ],
-            "changes": [
-              {
-                "cypher": "CREATE (:Neo4j {enterprise: true})"
-              }
-            ]
-          }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-        - changeSet:
-          id: my-neo4j-ee-deployment
-          author: fbiville
-          preConditions:
-          - edition:
-          enterprise: true
-          - onFail: 'CONTINUE'
-          changes:
-          - cypher: 'CREATE (:Neo4j {enterprise: true})'
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/neo4jEditionChangeLog.yaml' !}
+    ~~~~
 
 ### Cypher check alias
 
@@ -261,64 +136,21 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 
 === "XML"
 
-    ```xml
-    <?xml version="1.0" encoding="UTF-8"?>
-    <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    
-        <changeSet id="my-neo4j-deployment" author="fbiville">
-            <preConditions onFail="CONTINUE">
-                <neo4j:cypherCheck expectedResult="0">MATCH (n:Neo4j) RETURN count(n)</neo4j:cypherCheck>
-            </preConditions>
-            <neo4j:cypher>CREATE (:Neo4j)</neo4j:cypher>
-        </changeSet>
-    
-    </databaseChangeLog>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"databaseChangeLog": [
-        {
-            "changeSet": {
-                "id": "my-neo4j-deployment",
-                "author": "fbiville",
-                "preConditions": [
-                    {"onFail": "CONTINUE"},
-                    {"cypherCheck": {
-                        "expectedResult": "0",
-                        "cypher": "MATCH (n:Neo4j) RETURN count(n)"
-                    }}
-                ],
-                "changes": [
-                    {"cypher": {
-                        "cypher": "CREATE (:Neo4j)"
-                    }}
-                ]
-            }
-        }
-    ]}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    databaseChangeLog:
-    - changeSet:
-          id: my-neo4j-deployment
-          author: fbiville
-          preConditions:
-          - onFail: 'CONTINUE'
-          - cypherCheck:
-              expectedResult: '0'
-              cypher: MATCH (n:Neo4j) RETURN count(n)
-          changes:
-          - cypher:
-                cypher: CREATE (:Neo4j)
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.yaml' !}
+    ~~~~
 
 ## Insert Change
 
@@ -328,74 +160,21 @@ The change allows to define the creation of individual nodes, with a single labe
 
 === "XML"
 
-    ```xml
-    <neo4j:insert labelName="Person">
-        <column name="id" value="8987212b-a6ff-48a1-901f-8c4b39bd6d9e" type="uuid"/>
-        <column name="first_name" value="Florent"/>
-        <column name="last_name" value="Biville"/>
-        <column name="birth_date" valueDate="1950-01-01T22:23:24+02:00" type="date"/>
-        <column name="picture" value="DLxmEfVUC9CAmjiNyVphWw==" type="blob"/>
-    </neo4j:insert>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/insert/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {"insert": {
-        "labelName": "Person",
-        "columns": [
-            {"column": {
-                "name": "id",
-                "type": "uuid",
-                "value": "8987212b-a6ff-48a1-901f-8c4b39bd6d9e"
-            }},
-            {"column": {
-                "name": "first_name",
-                "value": "Florent"
-            }},
-            {"column": {
-                "name": "last_name",
-                "value": "Biville"
-            }},
-            {"column": {
-                "name": "birth_date",
-                "type": "date",
-                "valueDate": "1950-01-01T22:23:24+02:00"
-            }},
-            {"column": {
-                "name": "picture",
-                "type": "blob",
-                "value": "DLxmEfVUC9CAmjiNyVphWw=="
-            }}
-        ]
-    }}
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/insert/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    - insert:
-        labelName: Person
-        columns:
-        - column:
-            name: id
-            type: uuid
-            value: 8987212b-a6ff-48a1-901f-8c4b39bd6d9e
-        - column:
-            name: first_name
-            value: Florent
-        - column:
-            name: last_name
-            value: Biville
-        - column:
-            name: birth_date
-            type: date
-            valueDate: 1950-01-01T22:23:24+02:00
-        - column:
-            name: picture
-            type: blob
-            value: DLxmEfVUC9CAmjiNyVphWw==
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/insert/changeLog.yaml' !}
+    ~~~~
 
 Please refer to the [Load Data](#load-data) documentation for the supported value types for each column.
 
@@ -403,6 +182,31 @@ Please refer to the [Load Data](#load-data) documentation for the supported valu
 
 |Required Liquibase core version|4.11.0|
 |Required plugin version|4.16.1.1|
+
+
+Assuming the following (S)CSV `data.scsv` file:
+
+~~~~csv
+{! include '../src/test/resources/e2e/load-data/data.scsv' !}
+~~~~
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/load-data/changeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/load-data/changeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/load-data/changeLog.yaml' !}
+    ~~~~
 
 The general documentation of this change is available [here](https://docs.liquibase.com/change-types/load-data.html).
 
@@ -442,62 +246,21 @@ Make sure to use the right `valueXxx` attribute:
 
 === "XML"
 
-    ```xml
-    <neo4j:mergeNodes fragment="(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC" outputVariable="m">
-        <neo4j:propertyPolicy nameMatcher="name" mergeStrategy="KEEP_FIRST"/>
-        <neo4j:propertyPolicy nameMatcher="par.*" mergeStrategy="KEEP_LAST"/>
-        <neo4j:propertyPolicy nameMatcher=".*" mergeStrategy="KEEP_ALL"/>
-    </neo4j:mergeNodes>
-    ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    ```json
-    {
-        "mergeNodes": {
-            "fragment": "(m:Movie {title: 'My Life'}) WITH m ORDER BY id(m) ASC",
-            "outputVariable": "m",
-            "propertyPolicies": [
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_FIRST",
-                        "nameMatcher": "name"
-                    }
-                },
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_LAST",
-                        "nameMatcher": "par.*"
-                    }
-                },
-                {
-                    "propertyPolicy": {
-                        "mergeStrategy": "KEEP_ALL",
-                        "nameMatcher": ".*"
-                    }
-                }
-            ]
-        }
-    }
-    ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    ```yaml
-    - mergeNodes:
-        fragment: '(m:Movie {title: ''My Life''}) WITH m ORDER BY id(m) ASC'
-        outputVariable: m
-        propertyPolicies:
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_FIRST'
-            nameMatcher: name
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_LAST'
-            nameMatcher: par.*
-        - propertyPolicy:
-            mergeStrategy: 'KEEP_ALL'
-            nameMatcher: .*
-    ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/merge-nodes/changeLog.yaml' !}
+    ~~~~
 
 Specify a Cypher query fragment, which defines the nodes to match for the merge operation. If fewer than two nodes are
 matched, the merge is a no-op.
@@ -518,109 +281,26 @@ Once the policy is matched for the property name, one of the following operation
     "first" and "last" are defined by the ordering of the specified Cypher query fragment. It is strongly advised to
     explicitly order the matched nodes with the `ORDER BY` clause like in the example.
 
-{!includes/_abbreviations.md!}
-
 ### Node Property Extraction
 
 |Required plugin version|4.17.2|
 
 === "XML"
-
-    === "without relationships"
-        ```xml
-        <neo4j:extractProperty property="genre"
-                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
-                               nodesNamed="m">
-            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true" />
-        </neo4j:extractProperty>
-        ```
-
-    === "with relationships"
-
-        ```xml
-        <neo4j:extractProperty property="genre" 
-                               fromNodes="(m:Movie) WITH m ORDER BY id(m) ASC"
-                               nodesNamed="m">
-            <neo4j:toNodes withLabel="Genre" withProperty="genre" merge="true">
-                <neo4j:linkedFromSource withType="HAS_GENRE" 
-                                        withDirection="OUTGOING"
-                                        merge="true" />
-            </neo4j:toNodes>
-        </neo4j:extractProperty>
-        ```
+    ~~~~xml
+    {! include '../src/test/resources/e2e/extract-property/changeLog.xml' !}
+    ~~~~
 
 === "JSON"
 
-    === "without relationships"
-
-        ```json
-        {
-            "extractProperty": {
-                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
-                "nodesNamed": "m",
-                "property": "genre",
-                "toNodes": {
-                    "withLabel": "Genre",
-                    "withProperty": "genre",
-                    "merge": true
-                }
-            }
-        }
-        ```
-    
-    === "with relationships"
-
-        ```json
-        {
-            "extractProperty": {
-                "fromNodes": "(m:Movie) WITH m ORDER BY id(m) ASC",
-                "nodesNamed": "m",
-                "property": "genre",
-                "toNodes": {
-                    "withLabel": "Genre",
-                    "withProperty": "genre",
-                    "merge": true,
-                    "linkedFromSource": {
-                        "withDirection": "OUTGOING",
-                        "withType": "HAS_GENRE",
-                        "merge": true
-                    }
-                }
-            }
-        }
-        ```
+    ~~~~json
+    {! include '../src/test/resources/e2e/extract-property/changeLog.json' !}
+    ~~~~
 
 === "YAML"
 
-    === "without relationships"
-
-        ```yaml
-        - extractProperty:
-            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
-            nodesNamed: 'm'
-            property: 'genre'
-            toNodes:
-              withLabel: 'Genre'
-              withProperty: 'genre'
-              merge: true
-        ```
-
-    === "with relationships"
-
-        ```yaml
-        - extractProperty:
-            fromNodes: '(m:Movie) WITH m ORDER BY id(m) ASC'
-            nodesNamed: 'm'
-            property: 'genre'
-            toNodes:
-              withLabel: 'Genre'
-              withProperty: 'genre'
-              merge: true
-              linkedFromSource:
-                withDirection: 'OUTGOING'
-                withType: 'HAS_GENRE'
-                merge: true
-        ```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/extract-property/changeLog.yaml' !}
+    ~~~~
 
 The node property extraction refactoring allows to extract node properties into their own nodes.
 As for the [node merge refactoring](#node-merge), the nodes to extract properties from are specified as a Cypher
@@ -663,22 +343,7 @@ This is the right default and should be changed only if you need any of the foll
 - [since Neo4j 4.4]  [`CALL {} IN TRANSACTIONS`](https://neo4j.com/docs/cypher-manual/current/clauses/call-subquery/#subquery-call-in-transactions)
 - [until Neo4j 4.4]  [`PERIODIC COMMIT`](https://neo4j.com/docs/cypher-manual/4.4/query-tuning/using/#query-using-periodic-commit-hint)
 
-Indeed, using those constructs without disabling `runInTransaction` fails:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-
-  <changeSet id="my-movie-init" author="fbiville">
-    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
-  </changeSet>
-</databaseChangeLog>
-```
-
-The error message after executing the change set is similar to:
+Indeed, using those constructs without disabling `runInTransaction` fails with a similar error message:
 
 ```
 A query with 'CALL { ... } IN TRANSACTIONS' can only be executed in an implicit transaction, but tried to execute in an explicit transaction.
@@ -687,41 +352,37 @@ A query with 'CALL { ... } IN TRANSACTIONS' can only be executed in an implicit 
 Setting `runInTransaction` to `false` on a change set means that all its changes are going to run **in their own
 auto-commit (or implicit) transaction**.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.xml' !}
+    ~~~~
 
-  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
-    <neo4j:cypher>CALL { CREATE (:Movie {title: "Me, Myself and I"}) } IN TRANSACTIONS</neo4j:cypher>
-  </changeSet>
-</databaseChangeLog>
-```
+=== "JSON"
 
-`runInTransaction` is a sharp tool and can lead to unintended consequences, as illustrated below:
+    ~~~~json
+    {! include '../src/test/resources/e2e/autocommit/changeLog.json' !}
+    ~~~~
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+=== "YAML"
 
-  <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
-    <neo4j:cypher>CREATE (:Movie {title: "Me, Myself and I"})</neo4j:cypher> <!-- this is going to run -->
-    <neo4j:cypher>this is not valid cypher</neo4j:cypher><!-- this is going to fail -->
-  </changeSet>
-</databaseChangeLog>
-```
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.yaml' !}
+    ~~~~
 
-The first change of the change set successfully runs, but the second fails.
-More importantly, the enclosing change set `"my-movie-init"` is **not** stored in the history graph.
+=== "Cypher"
 
-Re-running this change set results in the `Movie` node being inserted again, since Liquibase has no knowledge of the
-change set having run before.
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/autocommit/changeLog.cypher' !}
+    ~~~~
+
+`runInTransaction` is a sharp tool and can lead to unintended consequences.
+
+If any of the change of the enclosing change set fails, the change set is **not** going to be stored in the history graph.
+
+Re-running this change set results in all changes being run again, even the ones that successfully ran before.
 
 In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
 idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
 set and using Cypher's `MERGE` instead of `CREATE` usually helps).
+
+{! include-markdown 'includes/_abbreviations.md' !}

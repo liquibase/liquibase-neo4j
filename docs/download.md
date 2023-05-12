@@ -75,4 +75,4 @@ First install [Liquibase](https://www.liquibase.org/download).
         liquibaseRuntime '{{ group_id }}:{{ artifact_id }}:{{ version }}'
         ```
 
-{!includes/_abbreviations.md!}
+{! include-markdown 'includes/_abbreviations.md' !}
