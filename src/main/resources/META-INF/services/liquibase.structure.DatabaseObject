@@ -1,0 +1,3 @@
+liquibase.ext.neo4j.structure.Label
+liquibase.ext.neo4j.structure.Type
+liquibase.ext.neo4j.structure.NodeBTreeIndex

@@ -1,0 +1,3 @@
+liquibase.ext.neo4j.snapshot.LabelSnapshotGeneratorNeo4j
+liquibase.ext.neo4j.snapshot.TypeSnapshotGeneratorNeo4j
+liquibase.ext.neo4j.snapshot.NodeBTreeIndexSnapshotGeneratorNeo4j
