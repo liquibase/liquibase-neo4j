@@ -9,6 +9,8 @@ import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
+import liquibase.structure.DatabaseObject;
+import liquibase.structure.core.Catalog;
 
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +62,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean isCorrectDatabaseImplementation(DatabaseConnection conn) throws DatabaseException {
-        return conn.getDatabaseProductName().equals("Neo4j");
+        return conn.getDatabaseProductName().startsWith("Neo4j");
     }
 
     @Override
@@ -100,6 +102,25 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     public boolean supportsSchemas() {
         return false;
     }
+
+    @Override
+    public boolean supportsSequences() {
+        return false;
+    }
+
+    @Override
+    public boolean supports(Class<? extends DatabaseObject> object) {
+        if (Catalog.class.isAssignableFrom(object)) {
+            return kernelVersion.compareTo(V4_0_0) >= 0 && isEnterprise();
+        }
+        return object.getPackage().getName().startsWith("liquibase.ext.neo4j");
+    }
+
+    @Override
+    public String getDefaultCatalogName() {
+        return "neo4j";
+    }
+
 
     @Override
     public boolean isCaseSensitive() {
