@@ -7,12 +7,19 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
+import liquibase.ext.neo4j.database.jdbc.Neo4jTransactionState;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
+import liquibase.structure.DatabaseObject;
+import liquibase.structure.core.Catalog;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,7 +67,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean isCorrectDatabaseImplementation(DatabaseConnection conn) throws DatabaseException {
-        return conn.getDatabaseProductName().equals("Neo4j");
+        return conn.getDatabaseProductName().startsWith("Neo4j");
     }
 
     @Override
@@ -100,6 +107,39 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     public boolean supportsSchemas() {
         return false;
     }
+
+    @Override
+    public boolean supportsSequences() {
+        return false;
+    }
+
+    @Override
+    public boolean supports(Class<? extends DatabaseObject> object) {
+        if (Catalog.class.isAssignableFrom(object)) {
+            return kernelVersion.compareTo(V4_0_0) >= 0 && isEnterprise();
+        }
+        return object.getPackage().getName().startsWith("liquibase.ext.neo4j");
+    }
+
+    @Override
+    public String getDefaultCatalogName() {
+        if (defaultCatalogName != null) {
+            return defaultCatalogName;
+        }
+        DatabaseConnection connection = getConnection();
+        if (connection != null) {
+            try {
+                String catalog = connection.getCatalog();
+                if (catalog != null) {
+                    return catalog;
+                }
+            } catch (DatabaseException ignored) {
+                // Fall back to Neo4j's conventional default database name below.
+            }
+        }
+        return "neo4j";
+    }
+
 
     @Override
     public boolean isCaseSensitive() {
@@ -218,6 +258,57 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     public void execute(SqlStatement statement) throws LiquibaseException {
         jdbcExecutor().execute(statement);
+    }
+
+    public List<Map<String, ?>> run(Catalog catalog, SqlStatement statement) throws LiquibaseException {
+        if (!supportsCatalogs() || catalog == null) {
+            return run(statement);
+        }
+        DatabaseConnection connection = getConnection();
+        if (connection == null) {
+            return run(statement);
+        }
+        Connection jdbcConnection = connection.getUnderlyingConnection();
+        if (jdbcConnection == null) {
+            return run(statement);
+        }
+        String previousCatalog;
+        try {
+            previousCatalog = jdbcConnection.getCatalog();
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not retrieve current Neo4j database catalog", e);
+        }
+        String requestedCatalog = catalog.getName();
+        boolean switchCatalog = !Objects.equals(previousCatalog, requestedCatalog);
+        if (switchCatalog) {
+            if (hasActiveTransaction(jdbcConnection)) {
+                throw new DatabaseException(String.format(
+                        "Cannot run statement against Neo4j database catalog '%s' while the connection has an active transaction against catalog '%s'",
+                        requestedCatalog,
+                        previousCatalog
+                ));
+            }
+            setJdbcCatalog(jdbcConnection, requestedCatalog);
+        }
+        try {
+            List<Map<String, ?>> rows = run(statement);
+            // when autocommit's disabled, run may have left an open transaction
+            if (switchCatalog && hasActiveTransaction(jdbcConnection)) {
+                commit();
+            }
+            return rows;
+        } catch (LiquibaseException | RuntimeException e) {
+            if (switchCatalog && hasActiveTransaction(jdbcConnection)) {
+                // when autocommit's disabled, need to rollback before switching catalogs back
+                // catalog switch does not allow open transactions
+                rollbackBeforeCatalogRestore(e);
+            }
+            throw e;
+        } finally {
+            if (switchCatalog) {
+                setJdbcCatalog(jdbcConnection, previousCatalog);
+            }
+        }
     }
 
     public List<Map<String, ?>> run(SqlStatement statement) throws LiquibaseException {
@@ -433,6 +524,33 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     private Executor jdbcExecutor() {
         return Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
+    }
+
+    private static void setJdbcCatalog(Connection connection, String catalog) throws DatabaseException {
+        try {
+            connection.setCatalog(catalog);
+        } catch (SQLException e) {
+            throw new DatabaseException(String.format("Could not switch Neo4j database catalog to '%s'", catalog), e);
+        }
+    }
+
+    private static boolean hasActiveTransaction(Connection connection) throws DatabaseException {
+        try {
+            return connection.isWrapperFor(Neo4jTransactionState.class)
+                    && connection.unwrap(Neo4jTransactionState.class).hasActiveTransaction();
+        } catch (SQLFeatureNotSupportedException e) {
+            return false;
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not inspect Neo4j transaction state", e);
+        }
+    }
+
+    private void rollbackBeforeCatalogRestore(Throwable failure) {
+        try {
+            rollback();
+        } catch (DatabaseException e) {
+            failure.addSuppressed(e);
+        }
     }
 
     private void rollbackIfIndexExists(Exception ex) throws DatabaseException {

@@ -915,6 +915,35 @@ This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or lat
     {! include '../src/test/resources/e2e/normalize-boolean/changeLog-delete-unmatched.yaml' !}
     ~~~~
 
+## Snapshot Support
+
+|Required plugin version|5.0.3|
+
+This requires version 4.4 or later of Neo4j.
+
+The extension snapshots Neo4j schema metadata for Liquibase commands that inspect or compare database structure:
+`snapshot`, `snapshotReference`, `diff`, `diffChangelog`, and `generateChangelog`.
+
+Neo4j does not have schemas in the relational sense. For snapshot and comparison commands, Liquibase schema arguments
+are mapped to Neo4j database names:
+
+- `snapshot --schemas=<database>` snapshots the named Neo4j database instead of the connection's default database.
+- `diff` and `diffChangelog` use `--schemas=<target-database>` and `--referenceSchemas=<reference-database>` to
+  choose the target and reference Neo4j databases.
+- `generateChangelog --schemas=<database>` snapshots the named Neo4j database as the reference database.
+- `snapshotReference` does not expose a schema argument; choose the Neo4j database through the reference connection URL
+  or driver properties, for example `?database=<database>`.
+
+Snapshot coverage includes:
+
+- node labels and relationship types found in graph data and schema
+- current [graph type](https://neo4j.com/docs/cypher-manual/current/schema/graph-types/)
+- node and relationship indexes
+- node and relationship constraints (for Neo4j versions that do not support [graph type](https://neo4j.com/docs/cypher-manual/current/schema/graph-types/))
+
+The extension registers Neo4j-specific snapshot objects as `liquibase.ext.neo4j.structure.Label`,
+`liquibase.ext.neo4j.structure.Type`, `liquibase.ext.neo4j.structure.Index`,
+`liquibase.ext.neo4j.structure.Constraint`, and `liquibase.ext.neo4j.structure.GraphType`.
 
 ## Change Set's `runInTransaction`
 

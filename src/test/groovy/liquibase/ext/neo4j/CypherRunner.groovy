@@ -5,6 +5,7 @@ import liquibase.statement.SqlStatement
 import liquibase.statement.core.RawParameterizedSqlStatement
 import liquibase.statement.core.RawSqlStatement
 import org.neo4j.driver.Driver
+import org.neo4j.driver.SessionConfig
 
 import java.util.function.Predicate
 import java.util.stream.Collectors
@@ -125,8 +126,25 @@ class CypherRunner implements AutoCloseable {
         })
     }
 
+    void recreateDatabase(String database) {
+        run("CREATE OR REPLACE DATABASE \$name WAIT", [name: database], SessionConfig.forDatabase("system"))
+    }
+
+    void dropDatabase(String database) {
+        run("DROP DATABASE \$name IF EXISTS WAIT", [name: database], SessionConfig.forDatabase("system"))
+    }
+
+
     Map<String, Object> getSingleRow(String query) {
         driver.session().withCloseable { session ->
+            session.executeRead({ tx ->
+                tx.run(query).single().asMap()
+            })
+        }
+    }
+
+    Map<String, Object> getSingleRow(String database, String query) {
+        driver.session(SessionConfig.forDatabase(database)).withCloseable { session ->
             session.executeRead({ tx ->
                 tx.run(query).single().asMap()
             })
@@ -141,6 +159,15 @@ class CypherRunner implements AutoCloseable {
         }
     }
 
+    List<Map<String, Object>> getRows(String database, String query) {
+        driver.session(SessionConfig.forDatabase(database)).withCloseable { session ->
+            session.executeRead({ tx ->
+                tx.run(query).list({ record -> record.asMap() })
+            })
+        }
+    }
+
+    @SuppressWarnings("deprecation")
     void run(SqlStatement statement) {
         if (statement instanceof RawSqlStatement) {
             run(statement.sql)
@@ -157,12 +184,11 @@ class CypherRunner implements AutoCloseable {
         throw new IllegalArgumentException("unsupported type of statement: ${statement.getClass()}")
     }
 
-    void run(String query) {
-        run(query, new HashMap<String, Object>(0))
-    }
+    void run(String query,
+             Map<String, Object> params = new HashMap<String, Object>(0),
+             SessionConfig config = SessionConfig.defaultConfig()) {
 
-    void run(String query, Map<String, Object> params) {
-        driver.session().withCloseable { session ->
+        driver.session(config).withCloseable { session ->
             session.executeWrite({ tx ->
                 return tx.run(query, params).consume()
             })
