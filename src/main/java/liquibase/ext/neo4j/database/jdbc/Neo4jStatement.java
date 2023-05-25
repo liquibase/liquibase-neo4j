@@ -1,9 +1,6 @@
 package liquibase.ext.neo4j.database.jdbc;
 
 import org.neo4j.driver.QueryRunner;
-import org.neo4j.driver.Result;
-import org.neo4j.driver.Session;
-import org.neo4j.driver.Transaction;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -30,15 +27,12 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import static java.sql.ResultSet.CLOSE_CURSORS_AT_COMMIT;
 import static java.sql.ResultSet.CONCUR_READ_ONLY;
 import static java.sql.ResultSet.HOLD_CURSORS_OVER_COMMIT;
 import static java.sql.ResultSet.TYPE_FORWARD_ONLY;
-import static liquibase.ext.neo4j.database.jdbc.EmptyResultPlanPredicate.HAS_EMPTY_RESULT;
 import static liquibase.ext.neo4j.database.jdbc.ResultSets.rsConcurrencyName;
 import static liquibase.ext.neo4j.database.jdbc.ResultSets.rsHoldabilityName;
 import static liquibase.ext.neo4j.database.jdbc.ResultSets.rsTypeName;
@@ -629,24 +623,9 @@ class Neo4jStatement implements Statement, PreparedStatement {
     Map<String, Object> getParameters() {
         return Collections.unmodifiableMap(parameters);
     }
-    private boolean hasResults() throws SQLException {
-        if (profiledQuery()) {
-            return resultSet.hasResults();
-        }
-        try (Session session = connection.openSession();
-             Transaction transaction = session.beginTransaction()) {
-            return HAS_EMPTY_RESULT.test(transaction
-                    .run("EXPLAIN " + cypher)
-                    .consume()
-                    .plan());
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
-    private boolean profiledQuery() {
-        String cql = cypher.trim().toUpperCase(Locale.ENGLISH);
-        return cql.startsWith("EXPLAIN") || cql.startsWith("PROFILE");
+    private boolean hasResults() throws SQLException {
+        return resultSet.hasNext();
     }
 
     private Neo4jResultSet doExecute() {
