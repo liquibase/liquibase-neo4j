@@ -48,7 +48,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     private boolean closed;
 
     public Neo4jConnection(String url, Properties info) {
-        this(url, info, new DriverConfigSupplier(QueryStringParser.parseQueryString(url), info));
+        this(url, info, new DriverConfigSupplier(QueryStringParser.parseQueryString(url.replaceFirst("jdbc:neo4j:", "")), info));
     }
 
     Neo4jConnection(String uri, Properties info, DriverConfigSupplier configSupplier) {

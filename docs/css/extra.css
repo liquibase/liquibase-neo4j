@@ -1,0 +1,6 @@
+.md-typeset__table td:nth-of-type(1),
+.md-typeset__table th:nth-of-type(1),
+.md-typeset__table td:nth-of-type(2),
+.md-typeset__table th:nth-of-type(2) {
+    white-space: nowrap;
+}
