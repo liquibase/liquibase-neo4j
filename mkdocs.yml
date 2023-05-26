@@ -35,6 +35,8 @@ extra:
   group_id_url: org/liquibase/ext
   artifact_id: liquibase-neo4j
   version: 4.22.0
+extra_css:
+  - css/extra.css
 markdown_extensions:
   - abbr
   - admonition

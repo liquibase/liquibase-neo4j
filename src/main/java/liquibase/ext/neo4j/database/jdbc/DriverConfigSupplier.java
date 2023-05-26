@@ -5,6 +5,7 @@ import org.neo4j.driver.Config;
 import org.neo4j.driver.Config.ConfigBuilder;
 import org.neo4j.driver.Config.TrustStrategy;
 import org.neo4j.driver.Config.TrustStrategy.Strategy;
+import org.neo4j.driver.Logging;
 import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.SessionConfig.Builder;
 
@@ -18,6 +19,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 class DriverConfigSupplier implements Supplier<Config> {
 
@@ -69,6 +71,20 @@ class DriverConfigSupplier implements Supplier<Config> {
         Long maxTransactionRetryTime = readSingleSetting("max.transaction.retry.time", Long::parseLong).orElse(null);
         if (maxTransactionRetryTime != null) {
             builder = builder.withMaxTransactionRetryTime(maxTransactionRetryTime, TimeUnit.MILLISECONDS);
+        }
+        Level consoleLoggingLevel = readSingleSetting("driver.logging.console.level", Level::parse).orElse(null);
+        if (consoleLoggingLevel != null) {
+            builder = builder.withLogging(Logging.console(consoleLoggingLevel));
+        }
+        Level julLoggingLevel = readSingleSetting("driver.logging.jul.level", Level::parse).orElse(null);
+        if (julLoggingLevel != null) {
+            builder = builder.withLogging(Logging.javaUtilLogging(julLoggingLevel));
+        }
+        if (readSingleSetting("driver.logging.slf4j", Boolean::parseBoolean).orElse(false)) {
+            builder = builder.withLogging(Logging.slf4j());
+        }
+        if (readSingleSetting("driver.logging.none", Boolean::parseBoolean).orElse(false)) {
+            builder = builder.withLogging(Logging.none());
         }
         return builder.build();
     }
