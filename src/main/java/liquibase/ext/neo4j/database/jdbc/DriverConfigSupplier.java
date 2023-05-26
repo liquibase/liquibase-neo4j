@@ -67,6 +67,8 @@ class DriverConfigSupplier implements Supplier<Config> {
         Integer maxPoolSize = readSingleSetting("max.connection.poolsize", Integer::parseInt).orElse(null);
         if (maxPoolSize != null) {
             builder = builder.withMaxConnectionPoolSize(maxPoolSize);
+        } else {
+            builder = builder.withMaxConnectionPoolSize(1);
         }
         Long maxTransactionRetryTime = readSingleSetting("max.transaction.retry.time", Long::parseLong).orElse(null);
         if (maxTransactionRetryTime != null) {

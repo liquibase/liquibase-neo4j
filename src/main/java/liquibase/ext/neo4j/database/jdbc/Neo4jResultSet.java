@@ -21,8 +21,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -49,7 +47,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toList;
-import static liquibase.ext.neo4j.database.jdbc.EmptyResultPlanPredicate.HAS_EMPTY_RESULT;
 
 class Neo4jResultSet implements ResultSet, ResultSetMetaData {
 
@@ -78,6 +75,11 @@ class Neo4jResultSet implements ResultSet, ResultSetMetaData {
         } catch (Exception e) {
             throw new SQLException("cannot move to next row", e);
         }
+    }
+
+    public boolean hasNext() throws SQLException {
+        ensureOpen();
+        return result.hasNext();
     }
 
     @Override
@@ -1065,11 +1067,6 @@ class Neo4jResultSet implements ResultSet, ResultSetMetaData {
         }
         SummaryCounters counters = summary.counters();
         return sumAll(counters);
-    }
-
-    boolean hasResults() throws SQLException {
-        this.close();
-        return HAS_EMPTY_RESULT.test(summary.plan());
     }
 
     private static int sumAll(SummaryCounters counters) {
