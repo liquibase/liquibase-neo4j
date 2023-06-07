@@ -34,6 +34,7 @@ class DriverConfigSupplier implements Supplier<Config> {
     @Override
     public Config get() {
         ConfigBuilder builder = Config.builder();
+        builder.withUserAgent(String.format("liquibase-neo4j/%s", Neo4jDriver.VERSION.getRaw()));
         if (readSingleSetting("nossl", Boolean::parseBoolean).orElse(false)) {
             builder = builder.withoutEncryption();
         }

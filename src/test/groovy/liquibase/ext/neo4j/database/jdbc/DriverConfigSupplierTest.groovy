@@ -195,6 +195,17 @@ class DriverConfigSupplierTest extends Specification {
         ["impersonated.user": ["selda"]] | ["impersonated.user": "özdemir"] | SessionConfig.builder().withImpersonatedUser("selda").build()
     }
 
+    def "creates the driver configuration with a custom user agent"() {
+        given:
+        def supplier = new DriverConfigSupplier(new QueryString(Collections.emptyMap()), new Properties())
+
+        when:
+        def config = supplier.get()
+
+        then:
+        config.userAgent().startsWith("liquibase-neo4j/")
+    }
+
     Properties propertiesOf(Map<String, String> dictionary) {
         def props = new Properties()
         props.putAll(dictionary)
