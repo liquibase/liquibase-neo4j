@@ -96,7 +96,7 @@ abstract class Neo4jContainerSpec extends Specification {
         return dockerTag()
     }
 
-    private static PrintStream tempFilePrintStream() {
+    static PrintStream tempFilePrintStream() {
         new PrintStream(Files.createTempFile("liquibase", "neo4j").toFile())
     }
 }

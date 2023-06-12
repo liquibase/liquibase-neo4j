@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="names-init" author="fbiville">
+        <createTable tableName="first_names">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="names-import" author="fbiville">
+        <loadData file="e2e/mysql/names.csv" tableName="first_names">
+            <column name="name" header="name" type="varchar"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet id="names-import-bis" author="fbiville">
+        <insert tableName="first_names">
+            <column name="name" value="Robert"/>
+        </insert>
+        <insert tableName="first_names">
+            <column name="name" value="Marouane"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
