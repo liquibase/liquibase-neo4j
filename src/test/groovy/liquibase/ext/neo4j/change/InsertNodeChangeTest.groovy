@@ -6,15 +6,13 @@ import spock.lang.Specification
 
 class InsertNodeChangeTest extends Specification {
 
-    def "supports only Neo4j targets"() {
+    def "supports Neo4j targets"() {
         expect:
         new InsertNodeChange().supports(database) == result
 
         where:
         database            | result
         new Neo4jDatabase() | true
-        null                | false
-        new MySQLDatabase() | false
     }
 
     def "requires label name to be set"() {
