@@ -44,7 +44,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     private final SessionConfig sessionConfig;
     private final Session session;
     private Transaction transaction;
-    private boolean autocommit;
+    private boolean autocommit = true;
     private boolean closed;
 
     public Neo4jConnection(String url, Properties info) {
@@ -83,7 +83,13 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public void setAutoCommit(boolean autoCommit) {
+    public void setAutoCommit(boolean autoCommit) throws SQLException {
+        if (this.autocommit == autoCommit) {
+            return;
+        }
+        if (this.transaction != null) {
+            this.commit();
+        }
         this.autocommit = autoCommit;
     }
 
@@ -1190,7 +1196,10 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public void commit() {
+    public void commit() throws SQLException {
+        if (autocommit) {
+            throw new SQLException("the connection is in auto-commit mode. Explicit commit is prohibited");
+        }
         if (!transaction.isOpen()) {
             return;
         }
@@ -1199,7 +1208,10 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public void rollback() {
+    public void rollback() throws SQLException {
+        if (autocommit) {
+            throw new SQLException("the connection is in auto-commit mode. Explicit rollback is prohibited");
+        }
         if (!transaction.isOpen()) {
             return;
         }
@@ -1234,6 +1246,11 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
         if (transaction == null || !transaction.isOpen()) {
             transaction = session.beginTransaction();
         }
+        return transaction;
+    }
+
+    // visible for testing
+    final Transaction getTransaction() {
         return transaction;
     }
 

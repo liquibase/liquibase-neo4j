@@ -1,9 +1,10 @@
 package liquibase.ext.neo4j.database.jdbc
 
-
+import org.neo4j.driver.Transaction
 import spock.lang.Specification
 
 import java.sql.Connection
+import java.sql.SQLException
 
 import static java.sql.ResultSet.CLOSE_CURSORS_AT_COMMIT
 import static java.sql.ResultSet.CONCUR_READ_ONLY
@@ -18,10 +19,18 @@ import static liquibase.ext.neo4j.database.jdbc.ResultSets.rsTypeName
 
 class Neo4jConnectionTest extends Specification {
 
-    Connection connection
+    Neo4jConnection connection
 
     def setup() {
         connection = new Neo4jConnection("jdbc:neo4j:neo4j://example.com", new Properties())
+    }
+
+    def "new connections are in autocommit mode by default"() {
+        when:
+        connection = new Neo4jConnection("jdbc:neo4j:neo4j://example.com", new Properties())
+
+        then:
+        connection.getAutoCommit()
     }
 
     def "creates a simple statement"() {
@@ -154,5 +163,23 @@ but got:
         false      | TYPE_SCROLL_SENSITIVE   | CONCUR_READ_ONLY | CLOSE_CURSORS_AT_COMMIT
         false      | TYPE_SCROLL_SENSITIVE   | CONCUR_UPDATABLE | HOLD_CURSORS_OVER_COMMIT
         false      | TYPE_SCROLL_SENSITIVE   | CONCUR_UPDATABLE | CLOSE_CURSORS_AT_COMMIT
+    }
+
+    def "fails to commit in autocommit mode"() {
+        when:
+        connection.commit()
+
+        then:
+        def exception = thrown(SQLException.class)
+        exception.message == "the connection is in auto-commit mode. Explicit commit is prohibited"
+    }
+
+    def "fails to rollback in autocommit mode"() {
+        when:
+        connection.rollback()
+
+        then:
+        def exception = thrown(SQLException.class)
+        exception.message == "the connection is in auto-commit mode. Explicit rollback is prohibited"
     }
 }
