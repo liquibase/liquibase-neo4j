@@ -29,6 +29,7 @@ class Neo4jStatementIT extends Neo4jContainerSpec {
     def "can rollback simple statement, execute it again and then commit"() {
         given:
         def connection = new Neo4jDriver().connect(jdbcUrl(), authenticationProperties())
+        connection.setAutoCommit(false)
         def statement = connection.createStatement()
 
         when:
@@ -92,6 +93,7 @@ class Neo4jStatementIT extends Neo4jContainerSpec {
     def "can rollback parameterized statement, execute it again and then commit"() {
         given:
         def connection = new Neo4jDriver().connect(jdbcUrl(), authenticationProperties())
+        connection.setAutoCommit(false)
         def statement = connection.prepareStatement("MERGE (c:Count) ON CREATE SET c.count = \$1 ON MATCH SET c.count = c.count+1 RETURN c.count AS count")
 
         when:

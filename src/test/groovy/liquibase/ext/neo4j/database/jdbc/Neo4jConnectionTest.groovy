@@ -1,6 +1,6 @@
 package liquibase.ext.neo4j.database.jdbc
 
-
+import org.neo4j.driver.Transaction
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -18,10 +18,18 @@ import static liquibase.ext.neo4j.database.jdbc.ResultSets.rsTypeName
 
 class Neo4jConnectionTest extends Specification {
 
-    Connection connection
+    Neo4jConnection connection
 
     def setup() {
         connection = new Neo4jConnection("jdbc:neo4j:neo4j://example.com", new Properties())
+    }
+
+    def "new connections are in autocommit mode by default"() {
+        when:
+        connection = new Neo4jConnection("jdbc:neo4j:neo4j://example.com", new Properties())
+
+        then:
+        connection.getAutoCommit()
     }
 
     def "creates a simple statement"() {
