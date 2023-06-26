@@ -1,8 +1,10 @@
 package liquibase.ext.neo4j.changelog;
 
+import liquibase.ChecksumVersion;
 import liquibase.ContextExpression;
 import liquibase.Labels;
 import liquibase.Scope;
+import liquibase.Scope.Attr;
 import liquibase.change.CheckSum;
 import liquibase.change.core.TagDatabaseChange;
 import liquibase.changelog.AbstractChangeLogHistoryService;
@@ -19,7 +21,6 @@ import liquibase.statement.core.RawSqlStatement;
 import liquibase.util.LiquibaseUtil;
 
 import java.sql.Timestamp;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -37,11 +38,17 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     public static final String CHANGE_SET_CONSTRAINT_NAME = "node_key_liquibase_change_set";
 
+    public static final String CHANGE_SET_CHECK_SUM_INDEX_NAME = "index_liquibase_change_set_check_sum";
+
     private Neo4jDatabase database;
 
     private List<RanChangeSet> ranChangeSets;
 
     private Integer lastChangeSetSequenceValue;
+
+    private boolean containsOlderCheckSums;
+
+    private ChecksumVersion currentCheckSumVersion;
 
     @Override
     public int getPriority() {
@@ -65,16 +72,31 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     @Override
     public void init() throws DatabaseException {
+        currentCheckSumVersion = Scope.getCurrentScope().get(Attr.checksumVersion, ChecksumVersion.class);
         cleanUpGraph();
         createConstraints();
+        createIndices();
         initializeHistory();
+        readCheckSums();
     }
 
     @Override
     public void destroy() throws DatabaseException {
         removeHistory();
+        removeIndices();
         removeConstraints();
         reset();
+        currentCheckSumVersion = null;
+    }
+
+    @Override
+    public boolean isDatabaseChecksumsCompatible() {
+        return !containsOlderCheckSums;
+    }
+
+    @Override
+    public List<RanChangeSet> getRanChangeSets(boolean ignore) throws DatabaseException {
+        return getRanChangeSets();
     }
 
     @Override
@@ -103,7 +125,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                     changeSet.getId(),
                     changeSet.getAuthor(),
                     changeSet.getFilePath(),
-                    changeSet.generateCheckSum().toString()
+                    changeSet.generateCheckSum(currentCheckSumVersion).toString()
             ));
             database.commit();
         } catch (LiquibaseException e) {
@@ -255,7 +277,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 changeSet.getAuthor(),
                 changeSet.getFilePath(),
                 nextSequenceValue,
-                changeSet.generateCheckSum().toString(),
+                changeSet.generateCheckSum(currentCheckSumVersion).toString(),
                 execType.value,
                 getDeploymentId()
         ));
@@ -283,7 +305,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 changeSet.getFilePath(),
                 changeSet.getId(),
                 changeSet.getAuthor(),
-                changeSet.generateCheckSum().toString(),
+                changeSet.generateCheckSum(currentCheckSumVersion).toString(),
                 execType.value,
                 changeSet.getDescription(),
                 changeSet.getComments(),
@@ -456,6 +478,11 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         database.createNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog");
     }
 
+
+    private void createIndices() throws DatabaseException {
+        database.createIndex(CHANGE_SET_CHECK_SUM_INDEX_NAME, "__LiquibaseChangeSet", "checkSum");
+    }
+
     private void initializeHistory() throws DatabaseException {
         try {
             database.execute(new RawSqlStatement("MERGE (changeLog:__LiquibaseChangeLog) " +
@@ -511,12 +538,32 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
         }
     }
 
+    private void removeIndices() throws DatabaseException {
+        database.dropIndex(CHANGE_SET_CHECK_SUM_INDEX_NAME, "__LiquibaseChangeSet", "checkSum");
+        database.commit();
+    }
+
     private void removeConstraints() throws DatabaseException {
         database.dropUniqueConstraint(TAG_CONSTRAINT_NAME, "__LiquibaseTag", "tag");
         database.dropUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context");
         database.dropUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label");
         database.dropNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog");
         database.commit();
+    }
+
+    private void readCheckSums() throws DatabaseException {
+        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", database);
+        boolean result = executor.queryForObject(
+                new RawParameterizedSqlStatement(
+                        "MATCH (changeSet:__LiquibaseChangeSet)-[:IN_CHANGELOG]->(: __LiquibaseChangeLog)" +
+                                " WHERE NOT changeSet.checkSum STARTS WITH $0" +
+                                " RETURN count(changeSet) > 0",
+                        String.format("%d:", currentCheckSumVersion.getVersion())
+                ),
+                Boolean.class
+        );
+        database.rollback();
+        containsOlderCheckSums = result;
     }
 
     private String getLiquibaseVersion() {

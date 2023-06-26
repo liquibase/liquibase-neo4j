@@ -31,10 +31,10 @@ class BasicIT extends Neo4jContainerSpec {
 
     def "runs migrations"() {
         given:
-        run(format)
+        execute(format)
 
         expect:
-        verifyRun()
+        verifyExecution()
 
         where:
         format << ["json", "sql", "xml", "yaml"]
@@ -43,19 +43,17 @@ class BasicIT extends Neo4jContainerSpec {
     def "runs migrations twice without effect"() {
         given:
         2.times {
-            run(format)
+            execute(format)
         }
 
         expect:
-        verifyRun()
+        verifyExecution()
 
         where:
         format << ["json", "sql", "xml", "yaml"]
     }
 
-    // TODO: add tests for labels, contexts, tagging and rollback
-
-    private void run(String format) {
+    private void execute(String format) {
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
@@ -65,7 +63,7 @@ class BasicIT extends Neo4jContainerSpec {
         command.execute()
     }
 
-    private void verifyRun() {
+    private void verifyExecution() {
         def row = queryRunner.getSingleRow("""
             MATCH (n)
             WHERE none(label IN labels(n) WHERE label STARTS WITH "__Liquibase")

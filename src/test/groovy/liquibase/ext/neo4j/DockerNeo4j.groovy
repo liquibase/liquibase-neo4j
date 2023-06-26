@@ -24,6 +24,19 @@ class DockerNeo4j {
         return version.startsWith("4.4") || Integer.parseInt(version.substring(0, 1)) >= 5
     }
 
+    static boolean supportsShowConstraintsYieldSyntax() {
+        return supportsShowIndexesYieldSyntax()
+    }
+
+    static boolean supportsShowIndexesYieldSyntax() {
+        def version = neo4jVersion()
+        def major = Integer.parseInt(version.substring(0, 1))
+        def minor = Integer.parseInt(version.substring(2, 3))
+        // SHOW INDEXES|CONSTRAINTS is supported since Neo4j 4.2
+        // SHOW INDEXES|CONSTRAINTS YIELD xxx RETURN xxx is supported since Neo4j 4.3
+        return major >= 5 || major == 4 && minor >= 3
+    }
+
     static String dockerTag() {
         return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
     }
