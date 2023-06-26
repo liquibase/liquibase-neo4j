@@ -35,6 +35,23 @@ class MySQLMigrationIT extends Specification {
 
     def "runs migrations for MySQL without interference from the Neo4j plugin"() {
         when:
+        execute()
+
+        then:
+        verifyExecution()
+    }
+
+    def "runs migrations for MySQL twice without interference from the Neo4j plugin"() {
+        when:
+        2.times {
+            execute()
+        }
+
+        then:
+        verifyExecution()
+    }
+
+    private void execute() {
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, mysql.getJdbcUrl())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, mysql.getUsername())
@@ -42,22 +59,23 @@ class MySQLMigrationIT extends Specification {
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/mysql/changeLog.xml")
                 .setOutput(System.out)
         command.execute()
+    }
 
-        then:
+    private boolean verifyExecution() {
         connection.createStatement()
                 .withCloseable {
                     it.executeQuery("SELECT name FROM first_names ORDER BY name ASC")
-                    .withCloseable {
-                        assert it.next()
-                        assert it.getString("name") == "Florent"
-                        assert it.next()
-                        assert it.getString("name") == "Marouane"
-                        assert it.next()
-                        assert it.getString("name") == "Nathan"
-                        assert it.next()
-                        assert it.getString("name") == "Robert"
-                        assert !it.next()
-                    }
+                            .withCloseable {
+                                assert it.next()
+                                assert it.getString("name") == "Florent"
+                                assert it.next()
+                                assert it.getString("name") == "Marouane"
+                                assert it.next()
+                                assert it.getString("name") == "Nathan"
+                                assert it.next()
+                                assert it.getString("name") == "Robert"
+                                assert !it.next()
+                            }
                     return true
                 }
     }

@@ -27,7 +27,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     private static final String SERVER_VERSION_QUERY =
             "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition, versions[0] AS version LIMIT 1";
 
+    private static final Predicate<Exception> INDEX_ALREADY_EXISTS_ERROR = messageContaining("index already exists");
+
     private static final Predicate<Exception> CONSTRAINT_ALREADY_EXISTS_ERROR = messageContaining("constraint already exists");
+
+    private static final Predicate<Exception> NO_SUCH_INDEX_ERROR = messageContaining("no such index");
 
     private static final Predicate<Exception> NO_SUCH_CONSTRAINT_ERROR = messageContaining("no such constraint");
 
@@ -99,6 +103,24 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         return true;
     }
 
+    public void createIndex(String name, String label, String property) throws DatabaseException {
+        String neo4jVersion = this.getNeo4jVersion();
+        if (neo4jVersion.startsWith("3.5")) {
+            createIndexForNeo4j3(label, property);
+        } else if (neo4jVersion.startsWith("4")) {
+            createIndexForNeo4j4(name, label, property);
+        } else if (neo4jVersion.startsWith("5")) {
+            createIndexForNeo4j5(name, label, property);
+        } else {
+            throw new DatabaseException(String.format(
+                    "Index creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
+                    label,
+                    property,
+                    neo4jVersion
+            ));
+        }
+    }
+
     public void createUniqueConstraint(String name, String label, String property) throws DatabaseException {
         String neo4jVersion = this.getNeo4jVersion();
         if (neo4jVersion.startsWith("3.5")) {
@@ -134,6 +156,24 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                     "Node key constraint creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     String.join(", ", properties),
+                    neo4jVersion
+            ));
+        }
+    }
+
+    public void dropIndex(String name, String label, String property) throws DatabaseException {
+        String neo4jVersion = this.getNeo4jVersion();
+        if (neo4jVersion.startsWith("3.5")) {
+            dropIndexForNeo4j3(label, property);
+        } else if (neo4jVersion.startsWith("4")) {
+            dropIndexForNeo4j4(name);
+        } else if (neo4jVersion.startsWith("5")) {
+            dropIndexForNeo4j5(name);
+        } else {
+            throw new DatabaseException(String.format(
+                    "Unique constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
+                    label,
+                    property,
                     neo4jVersion
             ));
         }
@@ -227,7 +267,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     private void createUniqueConstraintForNeo4j4(String name, String label, String property) {
-        // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
+        // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.1.3+
         onThrow(this::rollbackIfConstraintExists,
                 () -> {
                     RawSqlStatement sql = new RawSqlStatement(String.format("CREATE CONSTRAINT `%s` ON (n:`%s`) ASSERT n.`%s` IS UNIQUE", name, label, property));
@@ -246,8 +286,18 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         }
     }
 
-    // before 4.x, constraints cannot be given names
+    // before 4.x, indices cannot be given names
+    private void createIndexForNeo4j3(String label, String property) {
+        onThrow(this::rollbackIfIndexExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE INDEX ON :`%s`(%s)", label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
+        );
+    }
 
+    // before 4.x, constraints cannot be given names
     private void createNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
         onThrow(this::rollbackIfConstraintExists,
@@ -258,8 +308,20 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                 }
         );
     }
+
+    private void createIndexForNeo4j4(String name, String label, String property) {
+        // `CREATE INDEX IF NOT EXISTS` is only available with Neo4j 4.1.3+
+        onThrow(this::rollbackIfIndexExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("CREATE INDEX `%s` FOR (n:`%s`) ON (n.`%s`)", name, label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
+        );
+    }
+
     private void createNodeKeyConstraintForNeo4j4(String name, String label, String[] properties) {
-        // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.2+
+        // `CREATE CONSTRAINT IF NOT EXISTS` is only available with Neo4j 4.1.3+
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
         onThrow(this::rollbackIfConstraintExists,
                 () -> {
@@ -268,6 +330,16 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                     this.commit();
                 }
         );
+    }
+
+    private void createIndexForNeo4j5(String name, String label, String property) {
+        try {
+            RawSqlStatement sql = new RawSqlStatement(String.format("CREATE INDEX `%s` IF NOT EXISTS FOR (n:`%s`) ON (n.`%s`)", name, label, property));
+            this.execute(sql);
+            this.commit();
+        } catch (LiquibaseException e) {
+            rollbackOnError(e);
+        }
     }
 
     private void createNodeKeyConstraintForNeo4j5(String name, String label, String[] properties) {
@@ -283,6 +355,18 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
 
     // before 4.x, constraints cannot be given names
+    private void dropIndexForNeo4j3(String label, String property) {
+        onThrow(this::rollbackIfNoSuchIndexExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("DROP INDEX ON :`%s`(`%s`)", label, property));
+                    this.execute(sql);
+                    this.commit();
+                }
+        );
+    }
+
+
+    // before 4.x, constraints cannot be given names
     private void dropUniqueConstraintForNeo4j3(String label, String property) {
         onThrow(this::rollbackIfNoSuchConstraintExists,
                 () -> {
@@ -294,6 +378,17 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     // before 4.x, constraints cannot be given names
+    private void dropIndexForNeo4j4(String name) {
+        // `DROP INDEX IF EXISTS` is only available with Neo4j 4.1.3+
+        onThrow(this::rollbackIfNoSuchIndexExists,
+                () -> {
+                    RawSqlStatement sql = new RawSqlStatement(String.format("DROP INDEX `%s`", name));
+                    this.execute(sql);
+                    this.commit();
+                }
+        );
+    }
+
     private void dropNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
         onThrow(this::rollbackIfNoSuchConstraintExists,
@@ -306,7 +401,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     private void dropConstraintForNeo4j4(String name) {
-        // `DROP CONSTRAINT IF EXISTS` is only available with Neo4j 4.2+
+        // `DROP CONSTRAINT IF EXISTS` is only available with Neo4j 4.1.3+
         onThrow(this::rollbackIfNoSuchConstraintExists,
                 () -> {
                     RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT `%s`", name));
@@ -315,9 +410,20 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                 }
         );
     }
+
     private void dropConstraintForNeo4j5(String name) {
         try {
             RawSqlStatement sql = new RawSqlStatement(String.format("DROP CONSTRAINT `%s` IF EXISTS", name));
+            this.execute(sql);
+            this.commit();
+        } catch (LiquibaseException e) {
+            rollbackOnError(e);
+        }
+    }
+
+    private void dropIndexForNeo4j5(String name) {
+        try {
+            RawSqlStatement sql = new RawSqlStatement(String.format("DROP INDEX `%s` IF EXISTS", name));
             this.execute(sql);
             this.commit();
         } catch (LiquibaseException e) {
@@ -329,8 +435,22 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         return Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor("jdbc", this);
     }
 
+    private void rollbackIfIndexExists(Exception ex) throws DatabaseException {
+        if (!INDEX_ALREADY_EXISTS_ERROR.test(ex)) {
+            return;
+        }
+        this.rollback();
+    }
+
     private void rollbackIfConstraintExists(Exception ex) throws DatabaseException {
         if (!CONSTRAINT_ALREADY_EXISTS_ERROR.test(ex)) {
+            return;
+        }
+        this.rollback();
+    }
+
+    private void rollbackIfNoSuchIndexExists(Exception ex) throws DatabaseException {
+        if (!NO_SUCH_INDEX_ERROR.test(ex)) {
             return;
         }
         this.rollback();

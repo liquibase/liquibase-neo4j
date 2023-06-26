@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.changelog
 
+import liquibase.ChecksumVersion
 import liquibase.Contexts
 import liquibase.LabelExpression
 import liquibase.Labels
@@ -19,15 +20,27 @@ import java.time.ZonedDateTime
 
 import static java.time.temporal.ChronoUnit.MINUTES
 import static java.util.Collections.singletonList
-import static liquibase.changelog.ChangeSet.ExecType.*
-import static liquibase.changelog.ChangeSet.RunStatus.*
+import static liquibase.changelog.ChangeSet.ExecType.EXECUTED
+import static liquibase.changelog.ChangeSet.ExecType.FAILED
+import static liquibase.changelog.ChangeSet.ExecType.MARK_RAN
+import static liquibase.changelog.ChangeSet.ExecType.RERAN
+import static liquibase.changelog.ChangeSet.ExecType.SKIPPED
+import static liquibase.changelog.ChangeSet.ExecType.valueOf
+import static liquibase.changelog.ChangeSet.RunStatus.ALREADY_RAN
+import static liquibase.changelog.ChangeSet.RunStatus.INVALID_MD5SUM
+import static liquibase.changelog.ChangeSet.RunStatus.NOT_RAN
+import static liquibase.changelog.ChangeSet.RunStatus.RUN_AGAIN
 import static liquibase.ext.neo4j.DateUtils.date
 import static liquibase.ext.neo4j.DateUtils.nowMinus
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
 import static liquibase.ext.neo4j.MapUtils.containsAll
 import static liquibase.ext.neo4j.ReflectionUtils.getField
 import static liquibase.ext.neo4j.ReflectionUtils.setField
-import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.*
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_SET_CHECK_SUM_INDEX_NAME
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CHANGE_SET_CONSTRAINT_NAME
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.CONTEXT_CONSTRAINT_NAME
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.LABEL_CONSTRAINT_NAME
+import static liquibase.ext.neo4j.changelog.Neo4jChangelogHistoryService.TAG_CONSTRAINT_NAME
 
 class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
@@ -38,15 +51,20 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
     }
 
     def cleanup() {
+        queryRunner.dropIndex(CHANGE_SET_CHECK_SUM_INDEX_NAME, "__LiquibaseChangeSet", "checkSum")
         queryRunner.dropUniqueConstraint(TAG_CONSTRAINT_NAME, "__LiquibaseTag", "tag")
         queryRunner.dropUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label")
         queryRunner.dropUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context")
         if (enterpriseEdition()) {
             queryRunner.dropNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog")
         }
+        queryRunner.listExistingConstraints().isEmpty()
+        queryRunner.listExistingIndices().isEmpty()
+        queryRunner.getSingleRow("MATCH (n) RETURN count(n) AS count")["count"] == 0L
+
     }
 
-    def "creates constraints and changelog node upon initialization"() {
+    def "creates indices, constraints and changelog node upon initialization"() {
         when:
         historyService.init()
 
@@ -55,6 +73,8 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         existingConstraints.findIndexOf { it.contains(":__LiquibaseTag") } >= 0
         existingConstraints.findIndexOf { it.contains(":__LiquibaseContext") } >= 0
         existingConstraints.findIndexOf { it.contains(":__LiquibaseLabel") } >= 0
+        def existingIndices = queryRunner.listExistingIndices()
+        existingIndices.findIndexOf { it.contains("__LiquibaseChangeSet") } >= 0
         !enterpriseEdition() || existingConstraints.findIndexOf { it.contains(":__LiquibaseChangeSet") } >= 0
         def row = queryRunner.getSingleRow("""
             MATCH (n) RETURN labels(n) AS labels, n.dateCreated AS dateCreated, n.dateUpdated as dateUpdated
@@ -62,6 +82,38 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         row["labels"] == ["__LiquibaseChangeLog"]
         date(row["dateCreated"] as ZonedDateTime) > nowMinus(1, MINUTES)
         row["dateUpdated"] == null
+    }
+
+    def "determines empty database is checksum-compatible"() {
+        when:
+        historyService.init()
+
+        then:
+        historyService.isDatabaseChecksumsCompatible()
+    }
+
+    def "determines change set with older checksum database is not checksum-compatible"() {
+        when:
+        def v1CheckSum = CheckSum.parse("1:2cdf9876e74347162401315d34b83746")
+        manuallyCreateOrderedChangesets(ranChangeSet("old-change-set", "me", v1CheckSum, date(2000, 1, 1)))
+
+        and:
+        historyService.init()
+
+        then:
+        !historyService.isDatabaseChecksumsCompatible()
+    }
+
+    def "determines change set with latest checksum database is checksum-compatible"() {
+        when:
+        def latestCheckSum = CheckSum.parse(String.format("%d:2cdf9876e74347162401315d34b83746", ChecksumVersion.latest().version))
+        manuallyCreateOrderedChangesets(ranChangeSet("old-change-set", "me", latestCheckSum, date(2000, 1, 1)))
+
+        and:
+        historyService.init()
+
+        then:
+        historyService.isDatabaseChecksumsCompatible()
     }
 
     def "cleans up disconnected labels upon initialization"() {
@@ -176,8 +228,9 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         stateIsReset()
     }
 
-    def "destroys state, constraints, and data"() {
+    def "destroys state, indices, constraints, and data"() {
         given:
+        queryRunner.createIndex(CHANGE_SET_CHECK_SUM_INDEX_NAME, "__LiquibaseChangeSet", "checkSum")
         queryRunner.createUniqueConstraint(TAG_CONSTRAINT_NAME, "__LiquibaseTag", "tag")
         queryRunner.createUniqueConstraint(CONTEXT_CONSTRAINT_NAME, "__LiquibaseContext", "context")
         queryRunner.createUniqueConstraint(LABEL_CONSTRAINT_NAME, "__LiquibaseLabel", "label")
@@ -202,6 +255,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         getField("ranChangeSets", historyService) == null
         historyService.deploymentId == null
         queryRunner.listExistingConstraints().isEmpty()
+        queryRunner.listExistingIndices().isEmpty()
         queryRunner.getSingleRow("MATCH (n) RETURN count(n) AS count")["count"] == 0L
     }
 
@@ -212,6 +266,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
         then:
         getField("ranChangeSets", historyService) == null
         queryRunner.listExistingConstraints().isEmpty()
+        queryRunner.listExistingIndices().isEmpty()
     }
 
     def "reads ran change sets from database upon first call"() {

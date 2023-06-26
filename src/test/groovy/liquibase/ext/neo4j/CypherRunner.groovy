@@ -11,6 +11,8 @@ import java.util.stream.Collectors
 import java.util.stream.IntStream
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
+import static liquibase.ext.neo4j.DockerNeo4j.supportsShowConstraintsYieldSyntax
+import static liquibase.ext.neo4j.DockerNeo4j.supportsShowIndexesYieldSyntax
 
 class CypherRunner implements AutoCloseable {
 
@@ -21,6 +23,17 @@ class CypherRunner implements AutoCloseable {
     CypherRunner(Driver driver, String neo4jVersion) {
         this.neo4jVersion = neo4jVersion
         this.driver = driver
+    }
+
+    void createIndex(String name, String label, String property) {
+        ignoring(exceptionMessageContaining("index already exists"), {
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "CREATE INDEX $name IF NOT EXISTS FOR (n:$label) ON (n.$property)" : neo4jVersion.startsWith("4") ?
+                    "CREATE INDEX $name FOR (n:$label) ON (n.$property)" :
+                    "CREATE INDEX ON :$label($property)"
+            this.run(query)
+        })
     }
 
     void createUniqueConstraint(String name, String label, String property) {
@@ -46,7 +59,7 @@ class CypherRunner implements AutoCloseable {
     }
 
     List<String> listExistingConstraints() {
-        if (neo4jVersion().startsWith("5")) {
+        if (supportsShowConstraintsYieldSyntax()) {
             def descriptions = (String[]) this.getSingleRow(
                     """
                     | SHOW CONSTRAINTS YIELD name, labelsOrTypes
@@ -57,6 +70,39 @@ class CypherRunner implements AutoCloseable {
         // names are not available before Neo4j 4.x
         def descriptions = (String[]) this.getSingleRow("CALL db.constraints() YIELD description RETURN collect(description) AS descriptions")["descriptions"]
         return Arrays.asList(descriptions)
+    }
+
+    List<String> listExistingIndices() {
+        if (supportsShowIndexesYieldSyntax()) {
+            def descriptions = (String[]) this.getSingleRow(
+                    """
+                    | SHOW INDEXES YIELD name, labelsOrTypes
+                    | RETURN collect(name + ":" + reduce(str = "", l IN labelsOrTypes | str+l+",")) AS descriptions
+                    """.stripMargin())["descriptions"]
+            return Arrays.asList(descriptions)
+        }
+        if (neo4jVersion().startsWith("4")) {
+            def descriptions = (String[]) this.getSingleRow(
+                    """
+                    | CALL db.indexes() YIELD name, labelsOrTypes
+                    | RETURN collect(name + ":" + reduce(str = "", l IN labelsOrTypes | str+l+",")) AS descriptions
+                    """.stripMargin())["descriptions"]
+            return Arrays.asList(descriptions)
+        }
+        // names are not available before Neo4j 4.x
+        def descriptions = (String[]) this.getSingleRow("CALL db.indexes() YIELD description RETURN collect(description) AS descriptions")["descriptions"]
+        return Arrays.asList(descriptions)
+    }
+
+    void dropIndex(String name, String label, String property) {
+        ignoring(exceptionMessageContaining("no such index"), {
+            def neo4jVersion = neo4jVersion()
+            def query = neo4jVersion.startsWith("5") ?
+                    "DROP INDEX $name IF EXISTS" : neo4jVersion.startsWith("4") ?
+                    "DROP INDEX $name" :
+                    "DROP INDEX ON :$label(`$property`)"
+            this.run(query)
+        })
     }
 
     void dropUniqueConstraint(String name, String label, String property) {
