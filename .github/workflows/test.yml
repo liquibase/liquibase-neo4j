@@ -41,6 +41,7 @@ jobs:
           - "5.7"
           - "5.8"
           - "5.9"
+          - "5.10"
         enterprise:
           - "true"
           - "false"
