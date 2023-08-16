@@ -44,14 +44,11 @@ public class LoadGraphDataChange extends LoadDataChange {
 
     @Override
     public boolean supports(Database database) {
-        return database instanceof Neo4jDatabase || super.supports(database);
+        return database instanceof Neo4jDatabase;
     }
 
     @Override
     protected SqlStatement[] generateStatementsFromRows(Database database, List<LoadDataRowConfig> rows) {
-        if (!(database instanceof Neo4jDatabase)) {
-            return super.generateStatementsFromRows(database, rows);
-        }
         String cypher = String.format("UNWIND $0 AS row CREATE (n:`%s`) SET n += row", escapeLabel(getTableName()));
         return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, keyValuePairs(rows))};
     }

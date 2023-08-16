@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.change
 
+import liquibase.database.core.MySQLDatabase
 import liquibase.ext.neo4j.database.Neo4jDatabase
 import spock.lang.Specification
 
@@ -12,5 +13,7 @@ class LoadGraphDataChangeTest extends Specification {
         where:
         database            | result
         new Neo4jDatabase() | true
+        null                | false
+        new MySQLDatabase() | false
     }
 }
