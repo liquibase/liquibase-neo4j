@@ -27,14 +27,11 @@ public class InsertNodeChange extends InsertDataChange {
 
     @Override
     public boolean supports(Database database) {
-        return database instanceof Neo4jDatabase || super.supports(database);
+        return database instanceof Neo4jDatabase;
     }
 
     @Override
     public ValidationErrors validate(Database database) {
-        if (!(database instanceof Neo4jDatabase)) {
-            return super.validate(database);
-        }
         ValidationErrors errors = new ValidationErrors(this);
         if (Sequences.isNullOrEmpty(labelName)) {
             errors.addError("label name for insert must be specified and not blank");

@@ -13,6 +13,8 @@ class InsertNodeChangeTest extends Specification {
         where:
         database            | result
         new Neo4jDatabase() | true
+        null                | false
+        new MySQLDatabase() | false
     }
 
     def "requires label name to be set"() {
