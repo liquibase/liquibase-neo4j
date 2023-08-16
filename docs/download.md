@@ -75,4 +75,13 @@ First install [Liquibase](https://www.liquibase.org/download).
         liquibaseRuntime '{{ group_id }}:{{ artifact_id }}:{{ version }}'
         ```
 
+## :fontawesome-solid-circle-radiation: Unsupported versions
+
+The following versions of Liquibase core are not compatible with the Neo4j extension:
+
+| Version | Workaround                                                                                                                                                        |
+|---------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 4.23.0  | [recommended] Upgrade both core and the extension to 4.23.1 (or later). <br/>Alternatively, use Liquibase core 4.21.1 and the Neo4j extension at version 4.21.1.2 |
+
+
 {! include-markdown 'includes/_abbreviations.md' !}
