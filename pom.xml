@@ -66,9 +66,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
         <liquibase.version>4.23.1</liquibase.version>
-        <version.to.release>${project.version}</version.to.release>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <sonar.organization>liquibase</sonar.organization>
         <sonar.projectKey>${project.artifactId}</sonar.projectKey>
         <sonar.projectName>${project.name}</sonar.projectName>
@@ -181,6 +181,15 @@
                     </compilerArgs>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
+                <configuration>
+                    <scmCommentPrefix>[Version Bumped to ${project.version}]</scmCommentPrefix>
                 </configuration>
             </plugin>
 
