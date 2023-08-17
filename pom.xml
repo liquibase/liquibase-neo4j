@@ -28,7 +28,7 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:http://github.com/liquibase/liquibase-neo4j.git</connection>
+        <connection>scm:git:https://github.com/liquibase/liquibase-neo4j.git</connection>
         <url>https://github.com/liquibase/liquibase-neo4j</url>
         <tag>HEAD</tag>
     </scm>
