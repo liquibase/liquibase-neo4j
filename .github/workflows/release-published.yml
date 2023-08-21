@@ -9,3 +9,44 @@ jobs:
   release:
     uses: liquibase/build-logic/.github/workflows/extension-release-published.yml@v0.3.9
     secrets: inherit
+
+  deploy_xsd:
+    name: Upload xsds
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download liquibase neo4j xsd
+        uses: actions/checkout@v3
+        with:
+          # Relative path under $GITHUB_WORKSPACE to place the repository
+          path: liquibase-neo4j
+          repository: "liquibase/liquibase-neo4j"
+
+      - name: Upload to s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LIQUIBASEORIGIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LIQUIBASEORIGIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        # aws s3 sync syncs directories and S3 prefixes.
+        run: |
+          aws s3 sync liquibase-neo4j/src/main/resources/www.liquibase.org/xml/ns/neo4j/ s3://liquibaseorg-origin/xml/ns/neo4j/ --content-type application/octet-stream --only-show-errors
+      - name: Index.htm file upload
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.LIQUIBASEORIGIN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.LIQUIBASEORIGIN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        # List all xsd and htm files in repository. Copy index.htm to temporary folder
+        # Add links for all xsd files to index.htm file (except liquibase-neo4j-latest.xsd and index.htm)
+        # Sync index.htm with the s3
+        run: |
+          search_dir=liquibase-neo4j/src/main/resources/www.liquibase.org/xml/ns/neo4j
+          filenames=`ls -1 $search_dir`
+          mkdir index-file
+          cp $search_dir/index.htm index-file/
+          for entry in $filenames
+          do
+            if [[ "$entry" != "liquibase-neo4j-latest.xsd" ]] && [[ "$entry" != "index.htm" ]] ;then
+              sed -ie "s/<\/ul>/  <li><a href=\"\/xml\/ns\/neo4j\/${entry}\">${entry}<\/a><\/li>\n<\/ul>/" index-file/index.htm
+            fi
+          done
+          
+          aws s3 sync index-file s3://liquibaseorg-origin/xml/ns/neo4j/ --only-show-errors
