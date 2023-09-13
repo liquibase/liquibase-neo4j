@@ -4,7 +4,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>4.23.2</version>
+    <version>4.24.2-SNAPSHOT</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
@@ -29,7 +29,7 @@
     <scm>
         <connection>scm:git:https://github.com/liquibase/liquibase-neo4j.git</connection>
         <url>https://github.com/liquibase/liquibase-neo4j</url>
-        <tag>liquibase-neo4j-4.23.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
