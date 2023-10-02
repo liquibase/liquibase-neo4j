@@ -77,7 +77,7 @@
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <sonar.sources>src/main/java</sonar.sources>
         <sonar.tests>src/test/groovy</sonar.tests>
-        <testcontainers.version>1.19.0</testcontainers.version>
+        <testcontainers.version>1.19.1</testcontainers.version>
     </properties>
 
     <dependencies>
