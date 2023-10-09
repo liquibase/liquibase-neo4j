@@ -109,7 +109,7 @@ public class Neo4jLockService implements LockService {
             init();
             UUID newLockId = UUID.randomUUID();
             database.execute(new RawParameterizedSqlStatement(
-                    "CREATE (lock:__LiquibaseLock {id: $0, grantDate: datetime(), lockedBy: $1})",
+                    "CREATE (lock:__LiquibaseLock {id: $1, grantDate: datetime(), lockedBy: $2})",
                     newLockId.toString(),
                     Neo4jLockService.class.getSimpleName()
             ));
@@ -158,7 +158,7 @@ public class Neo4jLockService implements LockService {
         }
         try {
             database.execute(new RawParameterizedSqlStatement(
-                    "MATCH (lock:__LiquibaseLock {id: $0}) DELETE lock",
+                    "MATCH (lock:__LiquibaseLock {id: $1}) DELETE lock",
                     lockId.toString()
             ));
             database.commit();

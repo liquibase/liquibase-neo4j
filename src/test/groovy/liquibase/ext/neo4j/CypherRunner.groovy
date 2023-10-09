@@ -152,7 +152,7 @@ class CypherRunner implements AutoCloseable {
             def parameters = statement.parameters
             Map<String, Object> indexedMap = IntStream.range(0, parameters.size())
                     .boxed()
-                    .collect(Collectors.toMap((Integer index) -> index.toString(), (Integer index) -> parameters.get(index)))
+                    .collect(Collectors.toMap((Integer index) -> (index+1).toString(), (Integer index) -> parameters.get(index)))
             run(statement.sql, indexedMap)
             return
         }

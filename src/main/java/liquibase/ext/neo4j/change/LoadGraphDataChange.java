@@ -49,7 +49,7 @@ public class LoadGraphDataChange extends LoadDataChange {
 
     @Override
     protected SqlStatement[] generateStatementsFromRows(Database database, List<LoadDataRowConfig> rows) {
-        String cypher = String.format("UNWIND $0 AS row CREATE (n:`%s`) SET n += row", escapeLabel(getTableName()));
+        String cypher = String.format("UNWIND $1 AS row CREATE (n:`%s`) SET n += row", escapeLabel(getTableName()));
         return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, keyValuePairs(rows))};
     }
 

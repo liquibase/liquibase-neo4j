@@ -52,7 +52,7 @@ public class InsertNodeChange extends InsertDataChange {
         }
         return new SqlStatement[]{
                 new RawParameterizedSqlStatement(
-                        String.format("CREATE (node:`%s`) SET node = $0", this.getTableName()),
+                        String.format("CREATE (node:`%s`) SET node = $1", this.getTableName()),
                         propertyMap(this.getColumns())
                 )
         };

@@ -47,7 +47,7 @@ public class NodeMerger {
 
     private Optional<SqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
-                "MATCH (n) WHERE ID(n) IN $0\n" +
+                "MATCH (n) WHERE ID(n) IN $1\n" +
                         "UNWIND labels(n) AS label\n" +
                         "WITH DISTINCT label\n" +
                         "ORDER BY label ASC\n" +
@@ -62,13 +62,13 @@ public class NodeMerger {
             labelLiterals.add(label);
         }
         return Optional.of(new RawParameterizedSqlStatement(
-                String.format("MATCH (n) WHERE ID(n) = $0 SET n%s", labelLiterals),
+                String.format("MATCH (n) WHERE ID(n) = $1 SET n%s", labelLiterals),
                 ids.get(0)));
     }
 
     private Optional<SqlStatement> generatePropertyCopyStatement(List<Long> ids, List<PropertyMergePolicy> policies) throws LiquibaseException {
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
-                "UNWIND $0 AS id\n" +
+                "UNWIND $1 AS id\n" +
                         "MATCH (n) WHERE id(n) = id\n" +
                         "UNWIND keys(n) AS key\n" +
                         "WITH key, n[key] as value\n" +
@@ -96,14 +96,14 @@ public class NodeMerger {
         }
 
         return Optional.of(new RawParameterizedSqlStatement(
-                "MATCH (n) WHERE id(n) = $0 SET n = $1",
+                "MATCH (n) WHERE id(n) = $1 SET n = $2",
                 asList(ids.get(0), combinedProperties).toArray()));
     }
 
     private Optional<SqlStatement> generateRelationshipCopyStatements(List<Long> ids) throws LiquibaseException {
         Set<Long> nodeIdTail = tailOf(ids);
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(
-                "MATCH (n) WHERE id(n) IN $0\n" +
+                "MATCH (n) WHERE id(n) IN $1\n" +
                         "WITH [ (n)-[r]-() | r ] AS rels\n" +
                         "UNWIND rels AS rel\n" +
                         "RETURN DISTINCT rel\n" +
@@ -113,16 +113,16 @@ public class NodeMerger {
         if (rows.isEmpty()) {
             return Optional.empty();
         }
-        int parameterIndex = 0;
+        int parameterIndex = 1;
         StringBuilder query = new StringBuilder();
         List<Object> parameters = new ArrayList<>();
-        query.append("MATCH (target) WHERE id(target) = $0 ");
-        parameters.add(ids.get(0));
+        query.append(String.format("MATCH (target) WHERE id(target) = $%d ", parameterIndex));
+        parameters.add(parameterIndex-1, ids.get(0));
         parameterIndex++;
         for (Map<String, ?> row : rows) {
             @SuppressWarnings("unchecked")
             Map<String, Object> relation = (Map<String, Object>) row.get("rel");
-            parameters.add(parameterIndex, relProperties(relation));
+            parameters.add(parameterIndex-1, relProperties(relation));
             long startId = (long) relation.get("_startId");
             long endId = (long) relation.get("_endId");
             if (nodeIdTail.contains(startId) && nodeIdTail.contains(endId)) { // current or post-merge self-rel
@@ -131,11 +131,11 @@ public class NodeMerger {
                 continue;
             }
             if (nodeIdTail.contains(endId)) { // incoming
-                parameters.add(parameterIndex + 1, startId);
+                parameters.add(parameterIndex, startId);
                 query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
                 query.append(String.format("CREATE (n_%1$d)-[rel_%1$d:`%2$s`]->(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
             } else { // outgoing
-                parameters.add(parameterIndex + 1, endId);
+                parameters.add(parameterIndex, endId);
                 query.append(String.format("WITH target MATCH (n_%1$d) WHERE id(n_%1$d) = $%1$d ", parameterIndex + 1));
                 query.append(String.format("CREATE (n_%1$d)<-[rel_%1$d:`%2$s`]-(target) SET rel_%1$d = $%3$d ", parameterIndex + 1, relation.get("_type"), parameterIndex));
             }
@@ -146,7 +146,7 @@ public class NodeMerger {
 
     private Optional<SqlStatement> generateNodeDeletion(List<Long> ids) {
         return Optional.of(new RawParameterizedSqlStatement(
-                "MATCH (n) WHERE id(n) IN $0 DETACH DELETE n",
+                "MATCH (n) WHERE id(n) IN $1 DETACH DELETE n",
                 tailOf(ids)
         ));
     }
