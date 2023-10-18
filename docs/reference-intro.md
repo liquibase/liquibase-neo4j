@@ -14,7 +14,7 @@ A change can also be a complex transformation operation, such as
 
 The interest of complex changes is two-fold:
 
- 1. it encapsulates several basic operations, which would otherwise be tedious and error-prone to write
+ 1. they encapsulate several basic operations, which would otherwise be tedious and error-prone to write
  2. most of these complex changes are portable across different database management systems 
 
 !!! note
