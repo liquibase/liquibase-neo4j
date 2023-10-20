@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-parent-pom</artifactId>
-        <version>0.2.4</version> <!-- Replace with the desired version -->
+        <version>0.2.6</version> <!-- Replace with the desired version -->
     </parent>
 
     <groupId>org.liquibase.ext</groupId>
@@ -112,22 +112,6 @@
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven-failsafe-plugin.version}</version>
-                <configuration>
-                    <skipITs>true</skipITs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                        <goal>integration-test</goal>
-                        <goal>verify</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
