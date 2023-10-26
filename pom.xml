@@ -51,6 +51,13 @@
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
     </properties>
 
+    <scm>
+        <connection>scm:git:${project.scm.url}</connection>
+        <developerConnection>scm:git:${project.scm.url}</developerConnection>
+		<url>https://github.com/liquibase/liquibase-neo4j.git</url>
+		<tag>HEAD</tag>
+	</scm>
+
     <dependencies>
         <dependency>
             <groupId>org.neo4j.driver</groupId>
