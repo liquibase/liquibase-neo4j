@@ -3,3 +3,4 @@ liquibase.ext.neo4j.change.MergeNodesChange
 liquibase.ext.neo4j.change.LoadGraphDataChange
 liquibase.ext.neo4j.change.ExtractPropertyChange
 liquibase.ext.neo4j.change.InsertNodeChange
+liquibase.ext.neo4j.change.RenameLabelChange
