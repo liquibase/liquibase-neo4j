@@ -33,7 +33,7 @@ public class InsertNodeChange extends InsertDataChange {
     @Override
     public ValidationErrors validate(Database database) {
         ValidationErrors errors = new ValidationErrors(this);
-        if (Sequences.isNullOrEmpty(labelName)) {
+        if (Sequences.isNullOrBlank(labelName)) {
             errors.addError("label name for insert must be specified and not blank");
         }
         return errors;

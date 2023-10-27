@@ -55,11 +55,11 @@ public class MergeNodesChange extends AbstractChange {
 
     @Override
     public ValidationErrors validate(Database database) {
-        if (isNullOrEmpty(fragment)) {
+        if (Sequences.isNullOrBlank(fragment)) {
             return new ValidationErrors(this)
                     .addError("missing Cypher fragment");
         }
-        if (isNullOrEmpty(outputVariable)) {
+        if (Sequences.isNullOrBlank(outputVariable)) {
             return new ValidationErrors(this)
                     .addError("missing Cypher output variable");
         }
