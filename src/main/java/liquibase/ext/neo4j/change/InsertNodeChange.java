@@ -10,7 +10,6 @@ import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

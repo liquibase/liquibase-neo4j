@@ -80,6 +80,7 @@ public class MergeNodesChange extends AbstractChange {
         return super.validate(database);
     }
 
+    @Override
     public boolean supports(Database database) {
         return database instanceof Neo4jDatabase;
     }
