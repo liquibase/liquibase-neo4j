@@ -45,6 +45,6 @@ class RenameLabelChangeTest extends Specification {
         false   | false   | "Movie" | ""     | 1000L     | "missing label (to)"
         false   | true    | "Movie" | "Film" | -1L       | "batch size, if set, must be strictly positive"
         false   | false   | "Movie" | "Film" | -1L       | "batch size, if set, must be strictly positive"
-        true    | true    | "Movie" | "Film" | 1000L     | "the enclosing change set's runInTransaction attribute must be set to false, it is currently true"
+        true    | false   | "Movie" | "Film" | 1000L     | "batch size must be set only if the enclosing change set's runInTransaction attribute is set to false"
     }
 }

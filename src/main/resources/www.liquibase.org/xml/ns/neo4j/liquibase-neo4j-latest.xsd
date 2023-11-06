@@ -86,4 +86,10 @@
     <xsd:complexType name="insertType">
         <xsd:attribute type="xsd:string" name="labelName" use="required" />
     </xsd:complexType>
+
+    <xsd:element name="renameLabel" type="renameLabelType" />
+    <xsd:complexType name="renameLabelType">
+        <xsd:attribute type="xsd:string" name="from" use="required" />
+        <xsd:attribute type="xsd:string" name="to" use="required" />
+    </xsd:complexType>
 </xsd:schema>

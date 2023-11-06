@@ -44,12 +44,12 @@ public class RenameLabelChange extends AbstractChange {
         if (batchSize != null && batchSize <= 0) {
             validation.addError("batch size, if set, must be strictly positive");
         }
-        Neo4jDatabase neo4j = (Neo4jDatabase) database;
-        if (neo4j.supportsCallInTransactions() && getChangeSet().isRunInTransaction()) {
-            validation.addError("the enclosing change set's runInTransaction attribute must be set to false, it is currently true");
+        if (getChangeSet().isRunInTransaction() && batchSize != null) {
+            validation.addError("batch size must be set only if the enclosing change set's runInTransaction attribute is set to false");
         }
+        Neo4jDatabase neo4j = (Neo4jDatabase) database;
         if (!neo4j.supportsCallInTransactions() && batchSize != null) {
-            validation.addWarning("older version of Neo4j detected, batch size is going to be ignored");
+            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, batch size is going to be ignored");
         }
         validation.addAll(super.validate(database));
         return validation;
@@ -62,15 +62,21 @@ public class RenameLabelChange extends AbstractChange {
 
     @Override
     public SqlStatement[] generateStatements(Database database) {
-        if (((Neo4jDatabase) database).supportsCallInTransactions()) {
+        Logger log = Scope.getCurrentScope().getLog(getClass());
+        boolean supportsCallInTransactions = ((Neo4jDatabase) database).supportsCallInTransactions();
+        if (supportsCallInTransactions && !getChangeSet().isRunInTransaction()) {
+            log.info("Running label rename in CALL {} IN TRANSACTIONS");
             String batchSpec = batchSize != null ? String.format(" OF %d ROWS", batchSize) : "";
             String cypher = String.format("MATCH (n:`%s`) CALL {WITH n SET n:`%s` REMOVE n:`%1$s`} IN TRANSACTIONS%s", from, to, batchSpec);
-            return new SqlStatement[] {new RawSqlStatement(cypher)};
+            return new SqlStatement[]{new RawSqlStatement(cypher)};
         }
-        Logger log = Scope.getCurrentScope().getLog(getClass());
-        log.warning("Older version of Neo4j detected, the rename might be slow if the number of affected nodes is large");
+        if (!supportsCallInTransactions) {
+            log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the label rename is going to run in a single, possibly large and slow, transaction");
+        } else {
+            log.info("Running label rename in single transaction (set the enclosing change set's runInTransaction to false to switch to CALL {} IN TRANSACTIONS)");
+        }
         String cypher = String.format("MATCH (n:`%s`) SET n:`%s` REMOVE n:`%1$s`", from, to);
-        return new SqlStatement[] {new RawSqlStatement(cypher)};
+        return new SqlStatement[]{new RawSqlStatement(cypher)};
     }
 
     public String getFrom() {
