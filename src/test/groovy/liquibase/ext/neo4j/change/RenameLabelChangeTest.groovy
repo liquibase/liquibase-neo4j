@@ -18,12 +18,14 @@ class RenameLabelChangeTest extends Specification {
         new MySQLDatabase() | false
     }
 
-    def "rejects invalid mandatory fields"() {
+    def "rejects invalid configuration"() {
         given:
         def renameLabelChange = new RenameLabelChange()
         renameLabelChange.from = from
         renameLabelChange.to = to
         renameLabelChange.batchSize = batchSize
+        renameLabelChange.fragment = fragment
+        renameLabelChange.outputVariable = outputVariable
         def changeSet = Mock(ChangeSet)
         changeSet.runInTransaction >> runInTx
         renameLabelChange.setChangeSet(changeSet)
@@ -34,17 +36,20 @@ class RenameLabelChangeTest extends Specification {
         renameLabelChange.validate(database).getErrorMessages() == [error]
 
         where:
-        runInTx | withCIT | from    | to     | batchSize | error
-        false   | true    | null    | "Film" | 1000L     | "missing label (from)"
-        false   | true    | ""      | "Film" | 1000L     | "missing label (from)"
-        false   | false   | null    | "Film" | 1000L     | "missing label (from)"
-        false   | false   | ""      | "Film" | 1000L     | "missing label (from)"
-        false   | true    | "Movie" | null   | 1000L     | "missing label (to)"
-        false   | true    | "Movie" | ""     | 1000L     | "missing label (to)"
-        false   | false   | "Movie" | null   | 1000L     | "missing label (to)"
-        false   | false   | "Movie" | ""     | 1000L     | "missing label (to)"
-        false   | true    | "Movie" | "Film" | -1L       | "batch size, if set, must be strictly positive"
-        false   | false   | "Movie" | "Film" | -1L       | "batch size, if set, must be strictly positive"
-        true    | false   | "Movie" | "Film" | 1000L     | "batch size must be set only if the enclosing change set's runInTransaction attribute is set to false"
+        runInTx | withCIT | from    | to     | batchSize | fragment     | outputVariable | error
+        false   | true    | null    | "Film" | 1000L     | null         | null           | "missing label (from)"
+        false   | true    | ""      | "Film" | 1000L     | null         | null           | "missing label (from)"
+        false   | false   | null    | "Film" | 1000L     | null         | null           | "missing label (from)"
+        false   | false   | ""      | "Film" | 1000L     | null         | null           | "missing label (from)"
+        false   | true    | "Movie" | null   | 1000L     | null         | null           | "missing label (to)"
+        false   | true    | "Movie" | ""     | 1000L     | null         | null           | "missing label (to)"
+        false   | false   | "Movie" | null   | 1000L     | null         | null           | "missing label (to)"
+        false   | false   | "Movie" | ""     | 1000L     | null         | null           | "missing label (to)"
+        false   | true    | "Movie" | "Film" | 1000L     | "(n)"        | null           | "both fragment and outputVariable must be set (only fragment is currently set), or both must be unset"
+        false   | false   | "Movie" | "Film" | 1000L     | null         | "n"            | "both fragment and outputVariable must be set (only outputVariable is currently set), or both must be unset"
+        false   | false   | "Movie" | "Film" | 1000L     | "(__node__)" | "__node__"     | "__node__ is a reserved variable name, outputVariable must be renamed and fragment accordingly updated"
+        false   | true    | "Movie" | "Film" | -1L       | null         | null           | "batch size, if set, must be strictly positive"
+        false   | false   | "Movie" | "Film" | -1L       | null         | null           | "batch size, if set, must be strictly positive"
+        true    | false   | "Movie" | "Film" | 1000L     | null         | null           | "batch size must be set only if the enclosing change set's runInTransaction attribute is set to false"
     }
 }

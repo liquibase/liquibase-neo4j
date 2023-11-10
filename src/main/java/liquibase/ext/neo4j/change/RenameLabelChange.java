@@ -25,6 +25,10 @@ public class RenameLabelChange extends AbstractChange {
 
     private String to;
 
+    private String fragment;
+
+    private String outputVariable;
+
     private Long batchSize;
 
     @Override
@@ -40,6 +44,14 @@ public class RenameLabelChange extends AbstractChange {
         }
         if (Sequences.isNullOrEmpty(to)) {
             validation.addError("missing label (to)");
+        }
+        if ((fragment == null) ^ (outputVariable == null)) {
+            String setAttribute = fragment != null ? "fragment" : "outputVariable";
+            String error = String.format("both fragment and outputVariable must be set (only %s is currently set), or both must be unset", setAttribute);
+            validation.addError(error);
+        }
+        if ("__node__".equals(outputVariable)) {
+            validation.addError("__node__ is a reserved variable name, outputVariable must be renamed and fragment accordingly updated");
         }
         if (batchSize != null && batchSize <= 0) {
             validation.addError("batch size, if set, must be strictly positive");
@@ -67,7 +79,7 @@ public class RenameLabelChange extends AbstractChange {
         if (supportsCallInTransactions && !getChangeSet().isRunInTransaction()) {
             log.info("Running label rename in CALL {} IN TRANSACTIONS");
             String batchSpec = batchSize != null ? String.format(" OF %d ROWS", batchSize) : "";
-            String cypher = String.format("MATCH (n:`%s`) CALL {WITH n SET n:`%s` REMOVE n:`%1$s`} IN TRANSACTIONS%s", from, to, batchSpec);
+            String cypher = String.format("%s CALL {WITH __node__ SET __node__:`%s` REMOVE __node__:`%s`} IN TRANSACTIONS%s", queryStart(), to, from, batchSpec);
             return new SqlStatement[]{new RawSqlStatement(cypher)};
         }
         if (!supportsCallInTransactions) {
@@ -75,7 +87,7 @@ public class RenameLabelChange extends AbstractChange {
         } else {
             log.info("Running label rename in single transaction (set the enclosing change set's runInTransaction to false to switch to CALL {} IN TRANSACTIONS)");
         }
-        String cypher = String.format("MATCH (n:`%s`) SET n:`%s` REMOVE n:`%1$s`", from, to);
+        String cypher = String.format("%s SET __node__:`%s` REMOVE __node__:`%s`", queryStart(), to, from);
         return new SqlStatement[]{new RawSqlStatement(cypher)};
     }
 
@@ -101,5 +113,28 @@ public class RenameLabelChange extends AbstractChange {
 
     public void setBatchSize(Long batchSize) {
         this.batchSize = batchSize;
+    }
+
+    public String getFragment() {
+        return fragment;
+    }
+
+    public void setFragment(String fragment) {
+        this.fragment = fragment;
+    }
+
+    public String getOutputVariable() {
+        return outputVariable;
+    }
+
+    public void setOutputVariable(String outputVariable) {
+        this.outputVariable = outputVariable;
+    }
+
+    private String queryStart() {
+        if (fragment != null) {
+            return String.format("MATCH %s WITH %s AS __node__ WHERE __node__:`%s`", fragment, outputVariable, from);
+        }
+        return String.format("MATCH (__node__:`%s`)", from);
     }
 }

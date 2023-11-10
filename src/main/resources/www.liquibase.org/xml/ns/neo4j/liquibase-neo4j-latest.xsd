@@ -91,5 +91,8 @@
     <xsd:complexType name="renameLabelType">
         <xsd:attribute type="xsd:string" name="from" use="required" />
         <xsd:attribute type="xsd:string" name="to" use="required" />
+        <xsd:attribute type="xsd:string" name="fragment" />
+        <xsd:attribute type="xsd:string" name="outputVariable" />
+        <xsd:attribute type="xsd:int" name="batchSize" />
     </xsd:complexType>
 </xsd:schema>
