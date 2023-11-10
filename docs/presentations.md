@@ -8,6 +8,9 @@
 ### Nodes 2023
 [![Watch the video](https://img.youtube.com/vi/UGt3u0htTmk/default.jpg)](https://youtu.be/UGt3u0htTmk)
 
+### Neo4j Internals (excerpt)
+[![Watch the video](https://img.youtube.com/vi/iihJXKAQZkA/default.jpg)](https://www.youtube.com/watch?v=iihJXKAQZkA&t=3569s)
+
 ## 2022
 
 ### [Nodes 2022](https://neo4j.com/video/nodes-2022/)
