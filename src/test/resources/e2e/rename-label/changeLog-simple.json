@@ -18,7 +18,6 @@
       "changeSet": {
         "id": "my-movie-init-fixed",
         "author": "fbiville",
-        "runInTransaction": false,
         "changes": [
           {
             "renameLabel": {

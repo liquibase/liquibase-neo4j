@@ -9,7 +9,7 @@
         <neo4j:cypher>CREATE (:Movie {title: 'My Birthday', genre: 'Musical'})</neo4j:cypher>
     </changeSet>
 
-    <changeSet id="my-movie-init-fixed" author="fbiville" runInTransaction="false">
+    <changeSet id="my-movie-init-fixed" author="fbiville">
         <neo4j:renameLabel from="Movie" to="Film" fragment="(m:Movie {title: 'My Birthday'})" outputVariable="m"  />
     </changeSet>
 

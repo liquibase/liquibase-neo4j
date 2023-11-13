@@ -83,7 +83,8 @@ public class RenameLabelChange extends AbstractChange {
             return new SqlStatement[]{new RawSqlStatement(cypher)};
         }
         if (!supportsCallInTransactions) {
-            log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the label rename is going to run in a single, possibly large and slow, transaction");
+            log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the label rename is going to run in a single, possibly large and slow, transaction.\n" +
+                    "Note: set the runInTransaction attribute of the enclosing change set to true to make this warning disappear.");
         } else {
             log.info("Running label rename in single transaction (set the enclosing change set's runInTransaction to false to switch to CALL {} IN TRANSACTIONS)");
         }

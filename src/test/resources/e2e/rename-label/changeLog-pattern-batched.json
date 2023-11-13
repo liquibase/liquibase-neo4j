@@ -18,13 +18,15 @@
       "changeSet": {
         "id": "my-movie-init-fixed",
         "author": "fbiville",
+        "runInTransaction": false,
         "changes": [
           {
             "renameLabel": {
               "from": "Movie",
               "to": "Film",
               "fragment": "(m:Movie {title: 'My Birthday'})",
-              "outputVariable": "m"
+              "outputVariable": "m",
+              "batchSize": 1
             }
           }
         ]

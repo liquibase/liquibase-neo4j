@@ -8,7 +8,9 @@ databaseChangeLog:
   - changeSet:
       id: my-movie-init-fixed
       author: fbiville
+      runInTransaction: false
       changes:
         - renameLabel:
             from: 'Movie'
             to: 'Film'
+            batchSize: 1

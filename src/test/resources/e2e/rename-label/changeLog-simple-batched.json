@@ -9,7 +9,7 @@
             "cypher": "CREATE (:Movie {title: 'My Life', genre: 'Comedy'})"
           },
           {
-            "cypher": "CREATE (:Movie {title: 'My Birthday', genre: 'Musical'})"
+            "cypher": "CREATE (:Book {title: 'My Life', genre: 'Autobiography'})"
           }
         ]
       }
@@ -18,13 +18,13 @@
       "changeSet": {
         "id": "my-movie-init-fixed",
         "author": "fbiville",
+        "runInTransaction": false,
         "changes": [
           {
             "renameLabel": {
               "from": "Movie",
               "to": "Film",
-              "fragment": "(m:Movie {title: 'My Birthday'})",
-              "outputVariable": "m"
+              "batchSize": 1
             }
           }
         ]

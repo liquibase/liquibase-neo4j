@@ -6,11 +6,11 @@
 
     <changeSet id="my-movie-init-oops" author="fbiville">
         <neo4j:cypher>CREATE (:Movie {title: 'My Life', genre: 'Comedy'})</neo4j:cypher>
-        <neo4j:cypher>CREATE (:Book {title: 'My Life', genre: 'Autobiography'})</neo4j:cypher>
+        <neo4j:cypher>CREATE (:Movie {title: 'My Birthday', genre: 'Musical'})</neo4j:cypher>
     </changeSet>
 
-    <changeSet id="my-movie-init-fixed" author="fbiville">
-        <neo4j:renameLabel from="Movie" to="Film" />
+    <changeSet id="my-movie-init-fixed" author="fbiville" runInTransaction="false">
+        <neo4j:renameLabel from="Movie" to="Film" fragment="(m:Movie {title: 'My Birthday'})" outputVariable="m" batchSize="1" />
     </changeSet>
 
 </databaseChangeLog>
