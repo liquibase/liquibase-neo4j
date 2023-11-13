@@ -328,8 +328,141 @@ attribute to `true`. The default is to always create relationships.
 
 !!! warning
     `merge=false` on nodes with `merge=true` on relationships will trigger a validation warning.
-    Indeed, creating extracting nodes imply that new relationships will be created as well.
+    Indeed, creating extracted nodes imply that new relationships will be created as well.
     Setting `merge=true` on relationships in that case incur an unnecessary execution penalty.
+
+### Label Rename
+
+|Required plugin version|4.24.1|
+
+The label rename refactoring allows to rename one label to another, matching all or some of its nodes, in a single
+transaction or in batches.
+
+As illustrated below, the main attributes of the refactoring are:
+
+- `from`: value of the existing label
+- `to`: value of the new label, replacing the existing one
+
+
+#### Global Rename
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, the enclosing change set's `runInTransaction` can be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    
+    Please also remember that Neo4j isolation level is "read-committed". As such, some of the nested transactions
+    may actually affect more or fewer elements if concurrent transactions overlap.
+    
+    Finally, make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
+
+#### Partial Rename
+
+The following attributes can also be set, in order to match only a subset of the nodes with the label specified in `from`:
+
+ - `fragment` specifies the pattern to match the nodes against
+ - `outputVariable` specifies the Cypher variable name defined in `fragment` that denotes the targeted nodes
+
+!!!note
+    The nodes that are going to be rename sit at the intersection of what is defined in `fragment` and the nodes with
+    label specified by `from`.
+    In other words, if none of the nodes defined in `fragment` carry the label defined in `from`, the rename
+    is not going to modify any of those.
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, the enclosing change set's `runInTransaction` can be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+
+    Please also remember that Neo4j isolation level is "read-committed". As such, some of the nested transactions
+    may actually affect more or fewer elements if concurrent transactions overlap.
+    
+    Finally, make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 ## Change Set's `runInTransaction`
 
