@@ -373,10 +373,7 @@ This results in the rename being executed in batches.
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
     If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
     
-    Please also remember that Neo4j isolation level is "read-committed". As such, some of the nested transactions
-    may actually affect more or fewer elements if concurrent transactions overlap.
-    
-    Finally, make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
 === "XML"
     ~~~~xml
@@ -437,11 +434,8 @@ This results in the rename being executed in batches.
 !!! warning
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
     If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
-
-    Please also remember that Neo4j isolation level is "read-committed". As such, some of the nested transactions
-    may actually affect more or fewer elements if concurrent transactions overlap.
     
-    Finally, make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
 
 === "XML"
@@ -508,14 +502,45 @@ auto-commit (or implicit) transaction**.
     {! include '../src/test/resources/e2e/autocommit/changeLog.cypher' !}
     ~~~~
 
+### History Consistency
+
 `runInTransaction` is a sharp tool and can lead to unintended consequences.
 
-If any of the change of the enclosing change set fails, the change set is **not** going to be stored in the history graph.
+If any of the changes of the enclosing change set fails, the change set is **not** going to be stored in the history
+graph.
 
 Re-running this change set results in all changes being run again, even the ones that successfully ran before.
 
 In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
-idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
-set and using Cypher's `MERGE` instead of `CREATE` usually helps).
+idempotent.
+Defining [constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) and using Cypher's `MERGE` instead
+of `CREATE` usually helps.
+
+### Neo4j Isolation Level Refresher
+
+`CALL {} IN TRANSACTIONS` and `PERIODIC COMMIT` spawn a new transaction for each batch.
+Since [Neo4j's default isolation level is 'read-committed'](https://neo4j.com/docs/operations-manual/current/database-internals/),
+these new transactions can read data modified by previous transactions, whether they originate from the same statement
+or from a completely different one.
+
+Let us illustrate this with a simple example.
+
+Assume the data is initialized with:
+
+```
+CREATE (:Person {name: 'Alejandro'})
+CREATE (:Person {name: 'Filipe'})
+CREATE (:Person {name: 'Florent'})
+CREATE (:Person {name: 'Marouane'})
+CREATE (:Person {name: 'Nathan'})
+```
+
+Running `MATCH (p:Person) CALL { WITH p DELETE p } IN TRANSACTIONS OF 2 ROWS` may have different outcomes.
+
+The execution may succeed with 3 batches if the data was not concurrently altered by other transactions.
+It may need more batches if concurrent transactions create more `Person` nodes.
+It may need fewer batches if concurrent transactions delete `Person` nodes.
+The `CALL {} IN TRANSACTIONS` may also fail if concurrent transactions create a relationship to any of the above nodes,
+since `DELETE` assumes disconnected nodes (`DETACH DELETE` deletes nodes AND their relationships).
 
 {! include-markdown 'includes/_abbreviations.md' !}
