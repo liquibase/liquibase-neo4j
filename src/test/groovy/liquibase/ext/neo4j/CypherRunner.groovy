@@ -166,7 +166,7 @@ class CypherRunner implements AutoCloseable {
     void run(String query, Map<String, Object> params) {
         driver.session().withCloseable { session ->
             session.writeTransaction({ tx ->
-                tx.run(query, params)
+                return tx.run(query, params).consume()
             })
         }
     }
