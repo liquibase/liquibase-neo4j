@@ -15,4 +15,5 @@ databaseChangeLog:
             to: 'Film'
             fragment: '(m:Movie {title: ''My Birthday''})'
             outputVariable: 'm'
+            enableBatchImport: true
             batchSize: 1

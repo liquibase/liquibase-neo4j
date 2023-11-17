@@ -10,7 +10,7 @@
     </changeSet>
 
     <changeSet id="my-movie-init-fixed" author="fbiville" runInTransaction="false">
-        <neo4j:renameLabel from="Movie" to="Film" fragment="(m:Movie {title: 'My Birthday'})" outputVariable="m" batchSize="1" />
+        <neo4j:renameLabel from="Movie" to="Film" fragment="(m:Movie {title: 'My Birthday'})" outputVariable="m" enableBatchImport="true" batchSize="1" />
     </changeSet>
 
 </databaseChangeLog>

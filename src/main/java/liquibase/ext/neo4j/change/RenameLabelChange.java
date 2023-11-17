@@ -29,6 +29,8 @@ public class RenameLabelChange extends AbstractChange {
 
     private String outputVariable;
 
+    private Boolean enableBatchImport = Boolean.FALSE;
+
     private Long batchSize;
 
     @Override
@@ -53,15 +55,18 @@ public class RenameLabelChange extends AbstractChange {
         if ("__node__".equals(outputVariable)) {
             validation.addError("__node__ is a reserved variable name, outputVariable must be renamed and fragment accordingly updated");
         }
+        if (enableBatchImport && getChangeSet().isRunInTransaction()) {
+            validation.addError("enableBatchImport can be true only if the enclosing change set's runInTransaction attribute is set to false");
+        }
+        if (!enableBatchImport && batchSize != null) {
+            validation.addError("batch size must be set only if enableBatchImport is set to true");
+        }
         if (batchSize != null && batchSize <= 0) {
             validation.addError("batch size, if set, must be strictly positive");
         }
-        if (getChangeSet().isRunInTransaction() && batchSize != null) {
-            validation.addError("batch size must be set only if the enclosing change set's runInTransaction attribute is set to false");
-        }
         Neo4jDatabase neo4j = (Neo4jDatabase) database;
-        if (!neo4j.supportsCallInTransactions() && batchSize != null) {
-            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, batch size is going to be ignored");
+        if (enableBatchImport && !neo4j.supportsCallInTransactions()) {
+            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, all batch import settings are ignored");
         }
         validation.addAll(super.validate(database));
         return validation;
@@ -69,6 +74,9 @@ public class RenameLabelChange extends AbstractChange {
 
     @Override
     public String getConfirmationMessage() {
+        if (fragment != null) {
+            return String.format("label %s, for nodes denoted by %s in %s, has been renamed to %s", from, outputVariable, fragment, to);
+        }
         return String.format("label %s has been renamed to %s", from, to);
     }
 
@@ -76,7 +84,7 @@ public class RenameLabelChange extends AbstractChange {
     public SqlStatement[] generateStatements(Database database) {
         Logger log = Scope.getCurrentScope().getLog(getClass());
         boolean supportsCallInTransactions = ((Neo4jDatabase) database).supportsCallInTransactions();
-        if (supportsCallInTransactions && !getChangeSet().isRunInTransaction()) {
+        if (supportsCallInTransactions && enableBatchImport) {
             log.info("Running label rename in CALL {} IN TRANSACTIONS");
             String batchSpec = batchSize != null ? String.format(" OF %d ROWS", batchSize) : "";
             String cypher = String.format("%s CALL {WITH __node__ SET __node__:`%s` REMOVE __node__:`%s`} IN TRANSACTIONS%s", queryStart(), to, from, batchSpec);
@@ -86,7 +94,7 @@ public class RenameLabelChange extends AbstractChange {
             log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the label rename is going to run in a single, possibly large and slow, transaction.\n" +
                     "Note: set the runInTransaction attribute of the enclosing change set to true to make this warning disappear.");
         } else {
-            log.info("Running label rename in single transaction (set the enclosing change set's runInTransaction to false to switch to CALL {} IN TRANSACTIONS)");
+            log.info("Running label rename in single transaction (set enableBatchImport to true to switch to CALL {} IN TRANSACTIONS)");
         }
         String cypher = String.format("%s SET __node__:`%s` REMOVE __node__:`%s`", queryStart(), to, from);
         return new SqlStatement[]{new RawSqlStatement(cypher)};
@@ -130,6 +138,14 @@ public class RenameLabelChange extends AbstractChange {
 
     public void setOutputVariable(String outputVariable) {
         this.outputVariable = outputVariable;
+    }
+
+    public void setEnableBatchImport(Boolean enableBatchImport) {
+        this.enableBatchImport = enableBatchImport;
+    }
+
+    public Boolean isEnableBatchImport() {
+        return enableBatchImport;
     }
 
     private String queryStart() {

@@ -24,6 +24,7 @@
             "renameLabel": {
               "from": "Movie",
               "to": "Film",
+              "enableBatchImport": true,
               "batchSize": 1
             }
           }
