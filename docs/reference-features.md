@@ -333,7 +333,7 @@ attribute to `true`. The default is to always create relationships.
 
 ### Label Rename
 
-|Required plugin version|4.24.1|
+|Required plugin version|4.25.0.1|
 
 The label rename refactoring allows to rename one label to another, matching all or some of its nodes, in a single
 transaction or in batches.
