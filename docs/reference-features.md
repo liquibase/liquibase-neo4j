@@ -366,7 +366,8 @@ As illustrated below, the main attributes of the refactoring are:
 Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
 infeasible since the transaction would likely run either too slow, or even run out of memory.
 
-To prevent this, the enclosing change set's `runInTransaction` can be set to `false`.
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
 This results in the rename being executed in batches.
 
 !!! warning
@@ -428,7 +429,8 @@ The following attributes can also be set, in order to match only a subset of the
 Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
 infeasible since the transaction would likely run either too slow, or even run out of memory.
 
-To prevent this, the enclosing change set's `runInTransaction` can be set to `false`.
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
 This results in the rename being executed in batches.
 
 !!! warning
