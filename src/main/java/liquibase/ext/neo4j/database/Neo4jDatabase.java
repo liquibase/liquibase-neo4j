@@ -90,7 +90,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        return neo4jVersion.startsWith("4") || neo4jVersion.startsWith("5");
+        return neo4jVersion.startsWith("4") || isV5OrLater();
     }
 
     @Override
@@ -109,7 +109,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createIndexForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             createIndexForNeo4j4(name, label, property);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             createIndexForNeo4j5(name, label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -127,7 +127,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             createUniqueConstraintForNeo4j4(name, label, property);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             createUniqueConstraintForNeo4j5(name, label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -149,7 +149,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             createNodeKeyConstraintForNeo4j4(name, label, properties);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             createNodeKeyConstraintForNeo4j5(name, label, properties);
         } else {
             throw new DatabaseException(String.format(
@@ -167,7 +167,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropIndexForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             dropIndexForNeo4j4(name);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             dropIndexForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -185,7 +185,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -207,7 +207,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
-        } else if (neo4jVersion.startsWith("5")) {
+        } else if (isV5OrLater()) {
             dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -225,6 +225,10 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     public List<Map<String, ?>> run(SqlStatement statement) throws LiquibaseException {
         return jdbcExecutor().queryForList(statement);
+    }
+
+    public boolean supportsCallInTransactions() {
+        return neo4jVersion.startsWith("4.4") || isV5OrLater();
     }
 
     public String getNeo4jVersion() {
@@ -470,5 +474,9 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             le.addSuppressed(ex);
         }
         throw convertToRuntimeException(le);
+    }
+
+    private boolean isV5OrLater() {
+        return Integer.parseInt(neo4jVersion.substring(0, 1), 10) >= 5;
     }
 }

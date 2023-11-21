@@ -328,8 +328,137 @@ attribute to `true`. The default is to always create relationships.
 
 !!! warning
     `merge=false` on nodes with `merge=true` on relationships will trigger a validation warning.
-    Indeed, creating extracting nodes imply that new relationships will be created as well.
+    Indeed, creating extracted nodes imply that new relationships will be created as well.
     Setting `merge=true` on relationships in that case incur an unnecessary execution penalty.
+
+### Label Rename
+
+|Required plugin version|4.25.0.1|
+
+The label rename refactoring allows to rename one label to another, matching all or some of its nodes, in a single
+transaction or in batches.
+
+As illustrated below, the main attributes of the refactoring are:
+
+- `from`: value of the existing label
+- `to`: value of the new label, replacing the existing one
+
+
+#### Global Rename
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
+
+#### Partial Rename
+
+The following attributes can also be set, in order to match only a subset of the nodes with the label specified in `from`:
+
+ - `fragment` specifies the pattern to match the nodes against
+ - `outputVariable` specifies the Cypher variable name defined in `fragment` that denotes the targeted nodes
+
+!!!note
+    The nodes that are going to be rename sit at the intersection of what is defined in `fragment` and the nodes with
+    label specified by `from`.
+    In other words, if none of the nodes defined in `fragment` carry the label defined in `from`, the rename
+    is not going to modify any of those.
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 ## Change Set's `runInTransaction`
 
@@ -375,14 +504,45 @@ auto-commit (or implicit) transaction**.
     {! include '../src/test/resources/e2e/autocommit/changeLog.cypher' !}
     ~~~~
 
+### History Consistency
+
 `runInTransaction` is a sharp tool and can lead to unintended consequences.
 
-If any of the change of the enclosing change set fails, the change set is **not** going to be stored in the history graph.
+If any of the changes of the enclosing change set fails, the change set is **not** going to be stored in the history
+graph.
 
 Re-running this change set results in all changes being run again, even the ones that successfully ran before.
 
 In situations where `runInTransactions="false"` cannot be avoided, make sure the affected change set's queries are
-idempotent ([constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) must be defined in a prior change
-set and using Cypher's `MERGE` instead of `CREATE` usually helps).
+idempotent.
+Defining [constraints](https://neo4j.com/docs/cypher-manual/current/constraints/) and using Cypher's `MERGE` instead
+of `CREATE` usually helps.
+
+### Neo4j Isolation Level Refresher
+
+`CALL {} IN TRANSACTIONS` and `PERIODIC COMMIT` spawn a new transaction for each batch.
+Since [Neo4j's default isolation level is 'read-committed'](https://neo4j.com/docs/operations-manual/current/database-internals/),
+these new transactions can read data modified by previous transactions, whether they originate from the same statement
+or from a completely different one.
+
+Let us illustrate this with a simple example.
+
+Assume the data is initialized with:
+
+```
+CREATE (:Person {name: 'Alejandro'})
+CREATE (:Person {name: 'Filipe'})
+CREATE (:Person {name: 'Florent'})
+CREATE (:Person {name: 'Marouane'})
+CREATE (:Person {name: 'Nathan'})
+```
+
+Running `MATCH (p:Person) CALL { WITH p DELETE p } IN TRANSACTIONS OF 2 ROWS` may have different outcomes.
+
+The execution may succeed with 3 batches if the data was not concurrently altered by other transactions.
+It may need more batches if concurrent transactions create more `Person` nodes.
+It may need fewer batches if concurrent transactions delete `Person` nodes.
+The `CALL {} IN TRANSACTIONS` may also fail if concurrent transactions create a relationship to any of the above nodes,
+since `DELETE` assumes disconnected nodes (`DETACH DELETE` deletes nodes AND their relationships).
 
 {! include-markdown 'includes/_abbreviations.md' !}

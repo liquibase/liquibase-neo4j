@@ -16,7 +16,6 @@ import liquibase.ext.neo4j.change.refactoring.RelationshipExtraction;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 
-import static liquibase.ext.neo4j.change.Sequences.isNullOrEmpty;
 import static liquibase.ext.neo4j.change.refactoring.PropertyExtractor.NODE_VARIABLE;
 
 @DatabaseChange(name = "extractProperty", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
@@ -52,15 +51,15 @@ public class ExtractPropertyChange extends AbstractChange {
 
     @Override
     public ValidationErrors validate(Database database) {
-        if (isNullOrEmpty(property)) {
+        if (Sequences.isNullOrBlank(property)) {
             return new ValidationErrors(this)
                     .addError("missing property name");
         }
-        if (isNullOrEmpty(fromNodes)) {
+        if (Sequences.isNullOrBlank(fromNodes)) {
             return new ValidationErrors(this)
                     .addError("missing Cypher fragment");
         }
-        if (isNullOrEmpty(nodesNamed)) {
+        if (Sequences.isNullOrBlank(nodesNamed)) {
             return new ValidationErrors(this)
                     .addError("missing Cypher output variable");
         }
@@ -73,19 +72,19 @@ public class ExtractPropertyChange extends AbstractChange {
                     .addError("missing node extraction description");
         }
         String label = toNodes.getWithLabel();
-        if (isNullOrEmpty(label)) {
+        if (Sequences.isNullOrBlank(label)) {
             return new ValidationErrors(this)
                     .addError("missing label in node extraction description");
         }
         String targetPropertyName = toNodes.getWithProperty();
-        if (isNullOrEmpty(targetPropertyName)) {
+        if (Sequences.isNullOrBlank(targetPropertyName)) {
             return new ValidationErrors(this)
                     .addError("missing target property name in node extraction description");
         }
         ExtractedRelationships extractedRelationships = toNodes.getLinkedFromSource();
         if (extractedRelationships != null) {
             String relationshipsType = extractedRelationships.getWithType();
-            if (isNullOrEmpty(relationshipsType)) {
+            if (Sequences.isNullOrBlank(relationshipsType)) {
                 return new ValidationErrors(this)
                         .addError("missing relationship type in node extraction description");
             }

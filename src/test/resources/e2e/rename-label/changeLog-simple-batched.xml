@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-movie-init-oops" author="fbiville">
+        <neo4j:cypher>CREATE (:Movie {title: 'My Life', genre: 'Comedy'})</neo4j:cypher>
+        <neo4j:cypher>CREATE (:Book {title: 'My Life', genre: 'Autobiography'})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="my-movie-init-fixed" author="fbiville" runInTransaction="false">
+        <neo4j:renameLabel from="Movie" to="Film" enableBatchImport="true" batchSize="1" />
+    </changeSet>
+
+</databaseChangeLog>

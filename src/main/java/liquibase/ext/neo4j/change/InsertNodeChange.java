@@ -10,7 +10,6 @@ import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +32,7 @@ public class InsertNodeChange extends InsertDataChange {
     @Override
     public ValidationErrors validate(Database database) {
         ValidationErrors errors = new ValidationErrors(this);
-        if (Sequences.isNullOrEmpty(labelName)) {
+        if (Sequences.isNullOrBlank(labelName)) {
             errors.addError("label name for insert must be specified and not blank");
         }
         return errors;

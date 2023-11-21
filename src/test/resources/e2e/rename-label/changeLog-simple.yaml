@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init-oops
+      author: fbiville
+      changes:
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+        - cypher: 'CREATE (:Book {title: ''My Life'', genre: ''Autobiography''})'
+  - changeSet:
+      id: my-movie-init-fixed
+      author: fbiville
+      changes:
+        - renameLabel:
+            from: 'Movie'
+            to: 'Film'
