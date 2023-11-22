@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init-oops
+      author: fbiville
+      changes:
+        - cypher: 'CREATE (:Movie)-[:SEEN_BY {date: ''now''}]->(:Person)'
+        - cypher: 'CREATE (:Movie)-[:SEEN_BY {date: ''yesterday''}]->(:Dog)'
+  - changeSet:
+      id: my-movie-init-fixed
+      author: fbiville
+      runInTransaction: false
+      changes:
+        - renameType:
+            from: 'SEEN_BY'
+            to: 'VIEWED_BY'
+            enableBatchImport: true
+            batchSize: 1
