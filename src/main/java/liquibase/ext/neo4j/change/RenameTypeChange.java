@@ -28,8 +28,6 @@ import java.util.Set;
                 "the output variable is either 'd' or 'a' depending on the relationships the rename should affect.")
 public class RenameTypeChange extends AbstractChange {
 
-    private static final Set<String> RESERVED_VARIABLES = new LinkedHashSet<>(Arrays.asList("__rel__", "__start__", "__end__", "__newrel__"));
-
     private String from;
 
     private String to;
@@ -61,8 +59,8 @@ public class RenameTypeChange extends AbstractChange {
             String error = String.format("both fragment and outputVariable must be set (only %s is currently set), or both must be unset", setAttribute);
             validation.addError(error);
         }
-        if (RESERVED_VARIABLES.contains(outputVariable)) {
-            validation.addError(String.format("outputVariable %s clashes with one of the following reserved variable names: %s. outputVariable must be renamed and fragment accordingly updated", outputVariable, String.join(", ", RESERVED_VARIABLES)));
+        if ("__rel__".equals(outputVariable)) {
+            validation.addError(String.format("outputVariable %s clashes with the reserved variable name: __rel__. outputVariable must be renamed and fragment accordingly updated", outputVariable));
         }
         if (enableBatchImport && getChangeSet().isRunInTransaction()) {
             validation.addError("enableBatchImport can be true only if the enclosing change set's runInTransaction attribute is set to false");
