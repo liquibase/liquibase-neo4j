@@ -48,6 +48,14 @@ public class RenameTypeChange extends AbstractChange {
     @Override
     public ValidationErrors validate(Database database) {
         ValidationErrors validation = new ValidationErrors(this);
+        Neo4jDatabase neo4j = (Neo4jDatabase) database;
+        if (neo4j.getNeo4jVersion().startsWith("3.5")) {
+            validation.addError("this version of Neo4j is not supported and has reached end of life, please upgrade");
+            return validation;
+        }
+        if (enableBatchImport && !neo4j.supportsCallInTransactions()) {
+            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, all batch import settings are ignored");
+        }
         if (Sequences.isNullOrEmpty(from)) {
             validation.addError("missing type (from)");
         }
@@ -70,10 +78,6 @@ public class RenameTypeChange extends AbstractChange {
         }
         if (batchSize != null && batchSize <= 0) {
             validation.addError("batch size, if set, must be strictly positive");
-        }
-        Neo4jDatabase neo4j = (Neo4jDatabase) database;
-        if (enableBatchImport && !neo4j.supportsCallInTransactions()) {
-            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, all batch import settings are ignored");
         }
         validation.addAll(super.validate(database));
         return validation;
