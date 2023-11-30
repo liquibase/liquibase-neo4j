@@ -10,6 +10,7 @@ import liquibase.ext.neo4j.change.Sequences;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.logging.Logger;
 import liquibase.statement.SqlStatement;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 
 import java.util.ArrayList;
@@ -95,16 +96,16 @@ public class RenameTypeChange extends AbstractChange {
             log.info("Running type rename in CALL {} IN TRANSACTIONS");
             String batchSpec = batchSize != null ? String.format(" OF %d ROWS", batchSize) : "";
             String cypher = String.format("%s CALL {WITH __rel__ MATCH (__start__) WHERE id(__start__) = id(startNode(__rel__)) MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) CREATE (__start__)-[__newrel__:`%s`]->(__end__) SET __newrel__ = properties(__rel__) DELETE __rel__ } IN TRANSACTIONS%s", queryStart(), to, batchSpec);
-            return new SqlStatement[]{new RawSqlStatement(cypher)};
+            return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
         }
         if (!supportsCallInTransactions) {
             log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the type rename is going to run in a single, possibly large and slow, transaction.\n" +
-                    "Note: set the runInTransaction attribute of the enclosing change set to true to make this warning disappear.");
+                    "Note: upgrade the Neo4j server or set the runInTransaction attribute of the enclosing change set to true to make this warning disappear.");
         } else {
             log.info("Running type rename in single transaction (set enableBatchImport to true to switch to CALL {} IN TRANSACTIONS)");
         }
         String cypher = String.format("%s MATCH (__start__) WHERE id(__start__) = id(startNode(__rel__)) MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) CREATE (__start__)-[__newrel__:`%s`]->(__end__) SET __newrel__ = properties(__rel__) DELETE __rel__", queryStart(), to);
-        return new SqlStatement[]{new RawSqlStatement(cypher)};
+        return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
     }
 
     public String getFrom() {
@@ -157,7 +158,7 @@ public class RenameTypeChange extends AbstractChange {
 
     private String queryStart() {
         if (fragment != null) {
-            return String.format("MATCH %s WITH %s AS __rel__ WHERE __rel__:`%s`", fragment, outputVariable, from);
+            return String.format("MATCH %s WITH %s AS __rel__ WHERE type(__rel__) = $1", fragment, outputVariable);
         }
         return String.format("MATCH ()-[__rel__:`%s`]->()", from);
     }
