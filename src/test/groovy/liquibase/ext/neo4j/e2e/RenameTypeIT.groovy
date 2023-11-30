@@ -5,10 +5,7 @@ import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
-import spock.lang.IgnoreIf
 
-@IgnoreIf(value = { env["NEO4J_VERSION"]?.startsWith("3.5") ?: false },
-        reason = "Neo4j 3.5 does not allow assign maps to relationships")
 class RenameTypeIT extends Neo4jContainerSpec {
 
     def "runs migrations renaming types"() {
