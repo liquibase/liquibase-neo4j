@@ -179,6 +179,12 @@
                             <skip>true</skip>
                         </configuration>
                     </plugin>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <useModulePath>false</useModulePath>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
