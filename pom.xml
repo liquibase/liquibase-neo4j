@@ -49,6 +49,7 @@
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.19.3</testcontainers.version>
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
+        <neo4j-driver.version>4.4.12</neo4j-driver.version>
     </properties>
 
     <scm>
@@ -68,7 +69,7 @@
         <dependency>
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
-            <version>4.4.12</version>
+            <version>${neo4j-driver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.groovy</groupId>
@@ -159,5 +160,34 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>5x-driver</id>
+            <properties>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+                <maven.compiler.source>17</maven.compiler.source>
+                <maven.compiler.target>17</maven.compiler.target>
+                <enforcer.skip>true</enforcer.skip>
+                <neo4j-driver.version>5.14.0</neo4j-driver.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <useModulePath>false</useModulePath>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
