@@ -527,7 +527,7 @@ If the attribute is not set, the batch size will depend on the Neo4j server's de
 
 #### Partial Rename
 
-The following attributes can also be set, in order to match only a subset of the nodes with the label specified in `from`:
+The following attributes can also be set, in order to match only a subset of the relationships with the type specified in `from`:
 
  - `fragment` specifies the pattern to match the relationships against
  - `outputVariable` specifies the Cypher variable name defined in `fragment` that denotes the targeted relationships
