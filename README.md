@@ -1,6 +1,6 @@
 # Neo4j plugin for Liquibase
 
-[![CI](https://github.com/liquibase/liquibase-neo4j/actions/workflows/pull-request.yml/badge.svg)](https://github.com/liquibase/liquibase-neo4j/actions/workflows/pull-request.yml)
+[![CI](https://github.com/liquibase/liquibase-neo4j/actions/workflows/test.yml/badge.svg)](https://github.com/liquibase/liquibase-neo4j/actions/workflows/test.yml)
 
 ## Migrating from Liquigraph?
 
