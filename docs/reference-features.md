@@ -501,7 +501,7 @@ This results in the rename being executed in batches.
 
 !!! warning
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
     
     Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
@@ -564,7 +564,7 @@ This results in the rename being executed in batches.
 
 !!! warning
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
     
     Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
