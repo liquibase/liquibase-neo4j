@@ -18,8 +18,8 @@ import java.util.Map;
 
 @DatabaseChange(name = "invertDirection", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
         "The 'invertDirection' tag allows you to invert the direction of relationships.\n" +
-                "The relationships to update are defined by the 'fragment' attribute, which defines the Cypher pattern" +
-                "to match relationships against.\n" +
+                "The relationships to update are defined by the 'type' attributed, and optionally refined with the" +
+                "'fragment' attribute, which defines the Cypher pattern to match relationships against.\n" +
                 "'invertDirection' also defines the 'outputVariable' attribute. This attribute denotes the variable used in the pattern for\n" +
                 "the relationships to merge. If the fragment is '(:Movie)<-[d:DIRECTED_BY]-(:Director {name: 'John Woo'})-[a:ACTED_IN]->(:Movie)', " +
                 "the output variable is either 'd' or 'a' depending on the relationships the inversion should affect.")

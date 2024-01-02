@@ -592,7 +592,7 @@ If the attribute is not set, the batch size will depend on the Neo4j server's de
 
 ### Relationship Direction Inversion
 
-|Required plugin version|4.26.0|
+|Required plugin version|4.25.1.1|
 
 The direction inversion refactoring allows to flip the start and end node of relationships with the specified type,
 matching all or some of them, in a single transaction or in batches.
