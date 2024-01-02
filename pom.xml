@@ -55,9 +55,9 @@
     <scm>
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
-		<url>https://github.com/liquibase/liquibase-neo4j.git</url>
-		<tag>HEAD</tag>
-	</scm>
+	<url>https://github.com/liquibase/liquibase-neo4j.git</url>
+	<tag>HEAD</tag>
+    </scm>
 
     <dependencies>
         <dependency>
