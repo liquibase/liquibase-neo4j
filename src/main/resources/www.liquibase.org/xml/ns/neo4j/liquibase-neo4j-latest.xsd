@@ -106,4 +106,13 @@
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
     </xsd:complexType>
+
+    <xsd:element name="invertDirection" type="invertDirectionType" />
+    <xsd:complexType name="invertDirectionType">
+        <xsd:attribute type="xsd:string" name="type" use="required" />
+        <xsd:attribute type="xsd:string" name="fragment" />
+        <xsd:attribute type="xsd:string" name="outputVariable" />
+        <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
+        <xsd:attribute type="xsd:int" name="batchSize" />
+    </xsd:complexType>
 </xsd:schema>

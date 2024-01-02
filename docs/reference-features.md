@@ -501,7 +501,7 @@ This results in the rename being executed in batches.
 
 !!! warning
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
     
     Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
@@ -564,7 +564,7 @@ This results in the rename being executed in batches.
 
 !!! warning
     This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
+    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
     
     Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
 
@@ -584,6 +584,135 @@ This results in the rename being executed in batches.
 
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-type/changeLog-pattern-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
+
+
+### Relationship Direction Inversion
+
+|Required plugin version|4.25.1.1|
+
+The direction inversion refactoring allows to flip the start and end node of relationships with the specified type,
+matching all or some of them, in a single transaction or in batches.
+
+As illustrated below, the main attributes of the refactoring are:
+
+- `type`: type of the relationship(s) to invert
+
+
+#### Global Inversion
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the direction inversion in a single, autocommit transaction.
+    
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-simple-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
+
+#### Partial Rename
+
+The following attributes can also be set, in order to match only a subset of the relationships with the type specified in `type`:
+
+ - `fragment` specifies the pattern to match the relationships against
+ - `outputVariable` specifies the Cypher variable name defined in `fragment` that denotes the targeted relationships
+
+!!!note
+    The relationships that are going to be inverted sit at the intersection of what is defined in `fragment` and the 
+    relationships whose type is specified by `type`.
+    In other words, if none of the relationships defined in `fragment` have the type defined in `type`, the inversion
+    is not going to modify any of those.
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the direction inversion in a single, autocommit transaction.
+    
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+
+=== "XML"
+    ~~~~xml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern-batched.yaml' !}
     ~~~~
 
 As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
