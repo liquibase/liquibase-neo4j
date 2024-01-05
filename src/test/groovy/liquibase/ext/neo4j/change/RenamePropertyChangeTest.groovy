@@ -1,6 +1,6 @@
 package liquibase.ext.neo4j.change
 
-
+import liquibase.changelog.ChangeSet
 import liquibase.database.core.MySQLDatabase
 import liquibase.ext.neo4j.database.Neo4jDatabase
 import spock.lang.Specification
@@ -20,21 +20,33 @@ class RenamePropertyChangeTest extends Specification {
 
     def "rejects invalid configuration"() {
         given:
-        def renameLabelChange = new RenamePropertyChange()
-        renameLabelChange.from = from
-        renameLabelChange.to = to
+        def renamePropertyChange = new RenamePropertyChange()
+        renamePropertyChange.from = from
+        renamePropertyChange.to = to
+        renamePropertyChange.enableBatchImport = enableBatchImport
+        renamePropertyChange.batchSize = batchSize
+        def changeSet = Mock(ChangeSet)
+        changeSet.runInTransaction >> runInTx
+        renamePropertyChange.setChangeSet(changeSet)
+        def database = Mock(Neo4jDatabase)
+        database.supportsCallInTransactions() >> withCIT
+
         expect:
-        renameLabelChange.validate(Mock(Neo4jDatabase)).getErrorMessages() == [error]
+        renamePropertyChange.validate(database).getErrorMessages() == [error]
 
         where:
-        from      | to          | error
-        null      | "VIEWED_BY" | "missing name (from)"
-        ""        | "VIEWED_BY" | "missing name (from)"
-        null      | "VIEWED_BY" | "missing name (from)"
-        ""        | "VIEWED_BY" | "missing name (from)"
-        "SEEN_BY" | null        | "missing name (to)"
-        "SEEN_BY" | ""          | "missing name (to)"
-        "SEEN_BY" | null        | "missing name (to)"
-        "SEEN_BY" | ""          | "missing name (to)"
+        runInTx | withCIT | enableBatchImport | batchSize | from  | to    | error
+        true    | false   | false             | null      | null  | "new" | "missing name (from)"
+        true    | false   | false             | null      | ""    | "new" | "missing name (from)"
+        true    | false   | false             | null      | null  | "new" | "missing name (from)"
+        true    | false   | false             | null      | ""    | "new" | "missing name (from)"
+        true    | false   | false             | null      | "old" | null  | "missing name (to)"
+        true    | false   | false             | null      | "old" | ""    | "missing name (to)"
+        true    | false   | false             | null      | "old" | null  | "missing name (to)"
+        true    | false   | false             | null      | "old" | ""    | "missing name (to)"
+        true    | false   | false             | null      | "old" | ""    | "missing name (to)"
+        false   | false   | true              | -1L       | "old" | "new" | "batch size, if set, must be strictly positive"
+        false   | false   | false             | 50L       | "old" | "new" | "batch size must be set only if enableBatchImport is set to true"
+        true    | false   | true              | 50L       | "old" | "new" | "enableBatchImport can be true only if the enclosing change set's runInTransaction attribute is set to false"
     }
 }
