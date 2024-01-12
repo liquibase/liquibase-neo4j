@@ -654,7 +654,7 @@ This results in the rename being executed in batches.
 As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
 If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
-#### Partial Rename
+#### Partial Inversion
 
 The following attributes can also be set, in order to match only a subset of the relationships with the type specified in `type`:
 
@@ -718,9 +718,159 @@ This results in the rename being executed in batches.
 As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
 If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
-## Change Set's `runInTransaction`
+### Property Rename
 
-|Required plugin version|4.19.0|
+|Required plugin version|4.25.1.1|
+
+The property rename refactoring allows to rename a property of all enclosing entities, or only nodes or relationships.
+
+As illustrated below, the main attributes of the refactoring are:
+
+- `from`: name of the existing property
+- `to`: new name of the property, replacing the existing one
+- `entityType`: type of the enclosing entity to match. One of: `ALL` (default), `NODE`, `RELATIONSHIP`.
+
+
+#### Global Rename
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all.yaml' !}
+    ~~~~
+
+Since this operation can potentially affect a lot of entities, running the change in a single transaction (per entity type) may be
+infeasible since the transaction would likely run either too slow, or even run out of memory.
+
+To prevent this, `enableBatchImport` must be set to `true`.
+Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
+This results in the rename being executed in batches.
+
+!!! warning
+    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
+    If not, the Neo4j plugin will run the property rename in a single, autocommit transaction per entity type (`ALL` will yield 2 transactions: 1 for nodes, 1 for relationships).
+
+    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-all-batched.yaml' !}
+    ~~~~
+
+As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
+If the attribute is not set, the batch size will depend on the Neo4j server's default value.
+
+#### Node-only Property Rename
+
+When setting the `entityType` attribute to `NODE`, only the matching properties of nodes will be renamed:
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node.yaml' !}
+    ~~~~
+
+As for the global rename, batching is supported in case the change affects many nodes at once.
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-node-batched.yaml' !}
+    ~~~~
+
+#### Relationship-only Property Rename
+
+When setting the `entityType` attribute to `RELATIONSHIP`, only the matching properties of relationships will be renamed:
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel.yaml' !}
+    ~~~~
+
+As for the global rename, batching is supported in case the change affects many relationships at once.
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel-batched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel-batched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/rename-property/changeLog-rel-batched.yaml' !}
+    ~~~~
+
+
+## Change Set's `runInTransaction`
 
 The default value of `runInTransaction` is `true`. This means that all changes of a given change set run in a single,
 explicit transaction.
