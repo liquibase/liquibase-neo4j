@@ -27,7 +27,7 @@ import java.util.Set;
                 "'renameType' also defines the 'outputVariable' attribute. This attribute denotes the variable used in the pattern for\n" +
                 "the relationships to merge. If the fragment is '(:Movie)<-[d:DIRECTED_BY]-(:Director {name: 'John Woo'})-[a:ACTED_IN]->(:Movie)', " +
                 "the output variable is either 'd' or 'a' depending on the relationships the rename should affect.")
-public class RenameTypeChange extends AbstractChange {
+public class RenameTypeChange extends BatchableChange {
 
     private String from;
 
@@ -36,10 +36,6 @@ public class RenameTypeChange extends AbstractChange {
     private String fragment;
 
     private String outputVariable;
-
-    private Boolean enableBatchImport = Boolean.FALSE;
-
-    private Long batchSize;
 
     @Override
     public boolean supports(Database database) {
@@ -63,19 +59,6 @@ public class RenameTypeChange extends AbstractChange {
         if ("__rel__".equals(outputVariable)) {
             validation.addError(String.format("outputVariable %s clashes with the reserved variable name: __rel__. outputVariable must be renamed and fragment accordingly updated", outputVariable));
         }
-        if (enableBatchImport && getChangeSet().isRunInTransaction()) {
-            validation.addError("enableBatchImport can be true only if the enclosing change set's runInTransaction attribute is set to false");
-        }
-        if (!enableBatchImport && batchSize != null) {
-            validation.addError("batch size must be set only if enableBatchImport is set to true");
-        }
-        if (batchSize != null && batchSize <= 0) {
-            validation.addError("batch size, if set, must be strictly positive");
-        }
-        Neo4jDatabase neo4j = (Neo4jDatabase) database;
-        if (enableBatchImport && !neo4j.supportsCallInTransactions()) {
-            validation.addWarning("this version of Neo4j does not support CALL {} IN TRANSACTIONS, all batch import settings are ignored");
-        }
         validation.addAll(super.validate(database));
         return validation;
     }
@@ -94,9 +77,7 @@ public class RenameTypeChange extends AbstractChange {
         boolean supportsCallInTransactions = ((Neo4jDatabase) database).supportsCallInTransactions();
         if (supportsCallInTransactions && enableBatchImport) {
             log.info("Running type rename in CALL {} IN TRANSACTIONS");
-            String batchSpec = batchSize != null ? String.format(" OF %d ROWS", batchSize) : "";
-            String cypher = String.format("%s CALL {WITH __rel__ MATCH (__start__) WHERE id(__start__) = id(startNode(__rel__)) MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) CREATE (__start__)-[__newrel__:`%s`]->(__end__) SET __newrel__ = properties(__rel__) DELETE __rel__ } IN TRANSACTIONS%s", queryStart(), to, batchSpec);
-            return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
+
         }
         if (!supportsCallInTransactions) {
             log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the type rename is going to run in a single, possibly large and slow, transaction.\n" +
@@ -105,6 +86,29 @@ public class RenameTypeChange extends AbstractChange {
             log.info("Running type rename in single transaction (set enableBatchImport to true to switch to CALL {} IN TRANSACTIONS)");
         }
         String cypher = String.format("%s MATCH (__start__) WHERE id(__start__) = id(startNode(__rel__)) MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) CREATE (__start__)-[__newrel__:`%s`]->(__end__) SET __newrel__ = properties(__rel__) DELETE __rel__", queryStart(), to);
+        return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
+    }
+
+    @Override
+    protected SqlStatement[] generateBatchedStatements(Database database) {
+        String cypher = String.format("%s CALL {WITH __rel__ MATCH (__start__) " +
+                "WHERE id(__start__) = id(startNode(__rel__)) " +
+                "MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) " +
+                "CREATE (__start__)-[__newrel__:`%s`]->(__end__) " +
+                "SET __newrel__ = properties(__rel__) " +
+                "DELETE __rel__ } " +
+                "IN TRANSACTIONS%s", queryStart(), to, cypherBatchSpec());
+        return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
+    }
+
+    @Override
+    protected SqlStatement[] generateUnbatchedStatements(Database database) {
+        String cypher = String.format("%s MATCH (__start__) " +
+                "WHERE id(__start__) = id(startNode(__rel__)) " +
+                "MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) " +
+                "CREATE (__start__)-[__newrel__:`%s`]->(__end__) " +
+                "SET __newrel__ = properties(__rel__) " +
+                "DELETE __rel__", queryStart(), to);
         return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
     }
 
@@ -124,14 +128,6 @@ public class RenameTypeChange extends AbstractChange {
         this.to = to;
     }
 
-    public Long getBatchSize() {
-        return batchSize;
-    }
-
-    public void setBatchSize(Long batchSize) {
-        this.batchSize = batchSize;
-    }
-
     public String getFragment() {
         return fragment;
     }
@@ -147,15 +143,6 @@ public class RenameTypeChange extends AbstractChange {
     public void setOutputVariable(String outputVariable) {
         this.outputVariable = outputVariable;
     }
-
-    public void setEnableBatchImport(Boolean enableBatchImport) {
-        this.enableBatchImport = enableBatchImport;
-    }
-
-    public Boolean isEnableBatchImport() {
-        return enableBatchImport;
-    }
-
     private String queryStart() {
         if (fragment != null) {
             return String.format("MATCH %s WITH %s AS __rel__ WHERE type(__rel__) = $1", fragment, outputVariable);
