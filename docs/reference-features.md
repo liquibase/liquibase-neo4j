@@ -363,18 +363,7 @@ As illustrated below, the main attributes of the refactoring are:
     {! include '../src/test/resources/e2e/rename-label/changeLog-simple.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
     ~~~~xml
@@ -392,9 +381,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-label/changeLog-simple-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 #### Partial Rename
 
@@ -429,15 +415,7 @@ The following attributes can also be set, in order to match only a subset of the
 Since this operation can potentially affect a lot of nodes, running the change in a single transaction may be
 infeasible since the transaction would likely run either too slow, or even run out of memory.
 
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the label rename in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+{! include-markdown 'includes/_batching.md' !}
 
 
 === "XML"
@@ -456,9 +434,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-label/changeLog-pattern-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 ### Relationship Type Rename
 
@@ -492,18 +467,7 @@ As illustrated below, the main attributes of the refactoring are:
     {! include '../src/test/resources/e2e/rename-type/changeLog-simple.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
     ~~~~xml
@@ -521,9 +485,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-type/changeLog-simple-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 #### Partial Rename
 
@@ -555,19 +516,7 @@ The following attributes can also be set, in order to match only a subset of the
     {! include '../src/test/resources/e2e/rename-type/changeLog-pattern.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the type rename in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
-
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
     ~~~~xml
@@ -585,10 +534,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-type/changeLog-pattern-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
-
 
 ### Relationship Direction Inversion
 
@@ -621,18 +566,7 @@ As illustrated below, the main attributes of the refactoring are:
     {! include '../src/test/resources/e2e/invert-direction/changeLog-simple.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the direction inversion in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
     ~~~~xml
@@ -650,9 +584,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/invert-direction/changeLog-simple-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 #### Partial Inversion
 
@@ -684,19 +615,7 @@ The following attributes can also be set, in order to match only a subset of the
     {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of relationships, running the change in a single transaction may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the direction inversion in a single, autocommit transaction.
-    
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
-
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
     ~~~~xml
@@ -714,9 +633,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/invert-direction/changeLog-pattern-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 ### Property Rename
 
@@ -751,18 +667,7 @@ As illustrated below, the main attributes of the refactoring are:
     {! include '../src/test/resources/e2e/rename-property/changeLog-all.yaml' !}
     ~~~~
 
-Since this operation can potentially affect a lot of entities, running the change in a single transaction (per entity type) may be
-infeasible since the transaction would likely run either too slow, or even run out of memory.
-
-To prevent this, `enableBatchImport` must be set to `true`.
-Since it relies on `CALL {} IN TRANSACTIONS` under the hood, the enclosing change set's `runInTransaction` must also be set to `false`.
-This results in the rename being executed in batches.
-
-!!! warning
-    This setting only works if the target Neo4j instance supports `CALL {} IN TRANSACTIONS` (version 4.4 and later).
-    If not, the Neo4j plugin will run the property rename in a single, autocommit transaction per entity type (`ALL` will yield 2 transactions: 1 for nodes, 1 for relationships).
-
-    Make sure to read about [the consequences of changing `runInTransaction`](#change-sets-runintransaction).
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
 
@@ -781,9 +686,6 @@ This results in the rename being executed in batches.
     ~~~~yaml
     {! include '../src/test/resources/e2e/rename-property/changeLog-all-batched.yaml' !}
     ~~~~
-
-As shown above, the `batchSize` attribute can be set in order to control how many transactions are going to be executed.
-If the attribute is not set, the batch size will depend on the Neo4j server's default value.
 
 #### Node-only Property Rename
 
@@ -807,7 +709,7 @@ When setting the `entityType` attribute to `NODE`, only the matching properties 
     {! include '../src/test/resources/e2e/rename-property/changeLog-node.yaml' !}
     ~~~~
 
-As for the global rename, batching is supported in case the change affects many nodes at once.
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
 
@@ -849,7 +751,7 @@ When setting the `entityType` attribute to `RELATIONSHIP`, only the matching pro
     {! include '../src/test/resources/e2e/rename-property/changeLog-rel.yaml' !}
     ~~~~
 
-As for the global rename, batching is supported in case the change affects many relationships at once.
+{! include-markdown 'includes/_batching.md' !}
 
 === "XML"
 
