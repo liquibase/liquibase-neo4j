@@ -115,4 +115,13 @@
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
     </xsd:complexType>
+
+    <xsd:element name="renameProperty" type="renamePropertyType" />
+    <xsd:complexType name="renamePropertyType">
+        <xsd:attribute type="xsd:string" name="from" use="required" />
+        <xsd:attribute type="xsd:string" name="to" use="required" />
+        <xsd:attribute type="xsd:string" name="entityType" />
+        <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
+        <xsd:attribute type="xsd:int" name="batchSize" />
+    </xsd:complexType>
 </xsd:schema>
