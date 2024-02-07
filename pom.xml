@@ -45,7 +45,7 @@
 
     <properties>
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
-        <liquibase.version>4.25.1</liquibase.version>
+        <liquibase.version>4.26.0</liquibase.version>
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.19.5</testcontainers.version>
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
