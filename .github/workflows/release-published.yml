@@ -32,10 +32,6 @@ jobs:
         run: |
           aws s3 sync liquibase-neo4j/src/main/resources/www.liquibase.org/xml/ns/neo4j/ s3://liquibaseorg-origin/xml/ns/neo4j/ --content-type application/octet-stream --only-show-errors
       - name: Index.htm file upload
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.LIQUIBASEORIGIN_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.LIQUIBASEORIGIN_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
         # List all xsd and htm files in repository. Copy index.htm to temporary folder
         # Add links for all xsd files to index.htm file (except liquibase-neo4j-latest.xsd and index.htm)
         # Sync index.htm with the s3
