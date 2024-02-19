@@ -1,6 +1,6 @@
 # Neo4j plugin for Liquibase
 
-[![CI](https://github.com/liquibase/liquibase-neo4j/actions/workflows/test.yml/badge.svg)](https://github.com/liquibase/liquibase-neo4j/actions/workflows/test.yml)
+[![Nightly build](https://github.com/liquibase/liquibase-neo4j/actions/workflows/build-nightly.yml/badge.svg)](https://github.com/liquibase/liquibase-neo4j/actions/workflows/build-nightly.yml)
 
 ## Migrating from Liquigraph?
 
