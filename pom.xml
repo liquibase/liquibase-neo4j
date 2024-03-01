@@ -49,7 +49,7 @@
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.19.6</testcontainers.version>
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
-        <neo4j-driver.version>4.4.13</neo4j-driver.version>
+        <neo4j-driver.version>4.4.14</neo4j-driver.version>
     </properties>
 
     <scm>
