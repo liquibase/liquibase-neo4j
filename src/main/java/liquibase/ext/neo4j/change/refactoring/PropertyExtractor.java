@@ -34,8 +34,8 @@ public class PropertyExtractor {
         NodeExtraction node = extraction.extractedNode();
         RelationshipDirection relationshipDirection = relationship.relationshipDirection();
         return new RawSqlStatement(String.format("MATCH %1$s WITH %2$s " +
-                        "MERGE (%9$s:`%3$s` {`%5$s`: %2$s.`%4$s`}) " +
-                        "%10$s (%2$s)%7$s-[:`%6$s`]-%8$s(%9$s) " +
+                        "%10$s (%9$s:`%3$s` {`%5$s`: %2$s.`%4$s`}) " +
+                        "%11$s (%2$s)%7$s-[:`%6$s`]-%8$s(%9$s) " +
                         "REMOVE %2$s.`%4$s` ",
                 matchPattern.cypherFragment(),
                 matchPattern.outputVariable(),
@@ -46,6 +46,7 @@ public class PropertyExtractor {
                 relationshipDirection == RelationshipDirection.INCOMING ? "<" : "",
                 relationshipDirection == RelationshipDirection.OUTGOING ? ">" : "",
                 NODE_VARIABLE,
+                node.isMerge() ? "MERGE" : "CREATE",
                 relationship.isMerge() ? "MERGE" : "CREATE"));
     }
 }

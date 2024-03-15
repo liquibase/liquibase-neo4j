@@ -6,6 +6,7 @@
 
     <changeSet id="my-movie-init" author="fbiville">
         <neo4j:cypher>CREATE (:Movie {title: 'My Life', genre: 'Comedy'})</neo4j:cypher>
+        <neo4j:cypher>CREATE (:Movie {title: 'My Project', genre: 'Comedy'})</neo4j:cypher>
     </changeSet>
 
     <changeSet id="genre-extraction" author="marouane">
