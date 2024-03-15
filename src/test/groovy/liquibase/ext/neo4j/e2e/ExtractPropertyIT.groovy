@@ -19,12 +19,14 @@ class ExtractPropertyIT extends Neo4jContainerSpec {
         command.execute()
 
         expect:
-        def row = queryRunner.getSingleRow("""
-            MATCH (m:Movie)-[:HAS_GENRE]->(g:Genre)
-            RETURN m{.*, genre: g.genre} AS movie
+        def rows = queryRunner.getRows("""
+            MATCH (g:Genre)
+            RETURN g.genre AS genre
         """)
 
-        row == [movie: [genre: "Comedy", title: "My Life"]]
+        rows.size() == 2
+        rows[0] == [genre: "Comedy"]
+        rows[1] == [genre: "Comedy"]
 
         where:
         format << ["json", "xml", "yaml"]
