@@ -52,6 +52,17 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         database.isEnterprise() == enterpriseEdition()
     }
 
+    def "detects current database"() {
+        given:
+        def database = new Neo4jDatabase()
+
+        when:
+        database.setConnection(connection)
+
+        then:
+        database.getCurrentDatabase() == "neo4j"
+    }
+
     private DatabaseConnection openConnection() {
         return DatabaseFactory.instance.openConnection(
                 "jdbc:neo4j:" + neo4jContainer.getBoltUrl(),
