@@ -9,6 +9,7 @@ import liquibase.exception.LiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.statement.SqlStatement;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 
 import java.util.List;
@@ -94,8 +95,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        if (neo4jVersion.startsWith("4")) return true;
-        return isVersionGreaterThanOrEqual(5);
+        return isVersionGreaterThanOrEqual(4);
     }
 
     @Override
@@ -477,31 +477,25 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     private void dropAll() throws DatabaseException {
-        if (supportsCallInTransactions()) {
-            boolean previousAutocommit = this.getAutoCommitMode();
-            try {
-                this.setAutoCommit(true);
-                this.execute(new RawSqlStatement("MATCH (n)\n" +
-                                                 "WHERE none(label IN labels(n) WHERE label STARTS WITH '__Liquibase')\n" +
-                                                 "CALL {\n" +
-                                                 "    WITH n\n" +
-                                                 "    DETACH DELETE n\n" +
-                                                 "} IN TRANSACTIONS"));
-                this.commit();
-            } catch (LiquibaseException e) {
-                rollbackOnError(e);
-            } finally {
-                this.setAutoCommit(previousAutocommit);
-            }
-            return;
-        }
+        boolean previousAutocommit = this.getAutoCommitMode();
         try {
-            this.execute(new RawSqlStatement("MATCH (n)\n" +
-                                             "WHERE none(label IN labels(n) WHERE label STARTS WITH '__Liquibase')\n" +
-                                             "DETACH DELETE n"));
-            this.commit();
-        } catch (LiquibaseException e) {
-            rollbackOnError(e);
+            this.setAutoCommit(true);
+            if (supportsCatalogs()) {
+                try {
+                    this.execute(new RawParameterizedSqlStatement("CREATE OR REPLACE DATABASE $1", this.currentDatabase));
+                } catch (LiquibaseException e) {
+                    throw new DatabaseException(e);
+                }
+                return;
+            }
+            try {
+                this.execute(new RawSqlStatement("MATCH (n) DETACH DELETE n"));
+                // TODO: indices & constraints
+            } catch (LiquibaseException e) {
+                throw new DatabaseException(e);
+            }
+        } finally {
+            this.setAutoCommit(previousAutocommit);
         }
     }
 
