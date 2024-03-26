@@ -48,7 +48,6 @@
         <liquibase.version>4.26.0</liquibase.version>
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <spock-core.version>2.3-groovy-4.0</spock-core.version>
         <neo4j-driver.version>4.4.14</neo4j-driver.version>
     </properties>
 
@@ -113,19 +112,6 @@
             <artifactId>objenesis</artifactId>
             <version>3.3</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>${groovy-all.version}</version>
-            <scope>test</scope>
-            <type>pom</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
