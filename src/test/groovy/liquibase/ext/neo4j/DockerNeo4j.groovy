@@ -24,6 +24,11 @@ class DockerNeo4j {
         return version.startsWith("4.4") || Integer.parseInt(version.substring(0, 1)) >= 5
     }
 
+    static boolean supportsMultiTenancy() {
+        def version = neo4jVersion()
+        return Integer.parseInt(version.substring(0, 1)) >= 4 && enterpriseEdition()
+    }
+
     static boolean supportsShowConstraintsYieldSyntax() {
         return supportsShowIndexesYieldSyntax()
     }
