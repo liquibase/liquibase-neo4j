@@ -34,7 +34,7 @@ extra:
   group_id: org.liquibase.ext
   group_id_url: org/liquibase/ext
   artifact_id: liquibase-neo4j
-  version: 4.27.0
+  version: 4.27.0.1
 extra_css:
   - css/extra.css
 markdown_extensions:
