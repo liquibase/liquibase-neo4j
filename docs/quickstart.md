@@ -77,7 +77,7 @@ This creates a node with the label `Movie` and one property, whose key is `title
 
 ## Dry Run
 
-This is the `updateSQL` command (a less RDBMS-centric name is [under consideration]({{ github_repo }}/liquibase-neo4j/issues/159)).
+This is the `updateSQL` command (a less RDBMS-centric name is [under consideration]({{ github_repo }}/issues/159)).
 Executing a dry run is a good way to detect errors early, before the changes are persisted to the database.
 This displays all the queries that would be executed against Neo4j if it were a normal execution.
 
