@@ -11,19 +11,8 @@ import static liquibase.ext.neo4j.DockerNeo4j.supportsCypherCallInTransactions
 
 class AutocommitIT extends Neo4jContainerSpec {
 
-    @Requires({ supportsCypherCallInTransactions() })
-    def "runs autocommit transaction"() {
-        given:
-        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/autocommit/changeLog.${format}".toString())
-                .setOutput(System.out)
-        command.execute()
-
-        expect:
-        def row = queryRunner.getSingleRow("""
+    private fetchRow() {
+        return queryRunner.getSingleRow("""
             MATCH (n)
             WHERE none(label IN labels(n) WHERE label STARTS WITH "__Liquibase")
             UNWIND labels(n) AS label 
@@ -36,6 +25,21 @@ class AutocommitIT extends Neo4jContainerSpec {
             OPTIONAL MATCH (n)-[r]-()
             RETURN labels, collect(property) AS properties, count(r) AS rel_count
         """)
+    }
+
+    @Requires({ supportsCypherCallInTransactions() })
+    def "runs autocommit transaction"() {
+        given:
+        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/autocommit/changeLog.${format}".toString())
+                .setOutput(System.out)
+        command.execute()
+
+        expect:
+        def row = fetchRow()
 
         row == [
                 labels    : ["Movie"],
@@ -45,5 +49,26 @@ class AutocommitIT extends Neo4jContainerSpec {
 
         where:
         format << ["cypher", "json", "xml", "yaml"]
+    }
+
+    @Requires({ supportsCypherCallInTransactions() })
+    def "runs autocommit transactions mixed with manual transactions"() {
+        given:
+        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/autocommit/changeLogMixed.xml".toString())
+                .setOutput(System.out)
+        command.execute()
+
+        expect:
+        def row = fetchRow()
+
+        row == [
+                labels    : ["Movie"],
+                properties: [[k: "genre", v: "Drama"], [k: "title", v: "My Life 2"]],
+                rel_count : 0
+        ]
     }
 }

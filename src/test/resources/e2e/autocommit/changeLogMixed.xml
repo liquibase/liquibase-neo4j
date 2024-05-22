@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
+        <sql>CALL { CREATE (:Movie {title: 'My Life', genre: 'Comedy'}) } IN TRANSACTIONS</sql>
+    </changeSet>
+
+    <changeSet id="my-movie-set-drama" author="fbiville">
+        <sql>MATCH (m:Movie {title: 'My Life', genre: 'Comedy'}) SET m.genre = 'Drama'</sql>
+    </changeSet>
+
+    <changeSet id="my-movie-set-title" author="fbiville" runInTransaction="false">
+        <sql>CALL { MATCH (m:Movie {title: 'My Life', genre: 'Drama'}) SET m.title = 'My Life 2' } IN TRANSACTIONS</sql>
+    </changeSet>
+
+</databaseChangeLog>
