@@ -3,15 +3,15 @@
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="my-movie-init" author="fbiville" runInTransaction="false">
+    <changeSet id="my-movie-init" author="hindog" runInTransaction="false">
         <sql>CALL { CREATE (:Movie {title: 'My Life', genre: 'Comedy'}) } IN TRANSACTIONS</sql>
     </changeSet>
 
-    <changeSet id="my-movie-set-drama" author="fbiville">
+    <changeSet id="my-movie-set-drama" author="hindog">
         <sql>MATCH (m:Movie {title: 'My Life', genre: 'Comedy'}) SET m.genre = 'Drama'</sql>
     </changeSet>
 
-    <changeSet id="my-movie-set-title" author="fbiville" runInTransaction="false">
+    <changeSet id="my-movie-set-title" author="hindog" runInTransaction="false">
         <sql>CALL { MATCH (m:Movie {title: 'My Life', genre: 'Drama'}) SET m.title = 'My Life 2' } IN TRANSACTIONS</sql>
     </changeSet>
 
