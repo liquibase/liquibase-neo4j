@@ -87,7 +87,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
         if (this.autocommit == autoCommit) {
             return;
         }
-        if (this.transaction != null) {
+        if (this.transaction != null && transaction.isOpen()) {
             this.commit();
         }
         this.autocommit = autoCommit;

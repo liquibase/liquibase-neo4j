@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: my-movie-init
+      author: hindog
+      runInTransaction: false
+      changes:
+        - cypher: 'CALL { CREATE (:Movie {title: ''My Life'', genre: ''Comedy''}) } IN TRANSACTIONS'
+  - changeSet:
+      id: my-movie-set-drama
+      author: hindog
+      changes:
+        - cypher: 'MATCH (m:Movie {title: ''My Life'', genre: ''Comedy''}) SET m.genre = ''Drama'''
+  - changeSet:
+      id: my-movie-set-title
+      author: hindog
+      runInTransaction: false
+      changes:
+        - cypher: 'CALL { MATCH (m:Movie {title: ''My Life'', genre: ''Drama''}) SET m.title = ''My Life 2'' } IN TRANSACTIONS'
