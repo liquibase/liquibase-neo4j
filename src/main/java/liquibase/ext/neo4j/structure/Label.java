@@ -46,10 +46,10 @@ public class Label extends AbstractDatabaseObject implements CatalogLevelObject 
         return database;
     }
 
-    public void addIndex(NodeBTreeIndex nodeIndex) {
-        Set<DatabaseObject> objects = getAttribute("btree_indices", new LinkedHashSet<>());
+    public void addIndex(NodeIndex nodeIndex) {
+        Set<DatabaseObject> objects = getAttribute("indices", new LinkedHashSet<>());
         objects.add(nodeIndex);
-        setAttribute("btree_indices", objects);
+        setAttribute("indices", objects);
     }
 
     @Override

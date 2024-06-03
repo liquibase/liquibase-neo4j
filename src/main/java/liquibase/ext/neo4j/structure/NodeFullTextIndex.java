@@ -9,18 +9,18 @@ import liquibase.structure.core.Schema;
 import java.util.List;
 import java.util.Map;
 
-public class NodeBTreeIndex extends AbstractDatabaseObject implements CatalogLevelObject, NodeIndex {
+public class NodeFullTextIndex extends AbstractDatabaseObject implements CatalogLevelObject, NodeIndex {
 
     private Catalog catalog;
     private String name;
 
-    public NodeBTreeIndex() {
+    public NodeFullTextIndex() {
     }
 
-    public NodeBTreeIndex(Catalog catalog, String name, String label, List<String> properties, String indexProvider, Map<String, Object> indexConfig) {
+    public NodeFullTextIndex(Catalog catalog, String name, List<String> labels, List<String> properties, String indexProvider, Map<String, Object> indexConfig) {
         this.catalog = catalog;
         this.name = name;
-        this.setAttribute("label", label);
+        this.setAttribute("labels", labels);
         this.setAttribute("properties", properties);
         this.setAttribute("indexProvider", indexProvider);
         this.setAttribute("indexConfig", indexConfig);
