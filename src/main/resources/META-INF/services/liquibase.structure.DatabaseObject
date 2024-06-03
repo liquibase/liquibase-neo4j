@@ -1,3 +1,7 @@
 liquibase.ext.neo4j.structure.Label
-liquibase.ext.neo4j.structure.Type
 liquibase.ext.neo4j.structure.NodeBTreeIndex
+liquibase.ext.neo4j.structure.NodeFullTextIndex
+liquibase.ext.neo4j.structure.NodePointIndex
+liquibase.ext.neo4j.structure.NodeRangeIndex
+liquibase.ext.neo4j.structure.NodeTextIndex
+liquibase.ext.neo4j.structure.Type
