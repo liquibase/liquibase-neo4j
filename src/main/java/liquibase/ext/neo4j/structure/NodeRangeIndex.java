@@ -9,15 +9,15 @@ import liquibase.structure.core.Schema;
 import java.util.List;
 import java.util.Map;
 
-public class NodeBTreeIndex extends AbstractDatabaseObject implements CatalogLevelObject, NodeIndex {
+public class NodeRangeIndex extends AbstractDatabaseObject implements CatalogLevelObject, NodeIndex {
 
     private Catalog catalog;
     private String name;
 
-    public NodeBTreeIndex() {
+    public NodeRangeIndex() {
     }
 
-    public NodeBTreeIndex(Catalog catalog, String name, String label, List<String> properties, String indexProvider, Map<String, Object> indexConfig) {
+    public NodeRangeIndex(Catalog catalog, String name, String label, List<String> properties, String indexProvider, Map<String, Object> indexConfig) {
         this.catalog = catalog;
         this.name = name;
         this.setAttribute("label", label);
