@@ -43,10 +43,16 @@ public class Label extends AbstractDatabaseObject implements CatalogLevelObject 
         return database;
     }
 
-    public void addIndex(NodeIndex nodeIndex) {
+    public void addIndex(NodeIndex index) {
         Set<DatabaseObject> objects = getAttribute("indices", new LinkedHashSet<>());
-        objects.add(nodeIndex);
+        objects.add(index);
         setAttribute("indices", objects);
+    }
+
+    public void addConstraint(NodeConstraint constraint) {
+        Set<DatabaseObject> objects = getAttribute("constraints", new LinkedHashSet<>());
+        objects.add(constraint);
+        setAttribute("constraints", objects);
     }
 
     @Override
