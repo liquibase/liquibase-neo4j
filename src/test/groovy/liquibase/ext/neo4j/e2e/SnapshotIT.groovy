@@ -4,13 +4,17 @@ import liquibase.command.CommandScope
 import liquibase.command.core.SnapshotCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
+import org.neo4j.driver.SessionConfig
 import org.yaml.snakeyaml.Yaml
 import spock.lang.Requires
 
 import java.nio.charset.StandardCharsets
 
+import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
+import static liquibase.ext.neo4j.DockerNeo4j.supportsTypeConstraints
 
+// TODO: test with everything at once (labels+types, indices+constraints all at once) - depends on core PR 5775
 class SnapshotIT extends Neo4jContainerSpec {
 
     private def buffer = new ByteArrayOutputStream()
@@ -24,21 +28,25 @@ class SnapshotIT extends Neo4jContainerSpec {
             "vector": "CREATE VECTOR INDEX node_vector_index IF NOT EXISTS FOR (f:Foo) ON f.embedding OPTIONS {indexConfig: {`vector.dimensions`: 1536, `vector.similarity_function`: 'cosine'}}",
     ]
 
+    private def nodeConstraintStatements = [
+            "existence": "CREATE CONSTRAINT node_existence_constraint FOR (f:Foo) REQUIRE f.bar IS NOT NULL",
+            "key": "CREATE CONSTRAINT node_key_constraint FOR (f:Foo) REQUIRE (f.baz) IS NODE KEY",
+            "type": "CREATE CONSTRAINT node_type_constraint FOR (f:Foo) REQUIRE f.location IS :: POINT",
+            "unique": "CREATE CONSTRAINT node_unique_constraint FOR (f:Foo) REQUIRE f.description IS UNIQUE"
+    ]
+
     def setup() {
-        queryRunner.run("CREATE (f:Foo {" +
-                "bar: 'qix', " +
-                "baz: 42, " +
-                "location: point({latitude: toFloat('37.89'), longitude: toFloat('41.12')}), " +
-                "description: 'lorem ipsum', " +
-                "embedding: " + cypherEmbeddings() +
-                "})-[:FIGHTERS]->()")
         System.out = new PrintStream(buffer)
     }
 
     @Requires({ neo4jVersion().startsWith("4.4")})
     def "[4.4] records snapshots of node indices"() {
         given:
+        queryRunner.run("DROP DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        queryRunner.run("CREATE DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        insertData()
         initNodeIndicesExcept("vector")
+
 
         and:
         def command = new CommandScope(SnapshotCommandStep.COMMAND_NAME)
@@ -52,7 +60,7 @@ class SnapshotIT extends Neo4jContainerSpec {
         command.execute()
 
         then:
-        def result = new Yaml().load(buffer.toString(StandardCharsets.UTF_8))
+        def result = parseSnapshotReport()
         def snapshot = result["snapshot"]
         snapshot["database"]["shortName"] == "neo4j"
         def objects = snapshot["objects"]
@@ -90,9 +98,57 @@ class SnapshotIT extends Neo4jContainerSpec {
 
     }
 
+    @Requires({ neo4jVersion().startsWith("4.4") && enterpriseEdition() })
+    def "[4.4] records snapshots of node constraints"() {
+        given:
+        queryRunner.run("DROP DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        queryRunner.run("CREATE DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        insertData()
+        initNodeConstraintsExcept("type")
+
+        and:
+        def command = new CommandScope(SnapshotCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(SnapshotCommandStep.SNAPSHOT_FORMAT_ARG, "json")
+                .setOutput(System.out)
+
+        when:
+        command.execute()
+
+        then:
+        def result = parseSnapshotReport()
+        def snapshot = result["snapshot"]
+        snapshot["database"]["shortName"] == "neo4j"
+        def objects = snapshot["objects"]
+        objects["liquibase.ext.neo4j.structure.Label"].size() == 1
+        def label = objects["liquibase.ext.neo4j.structure.Label"][0]["label"]
+        label["value"] == "Foo"
+        label["constraints"].size() == 3
+        label["constraints"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeConstraint")}
+        def constraints = objects["liquibase.ext.neo4j.structure.NodeConstraint"]
+        constraints.size() == 3
+        def existenceConstraint = constraints[0]["nodeConstraint"]
+        existenceConstraint["type"] == "NODE_PROPERTY_EXISTENCE"
+        existenceConstraint["labels"] == ["Foo"]
+        existenceConstraint["properties"] == ["bar"]
+        def keyConstraint = constraints[1]["nodeConstraint"]
+        keyConstraint["type"] == "NODE_KEY"
+        keyConstraint["labels"] == ["Foo"]
+        keyConstraint["properties"] == ["baz"]
+        def uniqueConstraint = constraints[2]["nodeConstraint"]
+        uniqueConstraint["type"] == "UNIQUENESS"
+        uniqueConstraint["labels"] == ["Foo"]
+        uniqueConstraint["properties"] == ["description"]
+    }
+
     @Requires({Integer.parseInt(neo4jVersion().substring(0, 1)) >= 5})
     def "[5+] records snapshots of node indices"() {
         given:
+        queryRunner.run("DROP DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        queryRunner.run("CREATE DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        insertData()
         initNodeIndicesExcept("btree")
 
         and:
@@ -107,7 +163,7 @@ class SnapshotIT extends Neo4jContainerSpec {
         command.execute()
 
         then:
-        def result = new Yaml().load(buffer.toString(StandardCharsets.UTF_8))
+        def result = parseSnapshotReport()
         def snapshot = result["snapshot"]
         snapshot["database"]["shortName"] == "neo4j"
         def objects = snapshot["objects"]
@@ -144,8 +200,87 @@ class SnapshotIT extends Neo4jContainerSpec {
         vectorIndex["properties"] == ["embedding"]
     }
 
+    @Requires({ supportsTypeConstraints() })
+    def "[5] records snapshots of node constraints"() {
+        given:
+        queryRunner.run("DROP DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        queryRunner.run("CREATE DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
+        insertData()
+        initNodeConstraints()
+
+        and:
+        def command = new CommandScope(SnapshotCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(SnapshotCommandStep.SNAPSHOT_FORMAT_ARG, "json")
+                .setOutput(System.out)
+
+        when:
+        command.execute()
+
+        then:
+        def result = parseSnapshotReport()
+        def snapshot = result["snapshot"]
+        snapshot["database"]["shortName"] == "neo4j"
+        def objects = snapshot["objects"]
+        objects["liquibase.ext.neo4j.structure.Label"].size() == 1
+        def label = objects["liquibase.ext.neo4j.structure.Label"][0]["label"]
+        label["value"] == "Foo"
+        label["constraints"].size() == 4
+        label["constraints"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeConstraint")}
+        def constraints = objects["liquibase.ext.neo4j.structure.NodeConstraint"]
+        constraints.size() == 4
+        def existenceConstraint = constraints[0]["nodeConstraint"]
+        existenceConstraint["type"] == "NODE_PROPERTY_EXISTENCE"
+        existenceConstraint["labels"] == ["Foo"]
+        existenceConstraint["properties"] == ["bar"]
+        def keyConstraint = constraints[1]["nodeConstraint"]
+        keyConstraint["type"] == "NODE_KEY"
+        keyConstraint["labels"] == ["Foo"]
+        keyConstraint["properties"] == ["baz"]
+        def typeConstraint = constraints[2]["nodeConstraint"]
+        typeConstraint["type"] == "NODE_PROPERTY_TYPE"
+        typeConstraint["labels"] == ["Foo"]
+        typeConstraint["properties"] == ["location"]
+        def uniqueConstraint = constraints[3]["nodeConstraint"]
+        uniqueConstraint["type"] == "UNIQUENESS"
+        uniqueConstraint["labels"] == ["Foo"]
+        uniqueConstraint["properties"] == ["description"]
+    }
+
     private Object parseSnapshotReport() {
         new Yaml().load(buffer.toString(StandardCharsets.UTF_8))
+    }
+
+    void initNodeIndicesExcept(String excludedType) {
+        nodeIndexStatements.forEach {indexType, statement -> {
+            if (indexType != excludedType) {
+                queryRunner.run(statement)
+            }
+        }}
+    }
+
+    void initNodeConstraints() {
+        initNodeConstraintsExcept(null)
+    }
+
+    void initNodeConstraintsExcept(String excludedType) {
+        nodeConstraintStatements.forEach {indexType, statement -> {
+            if (excludedType == null || indexType != excludedType) {
+                queryRunner.run(statement)
+            }
+        }}
+    }
+
+    private insertData() {
+        queryRunner.run("CREATE (f:Foo {" +
+                "bar: 'qix', " +
+                "baz: 42, " +
+                "location: point({latitude: toFloat('37.89'), longitude: toFloat('41.12')}), " +
+                "description: 'lorem ipsum', " +
+                "embedding: " + cypherEmbeddings() +
+                "})-[:FIGHTERS]->()")
     }
 
     private static def cypherEmbeddings() {
@@ -1688,13 +1823,5 @@ class SnapshotIT extends Neo4jContainerSpec {
         \t-0.014962038025259972
     ]
     """
-    }
-
-    void initNodeIndicesExcept(String excludedType) {
-        nodeIndexStatements.forEach {indexType, statement -> {
-            if (indexType != excludedType) {
-                queryRunner.run(statement)
-            }
-        }}
     }
 }
