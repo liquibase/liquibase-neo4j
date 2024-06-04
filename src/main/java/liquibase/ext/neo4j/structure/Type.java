@@ -6,9 +6,6 @@ import liquibase.structure.DatabaseObject;
 import liquibase.structure.core.Catalog;
 import liquibase.structure.core.Schema;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 public class Type extends AbstractDatabaseObject implements CatalogLevelObject {
 
     private Catalog catalog;
@@ -42,12 +39,6 @@ public class Type extends AbstractDatabaseObject implements CatalogLevelObject {
 
     public String getDatabase() {
         return database;
-    }
-
-    public void addIndex(NodeBTreeIndex nodeIndex) {
-        Set<DatabaseObject> objects = getAttribute("btree_indices", new LinkedHashSet<>());
-        objects.add(nodeIndex);
-        setAttribute("btree_indices", objects);
     }
 
     @Override
