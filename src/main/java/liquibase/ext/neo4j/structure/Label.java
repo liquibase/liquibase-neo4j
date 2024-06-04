@@ -6,16 +6,13 @@ import liquibase.structure.DatabaseObject;
 import liquibase.structure.core.Catalog;
 import liquibase.structure.core.Schema;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class Label extends AbstractDatabaseObject implements CatalogLevelObject {
 
     private Catalog catalog;
     private String database;
-    private String value;
 
     public Label() {
     }
@@ -23,7 +20,7 @@ public class Label extends AbstractDatabaseObject implements CatalogLevelObject 
     public Label(Catalog catalog, String value) {
         this.catalog = catalog;
         this.database = catalog.getName();
-        this.value = value;
+        this.setAttribute("value", value);
     }
 
     @Override
@@ -33,12 +30,12 @@ public class Label extends AbstractDatabaseObject implements CatalogLevelObject 
 
     @Override
     public String getName() {
-        return value;
+        return this.getAttribute("value", String.class);
     }
 
     @Override
     public DatabaseObject setName(String name) {
-        this.value = name;
+        this.setAttribute("value", name);
         return this;
     }
 
