@@ -502,6 +502,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     private boolean isGreaterOrEqualThanMajor(int major) {
-        return Integer.parseInt(neo4jVersion.substring(0, 1), 10) >= major;
+        int nextDot = neo4jVersion.indexOf(".");
+        return Integer.parseInt(neo4jVersion.substring(0, nextDot), 10) >= major;
     }
 }
