@@ -195,7 +195,7 @@
                 <maven.compiler.source>17</maven.compiler.source>
                 <maven.compiler.target>17</maven.compiler.target>
                 <enforcer.skip>true</enforcer.skip>
-                <neo4j-driver.version>5.14.0</neo4j-driver.version>
+                <neo4j-driver.version>5.23.0</neo4j-driver.version>
             </properties>
             <build>
                 <plugins>
