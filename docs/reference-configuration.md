@@ -22,9 +22,9 @@ Read more about what each URI scheme means in the [Neo4j driver manual](https://
 ## JDBC connectivity
 
 For versions 4.18.0.1 and earlier, the Neo4j extension relied on a [third-party JDBC connector](https://github.com/neo4j-contrib/neo4j-jdbc).
-Configuration parameters for this connector can be found in [this link](https://github.com/neo4j-contrib/neo4j-jdbc#list-of-supported-neo4j-configuration-parameters).
+Configuration parameters for this connector can be found in [this link](https://github.com/neo4j/neo4j-jdbc/tree/5.0?tab=readme-ov-file#configuration).
 
-Starting from version 4.19.0, the extension has its own built-in JDBC connector.
+Starting from version 4.19.0, the extension defines its own built-in JDBC connector.
 
 The built-in connector is simpler and easier to reason about because Liquibase only needs one connection for a single execution and relies on a specific, finite set of JDBC APIs.
 
