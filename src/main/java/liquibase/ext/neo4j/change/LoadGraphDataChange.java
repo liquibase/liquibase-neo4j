@@ -10,7 +10,6 @@ import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
 
 import java.util.AbstractMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,10 +58,7 @@ public class LoadGraphDataChange extends LoadDataChange {
                 .map(row -> row.getColumns().stream()
                         .flatMap(LoadGraphDataChange::keyValuePair)
                         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)))
-                // note: this is explicitly NOT using an ArrayList because of a regression introduced in core v4.29.2
-                // (see commit 631b7d42dd32d67f59f8294dc40d20d3c01085ab, JdbcExecutor#setParameters)
-                // ArrayList parameters get flattened instead of being treated as a whole list
-                .collect(Collectors.toCollection(LinkedList::new));
+                .collect(Collectors.toList());
     }
 
     private static Stream<AbstractMap.SimpleEntry<String, Object>> keyValuePair(LoadDataColumnConfig column) {
