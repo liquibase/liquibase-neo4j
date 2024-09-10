@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +43,11 @@ public class NodeMerger {
     private List<Long> getNodeIds(MatchPattern pattern) throws LiquibaseException {
         String query = String.format("MATCH %s RETURN id(%s) AS id", pattern.cypherFragment(), pattern.outputVariable());
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(query));
-        return rows.stream().map(row -> (Long) row.get("id")).collect(Collectors.toList());
+        return rows.stream().map(row -> (Long) row.get("id"))
+                // note: this is explicitly NOT using an ArrayList because of a regression introduced in core v4.29.2
+                // (see commit 631b7d42dd32d67f59f8294dc40d20d3c01085ab, JdbcExecutor#setParameters)
+                // ArrayList parameters get flattened instead of being treated as a whole list
+                .collect(Collectors.toCollection(LinkedList::new));
     }
 
     private Optional<SqlStatement> generateLabelCopyStatement(List<Long> ids) throws LiquibaseException {
