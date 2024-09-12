@@ -11,3 +11,67 @@ jobs:
       with:
         nightly: true
       secrets: inherit
+
+    night-build-e2e:
+      needs: nightly-build
+      name: Java ${{ matrix.java }} | Neo4j ${{ matrix.neo4j_version }} (EE? ${{ matrix.enterprise }})
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          java: [ 8, 11, 17, 21 ]
+          neo4j_version:
+            - "3.5"
+            - "4.0"
+            - "4.1"
+            - "4.2"
+            - "4.3"
+            - "4.4"
+            - "5.1"
+            - "5.2"
+            - "5.3"
+            - "5.4"
+            - "5.5"
+            - "5.6"
+            - "5.7"
+            - "5.8"
+            - "5.9"
+            - "5.10"
+            - "5.11"
+            - "5.12"
+            - "5.13"
+            - "5.14"
+            - "5.15"
+            - "5.16"
+            - "5.17"
+            - "5.18"
+            - "5.19"
+            - "5.20"
+            - "5.21"
+            - "5.22"
+            - "5.23"
+          enterprise:
+            - "true"
+            - "false"
+
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Set up JDK ${{ matrix.java }}
+          uses: actions/setup-java@v4
+          with:
+            java-version: ${{ matrix.java }}
+            distribution: 'temurin'
+            cache: 'maven'
+
+        - name: Run Tests
+          run: mvn --quiet --show-version --batch-mode verify
+          env:
+            NEO4J_VERSION: ${{ matrix.neo4j_version }}
+            ENTERPRISE: ${{ matrix.enterprise }}
+
+        - name: Run Tests (5.x driver)
+          if: ${{ matrix.neo4j_version == '4.4' || startsWith(matrix.neo4j_version, '5') }}
+          run: mvn -P5x-driver --quiet --show-version --batch-mode verify
+          env:
+            NEO4J_VERSION: ${{ matrix.neo4j_version }}
+            ENTERPRISE: ${{ matrix.enterprise }}
