@@ -9,6 +9,8 @@ import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
+import liquibase.structure.DatabaseObject;
+import liquibase.structure.core.Catalog;
 
 import java.util.List;
 import java.util.Locale;
@@ -57,7 +59,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean isCorrectDatabaseImplementation(DatabaseConnection conn) throws DatabaseException {
-        return conn.getDatabaseProductName().equals("Neo4j");
+        return conn.getDatabaseProductName().startsWith("Neo4j");
     }
 
     @Override
@@ -90,13 +92,32 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        return neo4jVersion.startsWith("4") || isV5OrLater();
+        return isGreaterOrEqualThanMajor(4);
+    }
+
+    @Override
+    public boolean supportsSequences() {
+        return false;
     }
 
     @Override
     public boolean supportsSchemas() {
         return false;
     }
+
+    @Override
+    public boolean supports(Class<? extends DatabaseObject> object) {
+        if (Catalog.class.isAssignableFrom(object)) {
+            return isGreaterOrEqualThanMajor(4);
+        }
+        return object.getPackage().getName().startsWith("liquibase.ext.neo4j");
+    }
+
+    @Override
+    public String getDefaultCatalogName() {
+        return "neo4j";
+    }
+
 
     @Override
     public boolean isCaseSensitive() {
@@ -109,7 +130,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createIndexForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             createIndexForNeo4j4(name, label, property);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             createIndexForNeo4j5(name, label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -127,7 +148,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             createUniqueConstraintForNeo4j4(name, label, property);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             createUniqueConstraintForNeo4j5(name, label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -149,7 +170,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             createNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             createNodeKeyConstraintForNeo4j4(name, label, properties);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             createNodeKeyConstraintForNeo4j5(name, label, properties);
         } else {
             throw new DatabaseException(String.format(
@@ -167,7 +188,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropIndexForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             dropIndexForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             dropIndexForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -185,7 +206,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropUniqueConstraintForNeo4j3(label, property);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -207,7 +228,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             dropNodeKeyConstraintForNeo4j3(label, properties);
         } else if (neo4jVersion.startsWith("4")) {
             dropConstraintForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        } else if (isGreaterOrEqualThanMajor(5)) {
             dropConstraintForNeo4j5(name);
         } else {
             throw new DatabaseException(String.format(
@@ -228,7 +249,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public boolean supportsCallInTransactions() {
-        return neo4jVersion.startsWith("4.4") || isV5OrLater();
+        return is44OrLater();
+    }
+
+    public boolean is44OrLater() {
+        return neo4jVersion.startsWith("4.4") || isGreaterOrEqualThanMajor(5);
     }
 
     public String getNeo4jVersion() {
@@ -476,7 +501,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         throw convertToRuntimeException(le);
     }
 
-    private boolean isV5OrLater() {
-        return Integer.parseInt(neo4jVersion.substring(0, 1), 10) >= 5;
+    private boolean isGreaterOrEqualThanMajor(int major) {
+        int nextDot = neo4jVersion.indexOf(".");
+        return Integer.parseInt(neo4jVersion.substring(0, nextDot), 10) >= major;
     }
 }
