@@ -31,7 +31,7 @@ class DockerNeo4j {
     static boolean supportsShowIndexesYieldSyntax() {
         def version = neo4jVersion()
         def major = Integer.parseInt(version.substring(0, 1))
-        def minor = Integer.parseInt(version.substring(2, 3))
+        def minor = version.contains(".") ? Integer.parseInt(version.substring(2, 3)) : Integer.MAX_VALUE
         // SHOW INDEXES|CONSTRAINTS is supported since Neo4j 4.2
         // SHOW INDEXES|CONSTRAINTS YIELD xxx RETURN xxx is supported since Neo4j 4.3
         return major >= 5 || major == 4 && minor >= 3
