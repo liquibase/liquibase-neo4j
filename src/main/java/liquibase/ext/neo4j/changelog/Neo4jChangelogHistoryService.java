@@ -331,7 +331,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
     }
 
     private void linkContexts(ChangeSet changeSet) throws LiquibaseException {
-        ContextExpression contexts = changeSet.getContexts();
+        ContextExpression contexts = changeSet.getContextFilter();
         if (contexts == null) {
             return;
         }
