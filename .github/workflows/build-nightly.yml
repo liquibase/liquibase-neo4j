@@ -67,14 +67,14 @@ jobs:
             cache: 'maven'
 
         - name: Run Tests
-          run: mvn --quiet --show-version --batch-mode verify
+          run: mvn --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT"
           env:
             NEO4J_VERSION: ${{ matrix.neo4j_version }}
             ENTERPRISE: ${{ matrix.enterprise }}
 
         - name: Run Tests (5.x driver)
           if: ${{ ( matrix.neo4j_version == '4.4' || startsWith(matrix.neo4j_version, '5') ) && (matrix.java == 17 || matrix.java == 21) }}
-          run: mvn -P5x-driver --quiet --show-version --batch-mode verify
+          run: mvn -P5x-driver --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT"
           env:
             NEO4J_VERSION: ${{ matrix.neo4j_version }}
             ENTERPRISE: ${{ matrix.enterprise }}
