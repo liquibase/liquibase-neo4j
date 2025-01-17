@@ -30,11 +30,11 @@ plugins:
 extra:
   maven_central: https://repo1.maven.org/maven2
   github_repo: https://github.com/liquibase/liquibase-neo4j
-  liquibase_version: 4.30.0
+  liquibase_version: 4.31.0
   group_id: org.liquibase.ext
   group_id_url: org/liquibase/ext
   artifact_id: liquibase-neo4j
-  version: 4.30.0
+  version: 4.31.0
 extra_css:
   - css/extra.css
 markdown_extensions:
