@@ -4,6 +4,7 @@ import liquibase.ChecksumVersion
 import liquibase.Contexts
 import liquibase.LabelExpression
 import liquibase.Labels
+import liquibase.Scope
 import liquibase.change.Change
 import liquibase.change.CheckSum
 import liquibase.change.core.RawSQLChange
@@ -238,7 +239,6 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
             queryRunner.createNodeKeyConstraint(CHANGE_SET_CONSTRAINT_NAME, "__LiquibaseChangeSet", "id", "author", "changeLog")
         }
         setField("ranChangeSets", historyService, singletonList(ranChangeSet("some ID", "some author", computeCheckSum("MATCH (n) RETURN n"), date(1986, 3, 4))))
-        historyService.generateDeploymentId()
         manuallyCreateOrderedChangesets(ranChangeSet("older", "some author", computeCheckSum("CREATE (n:SomeNode)"), date(2019, 12, 25)),
                 ranChangeSet("newer", "some author", computeCheckSum("MATCH (n:SomeNode) SET n:SomeExtraLabel"), date(2020, 12, 25)))
         manuallyAssignTag("guten-tag", "older")
@@ -253,7 +253,6 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
         then:
         getField("ranChangeSets", historyService) == null
-        historyService.deploymentId == null
         queryRunner.listExistingConstraints().isEmpty()
         queryRunner.listExistingIndices().isEmpty()
         queryRunner.getSingleRow("MATCH (n) RETURN count(n) AS count")["count"] == 0L
@@ -713,23 +712,11 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
 
         when:
         2.times {
-            historyService.generateDeploymentId()
-            deploymentIds << historyService.deploymentId
+            deploymentIds << Scope.currentScope.deploymentId
         }
 
         then:
         deploymentIds.size() == 1
-    }
-
-    def "resets deployment ID"() {
-        given:
-        historyService.generateDeploymentId()
-
-        when:
-        historyService.resetDeploymentId()
-
-        then:
-        historyService.deploymentId == null
     }
 
     def "replaces check sum of matching change set"() {
@@ -1163,7 +1150,7 @@ class Neo4jChangelogHistoryServiceIT extends Neo4jContainerSpec {
     }
 
     private boolean stateIsReset() {
-        return getField("ranChangeSets", historyService) == null && historyService.deploymentId == null && getField("lastChangeSetSequenceValue", historyService) == null
+        return getField("ranChangeSets", historyService) == null && getField("lastChangeSetSequenceValue", historyService) == null
     }
 
     private manuallyCreateOrderedChangesets(RanChangeSet... changeSets) {
