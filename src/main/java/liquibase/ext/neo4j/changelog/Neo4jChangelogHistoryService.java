@@ -136,7 +136,6 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
 
     @Override
     public void reset() {
-        resetDeploymentId();
         ranChangeSets = null;
         lastChangeSetSequenceValue = null;
     }
@@ -279,7 +278,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 nextSequenceValue,
                 changeSet.generateCheckSum(currentCheckSumVersion).toString(),
                 execType.value,
-                getDeploymentId()
+                Scope.getCurrentScope().getDeploymentId()
         ));
     }
 
@@ -309,7 +308,7 @@ public class Neo4jChangelogHistoryService extends AbstractChangeLogHistoryServic
                 execType.value,
                 changeSet.getDescription(),
                 changeSet.getComments(),
-                getDeploymentId(),
+                Scope.getCurrentScope().getDeploymentId(),
                 changeSet.getStoredFilePath(),
                 getLiquibaseVersion(),
                 nextSequenceValue
