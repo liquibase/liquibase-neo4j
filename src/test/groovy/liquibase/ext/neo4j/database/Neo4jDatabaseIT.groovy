@@ -2,7 +2,6 @@ package liquibase.ext.neo4j.database
 
 import liquibase.database.DatabaseConnection
 import liquibase.database.DatabaseFactory
-import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
@@ -42,7 +41,7 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         database.setConnection(connection)
 
         then:
-        database.supportsCatalogs() == (neo4jVersion() >= KernelVersion.V4_0 && enterpriseEdition())
+        database.supportsCatalogs() == (neo4jVersion() >= KernelVersion.V4_0_0 && enterpriseEdition())
     }
 
     def "detects server edition"() {

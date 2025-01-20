@@ -2,6 +2,7 @@ package liquibase.ext.neo4j.change
 
 import liquibase.changelog.ChangeSet
 import liquibase.database.core.MySQLDatabase
+import liquibase.ext.neo4j.database.KernelVersion
 import liquibase.ext.neo4j.database.Neo4jDatabase
 import spock.lang.Specification
 
@@ -32,6 +33,7 @@ class RenameTypeChangeTest extends Specification {
         renameLabelChange.setChangeSet(changeSet)
         def database = Mock(Neo4jDatabase)
         database.supportsCallInTransactions() >> withCIT
+        database.getKernelVersion() >> Mock(KernelVersion)
 
         expect:
         renameLabelChange.validate(database).getErrorMessages() == [error]

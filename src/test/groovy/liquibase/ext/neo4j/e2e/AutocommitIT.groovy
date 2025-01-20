@@ -8,11 +8,11 @@ import liquibase.ext.neo4j.Neo4jContainerSpec
 import spock.lang.Requires
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
-import static liquibase.ext.neo4j.database.KernelVersion.V4_4
+import static liquibase.ext.neo4j.database.KernelVersion.V4_4_0
 
 class AutocommitIT extends Neo4jContainerSpec {
 
-    @Requires({ neo4jVersion() >= V4_4 })
+    @Requires({ neo4jVersion() >= V4_4_0 })
     def "runs autocommit transaction"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
@@ -36,7 +36,7 @@ class AutocommitIT extends Neo4jContainerSpec {
         format << ["cypher", "json", "xml", "yaml"]
     }
 
-    @Requires({ (neo4jVersion() >= V4_4) })
+    @Requires({ (neo4jVersion() >= V4_4_0) })
     def "runs autocommit transactions mixed with default explicit transactions"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)

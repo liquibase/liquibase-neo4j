@@ -37,22 +37,23 @@ abstract class BatchableChange extends AbstractChange {
     @Override
     public SqlStatement[] generateStatements(Database database) {
         Logger log = Scope.getCurrentScope().getLog(getClass());
-        boolean supportsCallInTransactions = ((Neo4jDatabase) database).supportsCallInTransactions();
+        Neo4jDatabase neo4j = (Neo4jDatabase) database;
+        boolean supportsCallInTransactions = neo4j.supportsCallInTransactions();
         if (supportsCallInTransactions && enableBatchImport) {
             log.info("Running change in CALL {} IN TRANSACTIONS");
-            return generateBatchedStatements(database);
+            return generateBatchedStatements(neo4j);
         } else if (!supportsCallInTransactions) {
-            log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the type rename is going to run in a single, possibly large and slow, transaction.\n" +
+            log.warning("This version of Neo4j does not support CALL {} IN TRANSACTIONS, the change is going to run in a single, possibly large and slow, transaction.\n" +
                     "Note: upgrade the Neo4j server or set the runInTransaction attribute of the enclosing change set to true to make this warning disappear.");
         } else {
-            log.info("Running type rename in single transaction (set enableBatchImport to true to switch to CALL {} IN TRANSACTIONS)");
+            log.info("Running change in single transaction (set enableBatchImport to true to switch to CALL {} IN TRANSACTIONS)");
         }
-        return generateUnbatchedStatements(database);
+        return generateUnbatchedStatements(neo4j);
     }
 
-    protected abstract SqlStatement[] generateBatchedStatements(Database database);
+    protected abstract SqlStatement[] generateBatchedStatements(Neo4jDatabase database);
 
-    protected abstract SqlStatement[] generateUnbatchedStatements(Database database);
+    protected abstract SqlStatement[] generateUnbatchedStatements(Neo4jDatabase database);
 
 
     public Boolean getEnableBatchImport() {

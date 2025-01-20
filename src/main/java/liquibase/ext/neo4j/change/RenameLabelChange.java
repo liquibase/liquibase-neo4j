@@ -1,15 +1,16 @@
 package liquibase.ext.neo4j.change;
 
-import liquibase.Scope;
-import liquibase.change.AbstractChange;
 import liquibase.change.ChangeMetaData;
 import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
 import liquibase.exception.ValidationErrors;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
-import liquibase.logging.Logger;
 import liquibase.statement.SqlStatement;
+import liquibase.statement.core.RawParameterizedSqlStatement;
 import liquibase.statement.core.RawSqlStatement;
+
+import static liquibase.ext.neo4j.database.KernelVersion.V5_24_0;
+import static liquibase.ext.neo4j.database.KernelVersion.V5_26_0;
 
 @DatabaseChange(name = "renameLabel", priority = ChangeMetaData.PRIORITY_DEFAULT, description =
         "The 'renameLabel' tag allows you to rename the label ('from' attribute) of nodes to another label value ('to' attribute).\n" +
@@ -64,15 +65,24 @@ public class RenameLabelChange extends BatchableChange {
     }
 
     @Override
-    protected SqlStatement[] generateBatchedStatements(Database database) {
+    protected SqlStatement[] generateBatchedStatements(Neo4jDatabase neo4j) {
+        if (supportsDynamicLabels(neo4j)) {
+            String cypher = String.format("%s CALL {WITH __node__ SET __node__:$($1) REMOVE __node__:$($2)} IN TRANSACTIONS%s",
+                    queryStart(neo4j), cypherBatchSpec());
+            return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, to, from)};
+        }
         String cypher = String.format("%s CALL {WITH __node__ SET __node__:`%s` REMOVE __node__:`%s`} IN TRANSACTIONS%s",
-                queryStart(), to, from, cypherBatchSpec());
+                queryStart(neo4j), to, from, cypherBatchSpec());
         return new SqlStatement[]{new RawSqlStatement(cypher)};
     }
 
     @Override
-    protected SqlStatement[] generateUnbatchedStatements(Database database) {
-        String cypher = String.format("%s SET __node__:`%s` REMOVE __node__:`%s`", queryStart(), to, from);
+    protected SqlStatement[] generateUnbatchedStatements(Neo4jDatabase neo4j) {
+        if (supportsDynamicLabels(neo4j)) {
+            String cypher = String.format("%s SET __node__:$($1) REMOVE __node__:$($2)", queryStart(neo4j));
+            return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, to, from)};
+        }
+        String cypher = String.format("%s SET __node__:`%s` REMOVE __node__:`%s`", queryStart(neo4j), to, from);
         return new SqlStatement[]{new RawSqlStatement(cypher)};
     }
 
@@ -107,10 +117,23 @@ public class RenameLabelChange extends BatchableChange {
     public void setOutputVariable(String outputVariable) {
         this.outputVariable = outputVariable;
     }
-    private String queryStart() {
+
+    private String queryStart(Neo4jDatabase neo4j) {
         if (fragment != null) {
+            if (supportsDynamicLabels(neo4j)) {
+                return String.format("MATCH %s WITH %s AS __node__ MATCH (__node__:$($2))", fragment, outputVariable);
+            }
             return String.format("MATCH %s WITH %s AS __node__ WHERE __node__:`%s`", fragment, outputVariable, from);
         }
+        if (supportsDynamicLabels(neo4j)) {
+            return "MATCH (__node__:$($2))";
+        }
         return String.format("MATCH (__node__:`%s`)", from);
+    }
+
+    private static boolean supportsDynamicLabels(Neo4jDatabase neo4j) {
+        // 5.24: dynamic labels/properties in SET and REMOVE
+        // 5.26: dynamic labels/types/properties in CREATE, MATCH and MERGE
+        return neo4j.getKernelVersion().compareTo(V5_26_0) >= 0;
     }
 }

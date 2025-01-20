@@ -57,7 +57,7 @@ public class InvertDirectionChange extends BatchableChange {
         return String.format("the direction of relationships with type %s has been inverted", type);    }
 
     @Override
-    protected SqlStatement[] generateBatchedStatements(Database database) {
+    protected SqlStatement[] generateBatchedStatements(Neo4jDatabase database) {
         String cypher = String.format("%s " +
                 "CALL { " +
                 "   WITH __rel__ " +
@@ -71,7 +71,7 @@ public class InvertDirectionChange extends BatchableChange {
     }
 
     @Override
-    protected SqlStatement[] generateUnbatchedStatements(Database database) {
+    protected SqlStatement[] generateUnbatchedStatements(Neo4jDatabase database) {
         String cypher = String.format("%s " +
                 "MATCH (__start__) WHERE id(__start__) = id(startNode(__rel__)) " +
                 "MATCH (__end__) WHERE id(__end__) = id(endNode(__rel__)) " +

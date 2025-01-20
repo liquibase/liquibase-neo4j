@@ -4,11 +4,13 @@ import java.util.Objects;
 
 public class KernelVersion implements Comparable<KernelVersion> {
 
-    public static final KernelVersion V3_5 = new KernelVersion(3, 5, 0);
-    public static final KernelVersion V4_0 = new KernelVersion(4, 0, 0);
-    public static final KernelVersion V4_3 = new KernelVersion(4, 3, 0);
-    public static final KernelVersion V4_4 = new KernelVersion(4, 4, 0);
-    public static final KernelVersion V5_0 = new KernelVersion(5, 0, 0);
+    public static final KernelVersion V3_5_0 = new KernelVersion(3, 5, 0);
+    public static final KernelVersion V4_0_0 = new KernelVersion(4, 0, 0);
+    public static final KernelVersion V4_3_0 = new KernelVersion(4, 3, 0);
+    public static final KernelVersion V4_4_0 = new KernelVersion(4, 4, 0);
+    public static final KernelVersion V5_0_0 = new KernelVersion(5, 0, 0);
+    public static final KernelVersion V5_24_0 = new KernelVersion(5, 24, 0);
+    public static final KernelVersion V5_26_0 = new KernelVersion(5, 26, 0);
 
     private final int major;
     private final int minor;
