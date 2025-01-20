@@ -59,7 +59,7 @@ public class RenamePropertyChange extends BatchableChange {
     }
 
     @Override
-    protected SqlStatement[] generateBatchedStatements(Database database) {
+    protected SqlStatement[] generateBatchedStatements(Neo4jDatabase database) {
         String batchSpec = cypherBatchSpec();
         String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n.`%2$s` = n[$1] REMOVE n.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
         String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r.`%2$s` = r[$1] REMOVE r.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
@@ -67,7 +67,7 @@ public class RenamePropertyChange extends BatchableChange {
     }
 
     @Override
-    protected SqlStatement[] generateUnbatchedStatements(Database database) {
+    protected SqlStatement[] generateUnbatchedStatements(Neo4jDatabase database) {
         String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL SET n.`%2$s` = n[$1] REMOVE n.`%1$s` ", from, to);
         String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL SET r.`%2$s` = r[$1] REMOVE r.`%1$s`", from, to);
         return filterStatements(nodeRename, relRename);

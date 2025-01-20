@@ -4,7 +4,6 @@ import liquibase.command.CommandScope
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionCommandStep
-import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.Neo4jContainerSpec
 import liquibase.ext.neo4j.database.KernelVersion
 
@@ -51,7 +50,7 @@ class PreconditionsIT extends Neo4jContainerSpec {
 
 
         def version = neo4jVersion()
-        row["isNeo4j44"] == (version >= KernelVersion.V4_4 && version.major() == 4 && version.minor() == 4)
+        row["isNeo4j44"] == (version >= KernelVersion.V4_4_0 && version.major() == 4 && version.minor() == 4)
 
         where:
         format << ["json", "xml", "yaml"]

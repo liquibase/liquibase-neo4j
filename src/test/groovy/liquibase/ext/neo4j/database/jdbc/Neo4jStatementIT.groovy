@@ -4,7 +4,7 @@ import liquibase.ext.neo4j.Neo4jContainerSpec
 import spock.lang.Requires
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
-import static liquibase.ext.neo4j.database.KernelVersion.V4_4
+import static liquibase.ext.neo4j.database.KernelVersion.V4_4_0
 
 class Neo4jStatementIT extends Neo4jContainerSpec {
 
@@ -51,7 +51,7 @@ class Neo4jStatementIT extends Neo4jContainerSpec {
         connection.close()
     }
 
-    @Requires({ neo4jVersion() >= V4_4 })
+    @Requires({ neo4jVersion() >= V4_4_0 })
     def "executes auto-commit statements"() {
         given:
         def connection = new Neo4jDriver().connect(jdbcUrl(), authenticationProperties())
@@ -116,7 +116,7 @@ class Neo4jStatementIT extends Neo4jContainerSpec {
         connection.close()
     }
 
-    @Requires({ neo4jVersion() >= V4_4 })
+    @Requires({ neo4jVersion() >= V4_4_0 })
     def "executes autocommit parameterized statements"() {
         given:
         def connection = new Neo4jDriver().connect(jdbcUrl(), authenticationProperties())

@@ -17,9 +17,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
-import static liquibase.ext.neo4j.database.KernelVersion.V3_5;
-import static liquibase.ext.neo4j.database.KernelVersion.V4_0;
-import static liquibase.ext.neo4j.database.KernelVersion.V5_0;
+import static liquibase.ext.neo4j.database.KernelVersion.V3_5_0;
+import static liquibase.ext.neo4j.database.KernelVersion.V4_0_0;
+import static liquibase.ext.neo4j.database.KernelVersion.V5_0_0;
 import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.IS_SUPPORTED_JDBC_URL;
 import static liquibase.ext.neo4j.lockservice.Exceptions.convertToRuntimeException;
 import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
@@ -93,7 +93,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        return kernelVersion.compareTo(V4_0) >= 0 && isEnterprise();
+        return kernelVersion.compareTo(V4_0_0) >= 0 && isEnterprise();
     }
 
     @Override
@@ -107,11 +107,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public void createIndex(String name, String label, String property) throws DatabaseException {
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             createIndexForNeo4j5(name, label, property);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             createIndexForNeo4j4(name, label, property);
-        } else  if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else  if (kernelVersion.compareTo(V3_5_0) >= 0) {
             createIndexForNeo4j3(label, property);
         } else{
             throw new DatabaseException(String.format(
@@ -124,11 +124,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public void createUniqueConstraint(String name, String label, String property) throws DatabaseException {
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             createUniqueConstraintForNeo4j5(name, label, property);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             createUniqueConstraintForNeo4j4(name, label, property);
-        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else if (kernelVersion.compareTo(V3_5_0) >= 0) {
             createUniqueConstraintForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -145,11 +145,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             return;
         }
         String[] properties = Arrays.prepend(firstProperty, rest, String.class);
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             createNodeKeyConstraintForNeo4j5(name, label, properties);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             createNodeKeyConstraintForNeo4j4(name, label, properties);
-        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else if (kernelVersion.compareTo(V3_5_0) >= 0) {
             createNodeKeyConstraintForNeo4j3(label, properties);
         } else{
             throw new DatabaseException(String.format(
@@ -162,11 +162,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public void dropIndex(String name, String label, String property) throws DatabaseException {
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             dropIndexForNeo4j5(name);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             dropIndexForNeo4j4(name);
-        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else if (kernelVersion.compareTo(V3_5_0) >= 0) {
             dropIndexForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -179,11 +179,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public void dropUniqueConstraint(String name, String label, String property) throws DatabaseException {
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             dropConstraintForNeo4j5(name);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             dropConstraintForNeo4j4(name);
-        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else if (kernelVersion.compareTo(V3_5_0) >= 0) {
             dropUniqueConstraintForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
@@ -200,11 +200,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             return;
         }
         String[] properties = Arrays.prepend(firstProperty, rest, String.class);
-        if (kernelVersion.compareTo(V5_0) >= 0) {
+        if (kernelVersion.compareTo(V5_0_0) >= 0) {
             dropConstraintForNeo4j5(name);
-        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+        } else if (kernelVersion.compareTo(V4_0_0) >= 0) {
             dropConstraintForNeo4j4(name);
-        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+        } else if (kernelVersion.compareTo(V3_5_0) >= 0) {
             dropNodeKeyConstraintForNeo4j3(label, properties);
         } else {
             throw new DatabaseException(String.format(
@@ -224,8 +224,9 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         return jdbcExecutor().queryForList(statement);
     }
 
+    // FIXME: inline and remove this
     public boolean supportsCallInTransactions() {
-        return kernelVersion.compareTo(KernelVersion.V4_4) >= 0;
+        return kernelVersion.compareTo(KernelVersion.V4_4_0) >= 0;
     }
 
     public KernelVersion getKernelVersion() {
