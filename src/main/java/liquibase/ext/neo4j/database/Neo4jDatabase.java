@@ -17,6 +17,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
+import static liquibase.ext.neo4j.database.KernelVersion.V3_5;
+import static liquibase.ext.neo4j.database.KernelVersion.V4_0;
+import static liquibase.ext.neo4j.database.KernelVersion.V5_0;
 import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.IS_SUPPORTED_JDBC_URL;
 import static liquibase.ext.neo4j.lockservice.Exceptions.convertToRuntimeException;
 import static liquibase.ext.neo4j.lockservice.Exceptions.messageContaining;
@@ -35,7 +38,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     private static final Predicate<Exception> NO_SUCH_CONSTRAINT_ERROR = messageContaining("no such constraint");
 
-    private String neo4jVersion;
+    private KernelVersion kernelVersion;
 
     private String neo4jEdition;
 
@@ -90,7 +93,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     @Override
     public boolean supportsCatalogs() {
-        return neo4jVersion.startsWith("4") || isV5OrLater();
+        return kernelVersion.compareTo(V4_0) >= 0 && isEnterprise();
     }
 
     @Override
@@ -104,37 +107,35 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public void createIndex(String name, String label, String property) throws DatabaseException {
-        String neo4jVersion = this.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            createIndexForNeo4j3(label, property);
-        } else if (neo4jVersion.startsWith("4")) {
-            createIndexForNeo4j4(name, label, property);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             createIndexForNeo4j5(name, label, property);
-        } else {
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            createIndexForNeo4j4(name, label, property);
+        } else  if (kernelVersion.compareTo(V3_5) >= 0) {
+            createIndexForNeo4j3(label, property);
+        } else{
             throw new DatabaseException(String.format(
                     "Index creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     property,
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
 
     public void createUniqueConstraint(String name, String label, String property) throws DatabaseException {
-        String neo4jVersion = this.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            createUniqueConstraintForNeo4j3(label, property);
-        } else if (neo4jVersion.startsWith("4")) {
-            createUniqueConstraintForNeo4j4(name, label, property);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             createUniqueConstraintForNeo4j5(name, label, property);
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            createUniqueConstraintForNeo4j4(name, label, property);
+        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+            createUniqueConstraintForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
                     "Unique constraint creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     property,
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
@@ -143,56 +144,53 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         if (!this.isEnterprise()) {
             return;
         }
-        String neo4jVersion = this.getNeo4jVersion();
         String[] properties = Arrays.prepend(firstProperty, rest, String.class);
-        if (neo4jVersion.startsWith("3.5")) {
-            createNodeKeyConstraintForNeo4j3(label, properties);
-        } else if (neo4jVersion.startsWith("4")) {
-            createNodeKeyConstraintForNeo4j4(name, label, properties);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             createNodeKeyConstraintForNeo4j5(name, label, properties);
-        } else {
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            createNodeKeyConstraintForNeo4j4(name, label, properties);
+        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+            createNodeKeyConstraintForNeo4j3(label, properties);
+        } else{
             throw new DatabaseException(String.format(
                     "Node key constraint creation for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     String.join(", ", properties),
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
 
     public void dropIndex(String name, String label, String property) throws DatabaseException {
-        String neo4jVersion = this.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            dropIndexForNeo4j3(label, property);
-        } else if (neo4jVersion.startsWith("4")) {
-            dropIndexForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             dropIndexForNeo4j5(name);
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            dropIndexForNeo4j4(name);
+        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+            dropIndexForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
                     "Unique constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     property,
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
 
     public void dropUniqueConstraint(String name, String label, String property) throws DatabaseException {
-        String neo4jVersion = this.getNeo4jVersion();
-        if (neo4jVersion.startsWith("3.5")) {
-            dropUniqueConstraintForNeo4j3(label, property);
-        } else if (neo4jVersion.startsWith("4")) {
-            dropConstraintForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             dropConstraintForNeo4j5(name);
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            dropConstraintForNeo4j4(name);
+        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+            dropUniqueConstraintForNeo4j3(label, property);
         } else {
             throw new DatabaseException(String.format(
                     "Unique constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     property,
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
@@ -201,20 +199,19 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         if (!this.isEnterprise()) {
             return;
         }
-        String neo4jVersion = this.getNeo4jVersion();
         String[] properties = Arrays.prepend(firstProperty, rest, String.class);
-        if (neo4jVersion.startsWith("3.5")) {
-            dropNodeKeyConstraintForNeo4j3(label, properties);
-        } else if (neo4jVersion.startsWith("4")) {
-            dropConstraintForNeo4j4(name);
-        } else if (isV5OrLater()) {
+        if (kernelVersion.compareTo(V5_0) >= 0) {
             dropConstraintForNeo4j5(name);
+        } else if (kernelVersion.compareTo(V4_0) >= 0) {
+            dropConstraintForNeo4j4(name);
+        } else if (kernelVersion.compareTo(V3_5) >= 0) {
+            dropNodeKeyConstraintForNeo4j3(label, properties);
         } else {
             throw new DatabaseException(String.format(
                     "Node key constraint removal for (n:%s {%s}) aborted: Neo4j version %s is not supported",
                     label,
                     String.join(", ", properties),
-                    neo4jVersion
+                    kernelVersion
             ));
         }
     }
@@ -228,11 +225,11 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     public boolean supportsCallInTransactions() {
-        return neo4jVersion.startsWith("4.4") || isV5OrLater();
+        return kernelVersion.compareTo(KernelVersion.V4_4) >= 0;
     }
 
-    public String getNeo4jVersion() {
-        return neo4jVersion;
+    public KernelVersion getKernelVersion() {
+        return kernelVersion;
     }
 
     public boolean isEnterprise() {
@@ -241,7 +238,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
     private void initializeServerAttributes() {
         Map<String, ?> components = readComponents();
-        this.neo4jVersion = (String) components.get("version");
+        this.kernelVersion = KernelVersion.parse((String) components.get("version"));
         this.neo4jEdition = ((String) components.get("edition")).toLowerCase(Locale.ENGLISH);
     }
 
@@ -260,6 +257,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     // before 4.x, constraints cannot be given names
+
     private void createUniqueConstraintForNeo4j3(String label, String property) {
         onThrow(this::rollbackIfConstraintExists,
                 () -> {
@@ -291,6 +289,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
     }
 
     // before 4.x, indices cannot be given names
+
     private void createIndexForNeo4j3(String label, String property) {
         onThrow(this::rollbackIfIndexExists,
                 () -> {
@@ -300,8 +299,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                 }
         );
     }
-
     // before 4.x, constraints cannot be given names
+
     private void createNodeKeyConstraintForNeo4j3(String label, String[] properties) {
         String list = stream(properties).map(p -> String.format("n.`%s`", p)).collect(Collectors.joining(", ", "(", ")"));
         onThrow(this::rollbackIfConstraintExists,
@@ -359,6 +358,7 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
 
 
     // before 4.x, constraints cannot be given names
+
     private void dropIndexForNeo4j3(String label, String property) {
         onThrow(this::rollbackIfNoSuchIndexExists,
                 () -> {
@@ -369,8 +369,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         );
     }
 
-
     // before 4.x, constraints cannot be given names
+
     private void dropUniqueConstraintForNeo4j3(String label, String property) {
         onThrow(this::rollbackIfNoSuchConstraintExists,
                 () -> {
@@ -380,8 +380,8 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
                 }
         );
     }
-
     // before 4.x, constraints cannot be given names
+
     private void dropIndexForNeo4j4(String name) {
         // `DROP INDEX IF EXISTS` is only available with Neo4j 4.1.3+
         onThrow(this::rollbackIfNoSuchIndexExists,
@@ -474,9 +474,5 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
             le.addSuppressed(ex);
         }
         throw convertToRuntimeException(le);
-    }
-
-    private boolean isV5OrLater() {
-        return Integer.parseInt(neo4jVersion.substring(0, 1), 10) >= 5;
     }
 }

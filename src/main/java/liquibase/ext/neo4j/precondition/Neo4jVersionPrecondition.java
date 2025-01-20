@@ -8,6 +8,7 @@ import liquibase.exception.PreconditionErrorException;
 import liquibase.exception.PreconditionFailedException;
 import liquibase.exception.ValidationErrors;
 import liquibase.exception.Warnings;
+import liquibase.ext.neo4j.database.KernelVersion;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.precondition.AbstractPrecondition;
 import liquibase.precondition.FailedPrecondition;
@@ -49,8 +50,8 @@ public class Neo4jVersionPrecondition extends AbstractPrecondition {
                     changeLog, this)
             );
         }
-        String neo4jVersion = ((Neo4jDatabase) database).getNeo4jVersion();
-        if (!versionMatches(matches, neo4jVersion)) {
+        KernelVersion neo4jVersion = ((Neo4jDatabase) database).getKernelVersion();
+        if (!versionMatches(matches, neo4jVersion.versionString())) {
             throw new PreconditionFailedException(new FailedPrecondition(
                     String.format("expected %s version but got %s", matches, neo4jVersion),
                     changeLog, this)

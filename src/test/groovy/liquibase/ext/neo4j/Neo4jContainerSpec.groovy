@@ -46,7 +46,7 @@ abstract class Neo4jContainerSpec extends Specification {
     def setupSpec() {
         neo4jContainer.start()
         queryRunner = new CypherRunner(
-                GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic("neo4j", PASSWORD)), dockerTag())
+                GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic("neo4j", PASSWORD)))
         database = DatabaseFactory.instance.openDatabase(
                 "jdbc:neo4j:${neo4jContainer.getBoltUrl()}",
                 "neo4j",

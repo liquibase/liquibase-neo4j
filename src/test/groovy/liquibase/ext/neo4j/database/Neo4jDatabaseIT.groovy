@@ -2,6 +2,7 @@ package liquibase.ext.neo4j.database
 
 import liquibase.database.DatabaseConnection
 import liquibase.database.DatabaseFactory
+import liquibase.ext.neo4j.DockerNeo4j
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
@@ -27,10 +28,13 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         database.setConnection(connection)
 
         then:
-        database.getNeo4jVersion().startsWith(neo4jVersion())
+        def configuredVersion = neo4jVersion()
+        def actualVersion = database.getKernelVersion()
+        actualVersion.major() == configuredVersion.major() &&
+                (actualVersion.minor() == configuredVersion.minor() || configuredVersion.minor() == Integer.MAX_VALUE)
     }
 
-    def "supports catalog if Neo4j version is 4+"() {
+    def "supports catalog if Neo4j version is 4+ and edition is enterprise"() {
         given:
         def database = new Neo4jDatabase()
 
@@ -38,7 +42,7 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         database.setConnection(connection)
 
         then:
-        database.supportsCatalogs() == Integer.parseInt(neo4jVersion().substring(0, 1), 10) >= 4
+        database.supportsCatalogs() == (neo4jVersion() >= KernelVersion.V4_0 && enterpriseEdition())
     }
 
     def "detects server edition"() {
