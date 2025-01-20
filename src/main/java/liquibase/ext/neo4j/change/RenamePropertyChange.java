@@ -5,6 +5,7 @@ import liquibase.change.DatabaseChange;
 import liquibase.database.Database;
 import liquibase.exception.ValidationErrors;
 import liquibase.ext.neo4j.change.refactoring.TargetEntityType;
+import liquibase.ext.neo4j.database.KernelVersion;
 import liquibase.ext.neo4j.database.Neo4jDatabase;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawParameterizedSqlStatement;
@@ -61,6 +62,11 @@ public class RenamePropertyChange extends BatchableChange {
     @Override
     protected SqlStatement[] generateBatchedStatements(Neo4jDatabase database) {
         String batchSpec = cypherBatchSpec();
+        if (supportsDynamicProperties(database)) {
+            String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n[$2] = n[$1] REMOVE n[$1] } IN TRANSACTIONS%s", batchSpec);
+            String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r[$2] = r[$1] REMOVE r[$1] } IN TRANSACTIONS%s", batchSpec);
+            return filterStatements(nodeRename, relRename);
+        }
         String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n.`%2$s` = n[$1] REMOVE n.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
         String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r.`%2$s` = r[$1] REMOVE r.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
         return filterStatements(nodeRename, relRename);
@@ -68,6 +74,11 @@ public class RenamePropertyChange extends BatchableChange {
 
     @Override
     protected SqlStatement[] generateUnbatchedStatements(Neo4jDatabase database) {
+        if (supportsDynamicProperties(database)) {
+            String nodeRename = "MATCH (n) WHERE n[$1] IS NOT NULL SET n[$2] = n[$1] REMOVE n[$1]";
+            String relRename = "MATCH ()-[r]->() WHERE r[$1] IS NOT NULL SET r[$2] = r[$1] REMOVE r[$1]";
+            return filterStatements(nodeRename, relRename);
+        }
         String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL SET n.`%2$s` = n[$1] REMOVE n.`%1$s` ", from, to);
         String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL SET r.`%2$s` = r[$1] REMOVE r.`%1$s`", from, to);
         return filterStatements(nodeRename, relRename);
@@ -101,16 +112,22 @@ public class RenamePropertyChange extends BatchableChange {
         List<SqlStatement> statements = new ArrayList<>(2);
         switch (entityType) {
             case ALL:
-                statements.add(new RawParameterizedSqlStatement(nodeRename, from));
-                statements.add(new RawParameterizedSqlStatement(relRename, from));
+                statements.add(new RawParameterizedSqlStatement(nodeRename, from, to));
+                statements.add(new RawParameterizedSqlStatement(relRename, from, to));
                 break;
             case NODE:
-                statements.add(new RawParameterizedSqlStatement(nodeRename, from));
+                statements.add(new RawParameterizedSqlStatement(nodeRename, from, to));
                 break;
             case RELATIONSHIP:
-                statements.add(new RawParameterizedSqlStatement(relRename, from));
+                statements.add(new RawParameterizedSqlStatement(relRename, from, to));
                 break;
         }
         return statements.toArray(new SqlStatement[0]);
+    }
+
+    private static boolean supportsDynamicProperties(Neo4jDatabase database) {
+        // 5.24: dynamic labels/properties in SET and REMOVE
+        // 5.26: dynamic labels/types/properties in CREATE, MATCH and MERGE
+        return database.getKernelVersion().compareTo(KernelVersion.V5_24_0) >= 0;
     }
 }
