@@ -64,10 +64,10 @@ The rest of the tutorial assumes the change log is written in the XML file `chan
     ```yaml
     databaseChangeLog:
     - changeSet:
-      id: my-movie-init
-      author: fbiville
-      changes:
-      - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
+        id: my-movie-init
+        author: fbiville
+        changes:
+        - cypher: 'CREATE (:Movie {title: ''My Life'', genre: ''Comedy''})'
     ```
 
 This creates a node with the label `Movie` and one property, whose key is `title` and valued with the string `My Life`.
