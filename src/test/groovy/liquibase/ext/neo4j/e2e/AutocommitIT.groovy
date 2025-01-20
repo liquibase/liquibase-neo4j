@@ -7,11 +7,12 @@ import liquibase.command.core.helpers.DbUrlConnectionCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 import spock.lang.Requires
 
-import static liquibase.ext.neo4j.DockerNeo4j.supportsCypherCallInTransactions
+import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
+import static liquibase.ext.neo4j.database.KernelVersion.V4_4
 
 class AutocommitIT extends Neo4jContainerSpec {
 
-    @Requires({ supportsCypherCallInTransactions() })
+    @Requires({ neo4jVersion() >= V4_4 })
     def "runs autocommit transaction"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
@@ -35,7 +36,7 @@ class AutocommitIT extends Neo4jContainerSpec {
         format << ["cypher", "json", "xml", "yaml"]
     }
 
-    @Requires({ supportsCypherCallInTransactions() })
+    @Requires({ (neo4jVersion() >= V4_4) })
     def "runs autocommit transactions mixed with default explicit transactions"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
