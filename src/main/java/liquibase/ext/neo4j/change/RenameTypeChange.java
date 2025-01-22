@@ -72,7 +72,7 @@ public class RenameTypeChange extends BatchableChange {
                                           "CREATE (__start__)-[__newrel__:$($2)]->(__end__) " +
                                           "SET __newrel__ = properties(__rel__) " +
                                           "DELETE __rel__ } " +
-                                          "IN TRANSACTIONS%s", queryStart(neo4j), cypherBatchSpec());
+                                          "%s", queryStart(neo4j), cypherBatchSpec());
             return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from, to)};
         }
 
@@ -82,7 +82,7 @@ public class RenameTypeChange extends BatchableChange {
                 "CREATE (__start__)-[__newrel__:`%s`]->(__end__) " +
                 "SET __newrel__ = properties(__rel__) " +
                 "DELETE __rel__ } " +
-                "IN TRANSACTIONS%s", queryStart(neo4j), to, cypherBatchSpec());
+                "%s", queryStart(neo4j), to, cypherBatchSpec());
         return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, from)};
     }
 

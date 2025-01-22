@@ -2,6 +2,7 @@ package liquibase.ext.neo4j.change
 
 import liquibase.changelog.ChangeSet
 import liquibase.database.core.MySQLDatabase
+import liquibase.ext.neo4j.database.KernelVersion
 import liquibase.ext.neo4j.database.Neo4jDatabase
 import spock.lang.Specification
 
@@ -30,7 +31,8 @@ class InvertDirectionChangeTest extends Specification {
         changeSet.runInTransaction >> runInTx
         renameLabelChange.setChangeSet(changeSet)
         def database = Mock(Neo4jDatabase)
-        database.supportsCallInTransactions() >> withCIT
+        def version = (withCIT) ? KernelVersion.V4_4_0 : KernelVersion.V4_3_0
+        database.getKernelVersion() >> version
 
         expect:
         renameLabelChange.validate(database).getErrorMessages() == [error]
