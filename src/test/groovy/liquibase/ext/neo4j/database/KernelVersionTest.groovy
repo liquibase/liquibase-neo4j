@@ -8,20 +8,20 @@ import static liquibase.ext.neo4j.database.KernelVersionTest.Sign.ZERO
 
 class KernelVersionTest extends Specification {
 
-
     def "parses versions"() {
         expect:
         KernelVersion.parse(version) == result
 
         where:
-        version        | result
-        "1.0.0"        | new KernelVersion(1, 0, 0)
-        "1.0.12"       | new KernelVersion(1, 0, 12)
-        "1.0"          | new KernelVersion(1, 0)
-        "5.26-aura"    | new KernelVersion(5, 26)
-        "5"            | new KernelVersion(5)
-        "2025.01-aura" | new KernelVersion(2025, 1)
-        "2025.1.2"     | new KernelVersion(2025, 1, 2)
+        version          | result
+        "1.0.0"          | new KernelVersion(1, 0, 0)
+        "1.0.12"         | new KernelVersion(1, 0, 12)
+        "1.0"            | new KernelVersion(1, 0)
+        "5.26-aura"      | new KernelVersion(5, 26)
+        "5"              | new KernelVersion(5)
+        "2025.01-aura"   | new KernelVersion(2025, 1)
+        "2025.1.2"       | new KernelVersion(2025, 1, 2)
+        "2025.1.2-93482" | new KernelVersion(2025, 1, 2)
     }
 
     def "rejects invalid versions"() {
@@ -34,6 +34,7 @@ class KernelVersionTest extends Specification {
         where:
         version      | exceptionType
         ""           | IllegalArgumentException.class
+        "foobar"     | NumberFormatException.class
         "."          | NumberFormatException.class
         ".."         | NumberFormatException.class
         "5."         | IllegalArgumentException.class
