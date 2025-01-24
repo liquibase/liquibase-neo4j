@@ -14,11 +14,32 @@ class KernelVersionTest extends Specification {
         KernelVersion.parse(version) == result
 
         where:
-        version     | result
-        "1.0.0"     | new KernelVersion(1, 0, 0)
-        "1.0"       | new KernelVersion(1, 0)
-        "5.26-aura" | new KernelVersion(5, 26)
-        "5"         | new KernelVersion(5)
+        version        | result
+        "1.0.0"        | new KernelVersion(1, 0, 0)
+        "1.0.12"       | new KernelVersion(1, 0, 12)
+        "1.0"          | new KernelVersion(1, 0)
+        "5.26-aura"    | new KernelVersion(5, 26)
+        "5"            | new KernelVersion(5)
+        "2025.01-aura" | new KernelVersion(2025, 1)
+        "2025.1.2"     | new KernelVersion(2025, 1, 2)
+    }
+
+    def "rejects invalid versions"() {
+        when:
+        KernelVersion.parse(version)
+
+        then:
+        thrown(exceptionType)
+
+        where:
+        version      | exceptionType
+        ""           | IllegalArgumentException.class
+        "."          | NumberFormatException.class
+        ".."         | NumberFormatException.class
+        "5."         | IllegalArgumentException.class
+        "2025.1."    | IllegalArgumentException.class
+        ".5.25"      | NumberFormatException.class
+        "2025.2.1.2" | IllegalArgumentException.class
     }
 
     def "compares versions"() {

@@ -30,21 +30,22 @@ public class KernelVersion implements Comparable<KernelVersion> {
                 major = Integer.parseInt(buffer, 10);
             } else if (minor == -1) {
                 minor = parseMinor(buffer);
+            } else {
+                throw invalidVersion(version);
             }
             buffer = "";
         }
-        if (!buffer.isEmpty()) {
-            if (major == -1) {
-                major = Integer.parseInt(buffer, 10);
-            } else if (minor == -1) {
-                minor = parseMinor(buffer);
-            } else {
-                patch = Integer.parseInt(buffer, 10);
-            }
+        if (buffer.isEmpty()) {
+            throw invalidVersion(version);
         }
         if (major == -1) {
-            throw new IllegalArgumentException(String.format("Invalid Neo4j version: %s", version));
+            major = Integer.parseInt(buffer, 10);
+        } else if (minor == -1) {
+            minor = parseMinor(buffer);
+        } else {
+            patch = Integer.parseInt(buffer, 10);
         }
+
         if (minor == -1) {
             return new KernelVersion(major);
         }
@@ -118,11 +119,15 @@ public class KernelVersion implements Comparable<KernelVersion> {
         return String.format("%d.%d.%d", major, minor, patch);
     }
 
+    private static int parseMinor(String buffer) {
+        return Integer.parseInt(buffer.replace("-aura", ""), 10);
+    }
+
     private static int signum(int result) {
         return (int) Math.signum(result);
     }
 
-    private static int parseMinor(String buffer) {
-        return Integer.parseInt(buffer.replace("-aura", ""), 10);
+    private static IllegalArgumentException invalidVersion(String version) {
+        return new IllegalArgumentException(String.format("Invalid Neo4j version: %s", version));
     }
 }
