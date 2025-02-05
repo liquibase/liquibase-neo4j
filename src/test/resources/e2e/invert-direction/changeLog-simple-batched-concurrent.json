@@ -1,0 +1,35 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "my-movie-init-oops",
+        "author": "fbiville",
+        "changes": [
+          {
+            "cypher": "CREATE (:Movie)<-[:VIEWED_BY {date: 'now'}]-(:Person)"
+          },
+          {
+            "cypher": "CREATE (:Movie)<-[:VIEWED_BY {date: 'yesterday'}]-(:Dog)"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "my-movie-init-fixed",
+        "author": "fbiville",
+        "runInTransaction": false,
+        "changes": [
+          {
+            "invertDirection": {
+              "type": "VIEWED_BY",
+              "enableBatchImport": true,
+              "batchSize": 1,
+              "concurrent": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

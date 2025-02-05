@@ -1,0 +1,34 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "my-movie-init-oops",
+        "author": "fbiville",
+        "changes": [
+          {
+            "cypher": "CREATE (:Movie {calendar_date: 'today'})-[:SEEN_BY {calendar_date: 'now'}]->(:Person)"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "my-movie-init-fixed",
+        "author": "fbiville",
+        "runInTransaction": false,
+        "changes": [
+          {
+            "renameProperty": {
+              "from": "calendar_date",
+              "to": "date",
+              "entityType": "RELATIONSHIP",
+              "enableBatchImport": true,
+              "batchSize": 1,
+              "concurrent": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
