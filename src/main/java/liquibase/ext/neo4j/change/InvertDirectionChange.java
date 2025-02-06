@@ -66,7 +66,7 @@ public class InvertDirectionChange extends BatchableChange {
                 "   CREATE (__start__)<-[__newrel__:`%s`]-(__end__) " +
                 "   SET __newrel__ = properties(__rel__) " +
                 "   DELETE __rel__ " +
-                "} IN TRANSACTIONS%s", queryStart(), type, cypherBatchSpec());
+                "}%s", queryStart(), type, cypherBatchSpec());
         return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, type)};
     }
 

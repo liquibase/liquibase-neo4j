@@ -13,3 +13,12 @@ This results in the change being executed in batches.
 
 The `batchSize` attribute controls how many transactions run.
 If the attribute is not set, the batch size is defined on the Neo4j server side.
+
+The [error policy of inner transactions](https://neo4j.com/docs/cypher-manual/current/subqueries/subqueries-in-transactions/#error-behavior),
+introduced in Neo4j 5.7, is configurable with the `batchErrorPolicy` attribute, and accepts the following values:
+ - `CONTINUE`
+ - `BREAK`
+ - `FAIL`
+
+Inner transactions can also be configured to [run in parallel](https://neo4j.com/docs/cypher-manual/current/subqueries/subqueries-in-transactions/#error-behavior) since Neo4j 5.21.
+The boolean `concurrent` attribute controls that behavior. Concurrency is disabled by default.

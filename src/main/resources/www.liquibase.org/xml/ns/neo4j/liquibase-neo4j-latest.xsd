@@ -95,6 +95,16 @@
         <xsd:attribute type="xsd:string" name="outputVariable" />
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
+        <xsd:attribute type="xsd:boolean" name="concurrent" />
+        <xsd:attribute type="xsd:string" name="batchErrorPolicy">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="CONTINUE"/>
+                    <xsd:enumeration value="BREAK"/>
+                    <xsd:enumeration value="FAIL"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:element name="renameType" type="renameTypeType" />
@@ -105,6 +115,16 @@
         <xsd:attribute type="xsd:string" name="outputVariable" />
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
+        <xsd:attribute type="xsd:boolean" name="concurrent" />
+        <xsd:attribute type="xsd:string" name="batchErrorPolicy">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="CONTINUE"/>
+                    <xsd:enumeration value="BREAK"/>
+                    <xsd:enumeration value="FAIL"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:element name="invertDirection" type="invertDirectionType" />
@@ -114,6 +134,16 @@
         <xsd:attribute type="xsd:string" name="outputVariable" />
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
+        <xsd:attribute type="xsd:boolean" name="concurrent" />
+        <xsd:attribute type="xsd:string" name="batchErrorPolicy">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="CONTINUE"/>
+                    <xsd:enumeration value="BREAK"/>
+                    <xsd:enumeration value="FAIL"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 
     <xsd:element name="renameProperty" type="renamePropertyType" />
@@ -123,5 +153,15 @@
         <xsd:attribute type="xsd:string" name="entityType" />
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
+        <xsd:attribute type="xsd:boolean" name="concurrent" />
+        <xsd:attribute type="xsd:string" name="batchErrorPolicy">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="CONTINUE"/>
+                    <xsd:enumeration value="BREAK"/>
+                    <xsd:enumeration value="FAIL"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
     </xsd:complexType>
 </xsd:schema>

@@ -67,11 +67,11 @@ public class RenameLabelChange extends BatchableChange {
     @Override
     protected SqlStatement[] generateBatchedStatements(Neo4jDatabase neo4j) {
         if (supportsDynamicLabels(neo4j)) {
-            String cypher = String.format("%s CALL {WITH __node__ SET __node__:$($1) REMOVE __node__:$($2)} IN TRANSACTIONS%s",
+            String cypher = String.format("%s CALL {WITH __node__ SET __node__:$($1) REMOVE __node__:$($2)}%s",
                     queryStart(neo4j), cypherBatchSpec());
             return new SqlStatement[]{new RawParameterizedSqlStatement(cypher, to, from)};
         }
-        String cypher = String.format("%s CALL {WITH __node__ SET __node__:`%s` REMOVE __node__:`%s`} IN TRANSACTIONS%s",
+        String cypher = String.format("%s CALL {WITH __node__ SET __node__:`%s` REMOVE __node__:`%s`}%s",
                 queryStart(neo4j), to, from, cypherBatchSpec());
         return new SqlStatement[]{new RawSqlStatement(cypher)};
     }

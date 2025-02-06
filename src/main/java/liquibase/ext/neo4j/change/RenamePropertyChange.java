@@ -63,12 +63,12 @@ public class RenamePropertyChange extends BatchableChange {
     protected SqlStatement[] generateBatchedStatements(Neo4jDatabase database) {
         String batchSpec = cypherBatchSpec();
         if (supportsDynamicProperties(database)) {
-            String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n[$2] = n[$1] REMOVE n[$1] } IN TRANSACTIONS%s", batchSpec);
-            String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r[$2] = r[$1] REMOVE r[$1] } IN TRANSACTIONS%s", batchSpec);
+            String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n[$2] = n[$1] REMOVE n[$1] }%s", batchSpec);
+            String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r[$2] = r[$1] REMOVE r[$1] }%s", batchSpec);
             return filterStatements(nodeRename, relRename);
         }
-        String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n.`%2$s` = n[$1] REMOVE n.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
-        String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r.`%2$s` = r[$1] REMOVE r.`%1$s` } IN TRANSACTIONS%3$s", from, to, batchSpec);
+        String nodeRename = String.format("MATCH (n) WHERE n[$1] IS NOT NULL CALL { WITH n SET n.`%2$s` = n[$1] REMOVE n.`%1$s` }%3$s", from, to, batchSpec);
+        String relRename = String.format("MATCH ()-[r]->() WHERE r[$1] IS NOT NULL CALL { WITH r SET r.`%2$s` = r[$1] REMOVE r.`%1$s` }%3$s", from, to, batchSpec);
         return filterStatements(nodeRename, relRename);
     }
 

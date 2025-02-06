@@ -224,11 +224,6 @@ public class Neo4jDatabase extends AbstractJdbcDatabase {
         return jdbcExecutor().queryForList(statement);
     }
 
-    // FIXME: inline and remove this
-    public boolean supportsCallInTransactions() {
-        return kernelVersion.compareTo(KernelVersion.V4_4_0) >= 0;
-    }
-
     public KernelVersion getKernelVersion() {
         return kernelVersion;
     }

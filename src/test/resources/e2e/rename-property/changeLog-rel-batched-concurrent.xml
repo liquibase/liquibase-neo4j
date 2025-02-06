@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="my-movie-init-oops" author="fbiville">
+        <neo4j:cypher><![CDATA[CREATE (:Movie {calendar_date: 'today'})-[:SEEN_BY {calendar_date: 'now'}]->(:Person)]]></neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="my-movie-init-fixed" author="fbiville" runInTransaction="false">
+        <neo4j:renameProperty from="calendar_date" to="date" entityType="RELATIONSHIP" enableBatchImport="true" batchSize="1" concurrent="true" />
+    </changeSet>
+
+</databaseChangeLog>

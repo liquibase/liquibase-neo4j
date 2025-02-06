@@ -9,7 +9,9 @@ public class KernelVersion implements Comparable<KernelVersion> {
     public static final KernelVersion V4_3_0 = new KernelVersion(4, 3, 0);
     public static final KernelVersion V4_4_0 = new KernelVersion(4, 4, 0);
     public static final KernelVersion V5_0_0 = new KernelVersion(5, 0, 0);
+    public static final KernelVersion V5_7_0 = new KernelVersion(5, 7, 0);
     public static final KernelVersion V5_24_0 = new KernelVersion(5, 24, 0);
+    public static final KernelVersion V5_21_0 = new KernelVersion(5, 21, 0);
     public static final KernelVersion V5_26_0 = new KernelVersion(5, 26, 0);
 
     private final int major;

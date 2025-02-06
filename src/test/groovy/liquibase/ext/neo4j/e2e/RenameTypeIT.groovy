@@ -6,6 +6,10 @@ import liquibase.command.core.helpers.DatabaseChangelogCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
+import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
+import static liquibase.ext.neo4j.database.KernelVersion.V5_21_0
+import static org.junit.jupiter.api.Assumptions.assumeTrue
+
 class RenameTypeIT extends Neo4jContainerSpec {
 
     def "runs migrations renaming types"() {
@@ -48,11 +52,14 @@ class RenameTypeIT extends Neo4jContainerSpec {
 
     def "runs batched migrations renaming types"() {
         given:
+        if (concurrent) {
+            assumeTrue(neo4jVersion() >= V5_21_0)
+        }
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
                 .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-simple-batched.${format}".toString())
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-simple-batched${if (concurrent) "-concurrent" else ""}.${format}".toString())
                 .setOutput(System.out)
         command.execute()
 
@@ -81,7 +88,7 @@ class RenameTypeIT extends Neo4jContainerSpec {
         ]
 
         where:
-        format << ["json", "xml", "yaml"]
+        [format, concurrent] << [["json", "xml", "yaml"], [false, true]].combinations()
     }
 
     def "runs migrations renaming types of matching relationships"() {
@@ -123,11 +130,14 @@ class RenameTypeIT extends Neo4jContainerSpec {
 
     def "runs batched migrations renaming types of matching relationships"() {
         given:
+        if (concurrent) {
+            assumeTrue(neo4jVersion() >= V5_21_0)
+        }
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
                 .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
                 .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-pattern-batched.${format}".toString())
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-pattern-batched${if (concurrent) "-concurrent" else ""}.${format}".toString())
                 .setOutput(System.out)
         command.execute()
 
@@ -155,6 +165,6 @@ class RenameTypeIT extends Neo4jContainerSpec {
         ]
 
         where:
-        format << ["json", "xml", "yaml"]
+        [format, concurrent] << [["json", "xml", "yaml"], [false, true]].combinations()
     }
 }
