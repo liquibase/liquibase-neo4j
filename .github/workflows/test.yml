@@ -44,6 +44,7 @@ jobs:
           - "4.3"
           - "4.4"
           - "5"
+          - "2025.01"
         enterprise:
           - "true"
           - "false"
