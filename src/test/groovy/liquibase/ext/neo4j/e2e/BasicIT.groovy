@@ -4,7 +4,7 @@ import liquibase.command.CommandScope
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.UpdateSqlCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
 class BasicIT extends Neo4jContainerSpec {
@@ -14,9 +14,9 @@ class BasicIT extends Neo4jContainerSpec {
         def buffer = new ByteArrayOutputStream()
         System.out = new PrintStream(buffer)
         def command = new CommandScope(UpdateSqlCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/basic/changeLog.${format}".toString())
                 .setOutput(buffer)
         command.execute()
@@ -55,9 +55,9 @@ class BasicIT extends Neo4jContainerSpec {
 
     private void execute(String format) {
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(UpdateSqlCommandStep.CHANGELOG_FILE_ARG, "/e2e/basic/changeLog.${format}".toString())
                 .setOutput(System.out)
         command.execute()

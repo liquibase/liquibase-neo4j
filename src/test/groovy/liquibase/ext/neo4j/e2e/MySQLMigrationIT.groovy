@@ -3,7 +3,7 @@ package liquibase.ext.neo4j.e2e
 import liquibase.command.CommandScope
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import org.testcontainers.containers.MySQLContainer
 import spock.lang.Shared
 import spock.lang.Specification
@@ -53,9 +53,9 @@ class MySQLMigrationIT extends Specification {
 
     private void execute() {
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, mysql.getJdbcUrl())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, mysql.getUsername())
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, mysql.getPassword())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, mysql.getJdbcUrl())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, mysql.getUsername())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, mysql.getPassword())
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/mysql/changeLog.xml")
                 .setOutput(System.out)
         command.execute()

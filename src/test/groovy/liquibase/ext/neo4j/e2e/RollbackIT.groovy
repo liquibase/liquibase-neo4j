@@ -4,7 +4,7 @@ import liquibase.command.CommandScope
 import liquibase.command.core.RollbackCountCommandStep
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
 class RollbackIT extends Neo4jContainerSpec {
@@ -17,9 +17,9 @@ class RollbackIT extends Neo4jContainerSpec {
         assert row["genre"].equals("Comédie")
 
         def command = new CommandScope(RollbackCountCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, changeLogFile)
                 .addArgumentValue(RollbackCountCommandStep.COUNT_ARG, 1)
                 .setOutput(System.out)
@@ -36,9 +36,9 @@ class RollbackIT extends Neo4jContainerSpec {
 
     private def runUpdate(String changeLogFile) {
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, changeLogFile)
                 .setOutput(System.out)
         command.execute()
