@@ -35,6 +35,7 @@ jobs:
         neo4j_version:
           - "4.4"
           - "5"
+          - "2025.01"
         enterprise:
           - "true"
           - "false"
