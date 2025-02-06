@@ -3,7 +3,7 @@ package liquibase.ext.neo4j.e2e
 import liquibase.command.CommandScope
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
@@ -15,9 +15,9 @@ class RenameTypeIT extends Neo4jContainerSpec {
     def "runs migrations renaming types"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-simple.${format}".toString())
                 .setOutput(System.out)
         command.execute()
@@ -56,9 +56,9 @@ class RenameTypeIT extends Neo4jContainerSpec {
             assumeTrue(neo4jVersion() >= V5_21_0)
         }
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-simple-batched${if (concurrent) "-concurrent" else ""}.${format}".toString())
                 .setOutput(System.out)
         command.execute()
@@ -94,9 +94,9 @@ class RenameTypeIT extends Neo4jContainerSpec {
     def "runs migrations renaming types of matching relationships"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-pattern.${format}".toString())
                 .setOutput(System.out)
         command.execute()
@@ -134,9 +134,9 @@ class RenameTypeIT extends Neo4jContainerSpec {
             assumeTrue(neo4jVersion() >= V5_21_0)
         }
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
                 .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/rename-type/changeLog-pattern-batched${if (concurrent) "-concurrent" else ""}.${format}".toString())
                 .setOutput(System.out)
         command.execute()
