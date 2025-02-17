@@ -121,6 +121,11 @@ public class KernelVersion implements Comparable<KernelVersion> {
         return String.format("%d.%d.%d", major, minor, patch);
     }
 
+    public boolean isCalver() {
+        // hacky calver heuristic
+        return major > 2000;
+    }
+
     private static int parseMinor(String buffer) {
         return Integer.parseInt(buffer.replace("-aura", ""), 10);
     }

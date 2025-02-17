@@ -3,6 +3,7 @@ package liquibase.ext.neo4j.database
 import liquibase.database.DatabaseConnection
 import liquibase.database.DatabaseFactory
 import liquibase.ext.neo4j.Neo4jContainerSpec
+import spock.lang.Requires
 
 import static liquibase.ext.neo4j.DockerNeo4j.enterpriseEdition
 import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
@@ -19,6 +20,8 @@ class Neo4jDatabaseIT extends Neo4jContainerSpec {
         connection.close()
     }
 
+
+    @Requires({ !neo4jVersion().isCalver() })
     def "retrieves database version upon connection"() {
         given:
         def database = new Neo4jDatabase()
