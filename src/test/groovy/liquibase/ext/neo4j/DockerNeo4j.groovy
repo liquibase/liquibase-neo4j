@@ -21,7 +21,7 @@ class DockerNeo4j {
     }
 
     static String dockerTag() {
-        return "${neo4jVersion()}${enterpriseEdition() ? "-enterprise" : ""}"
+        return "${padMinor(neo4jVersion())}${enterpriseEdition() ? "-enterprise" : ""}"
     }
 
     static boolean enterpriseEdition() {
@@ -30,5 +30,15 @@ class DockerNeo4j {
 
     static KernelVersion neo4jVersion() {
         return KernelVersion.parse(System.getenv().getOrDefault("NEO4J_VERSION", "4.4"))
+    }
+
+    private static padMinor(KernelVersion v) {
+        if (v.isCalver() && v.minor() < 10) {
+            if (v.patch() != Integer.MAX_VALUE) {
+                return "${v.major()}.0${v.minor()}.${v.patch()}"
+            }
+            return "${v.major()}.0${v.minor()}"
+        }
+        return v.versionString()
     }
 }
