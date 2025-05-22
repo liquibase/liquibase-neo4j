@@ -8,10 +8,15 @@ on:
       - reopened
       - synchronize
     paths-ignore:
-      - 'documentation.Dockerfile'
-      - 'documentation.dockerignore'
-      - 'mkdocs.yml'
-      - 'docs/**'
+      - "documentation.Dockerfile"
+      - "documentation.dockerignore"
+      - "mkdocs.yml"
+      - "docs/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: read
 
 jobs:
   authorize:
@@ -19,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: true
-        
+
   build-test:
     needs: authorize
     uses: liquibase/build-logic/.github/workflows/os-extension-test.yml@main
@@ -49,8 +54,8 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'temurin'
-          cache: 'maven'
+          distribution: "temurin"
+          cache: "maven"
 
       - name: Run Tests
         run: mvn -P5x-driver --quiet --show-version --batch-mode verify
