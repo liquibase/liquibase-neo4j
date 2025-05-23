@@ -10,7 +10,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>4.32.0-SNAPSHOT</version>
+    <version>4.33.0-SNAPSHOT</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
