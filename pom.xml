@@ -47,7 +47,7 @@
         <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
         <liquibase.version>4.32.0</liquibase.version>
         <sonar.tests>src/test/groovy</sonar.tests>
-        <testcontainers.version>1.21.0</testcontainers.version>
+        <testcontainers.version>1.21.1</testcontainers.version>
         <neo4j-driver.version>4.4.18</neo4j-driver.version>
         <junit.version>5.12.2</junit.version>
         <junit-platform.version>1.12.2</junit-platform.version>
