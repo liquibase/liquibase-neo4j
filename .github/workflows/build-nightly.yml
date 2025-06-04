@@ -2,11 +2,12 @@
 name: "Nightly build"
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 7 * * 1-5"
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   packages: read
 
