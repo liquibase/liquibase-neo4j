@@ -57,16 +57,17 @@ class SnapshotIT extends Neo4jContainerSpec {
         System.out = new PrintStream(buffer)
     }
 
-    @Requires({ KernelVersion.V4_4_0 <= neo4jVersion() && neo4jVersion() < V5_0_0 })
-    def "[4.4] records snapshots of node indices"() {
+    @Requires({ KernelVersion.V4_4_0 <= neo4jVersion() && neo4jVersion() < V5_0_0 && enterpriseEdition() })
+    def "[4.4] records snapshots of node indices & constraints"() {
         given:
         queryRunner.run("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS")
-        dropNodeConstraints()
         dropNodeIndicesExcept("vector")
+        dropNodeConstraintsExcept("type")
 
         and:
         insertData()
         createNodeIndicesExcept("vector")
+        createNodeConstraintsExcept("type")
 
 
         and:
@@ -88,90 +89,56 @@ class SnapshotIT extends Neo4jContainerSpec {
         objects["liquibase.ext.neo4j.structure.Label"].size() == 2
         def firstLabel = objects["liquibase.ext.neo4j.structure.Label"][0]["label"]
         firstLabel["value"] == "Bar"
+        firstLabel["constraints"] == null
         firstLabel["indices"].size() == 1
         firstLabel["indices"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeIndex")}
         def secondLabel = objects["liquibase.ext.neo4j.structure.Label"][1]["label"]
         secondLabel["value"] == "Foo"
-        secondLabel["indices"].size() == 5
+        secondLabel["constraints"].size() == 3
+        secondLabel["constraints"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeConstraint")}
+        secondLabel["indices"].size() == 7
         secondLabel["indices"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeIndex")}
-        def indices = objects["liquibase.ext.neo4j.structure.NodeIndex"]
-        indices.size() == 5
-        def bTreeIndex = indices[0]["nodeIndex"]
-        bTreeIndex["type"] == "BTREE"
-        bTreeIndex["labels"] == ["Foo"]
-        bTreeIndex["properties"] == ["bar"]
-        def fullTextIndex = indices[1]["nodeIndex"]
-        fullTextIndex["type"] == "FULLTEXT"
-        fullTextIndex["labels"] == ["Foo", "Bar"]
-        fullTextIndex["properties"] == ["bar", "description"]
-        def pointIndex = indices[2]["nodeIndex"]
-        pointIndex["type"] == "POINT"
-        pointIndex["labels"] == ["Foo"]
-        pointIndex["properties"] == ["location"]
-        def rangeIndex = indices[3]["nodeIndex"]
-        rangeIndex["type"] == "RANGE"
-        rangeIndex["labels"] == ["Foo"]
-        rangeIndex["properties"] == ["baz"]
-        def textIndex = indices[4]["nodeIndex"]
-        textIndex["type"] == "TEXT"
-        textIndex["labels"] == ["Foo"]
-        textIndex["properties"] == ["description"]
-
-    }
-
-    @Requires({ KernelVersion.V4_4_0 <= neo4jVersion() && neo4jVersion() < V5_0_0 && enterpriseEdition() })
-    def "[4.4] records snapshots of node constraints"() {
-        given:
-        queryRunner.run("DROP DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
-        queryRunner.run("CREATE DATABASE \$db WAIT", ["db": "neo4j"], SessionConfig.forDatabase("system"))
-        insertData()
-        createNodeConstraintsExcept("type")
-
-        and:
-        def command = new CommandScope(SnapshotCommandStep.COMMAND_NAME)
-                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
-                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
-                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(SnapshotCommandStep.SNAPSHOT_FORMAT_ARG, "json")
-                .setOutput(System.out)
-
-        when:
-        command.execute()
-
-        then:
-        def result = parseSnapshotReport()
-        def snapshot = result["snapshot"]
-        snapshot["database"]["shortName"] == "neo4j"
-        def objects = snapshot["objects"]
-        objects["liquibase.ext.neo4j.structure.Label"].size() == 1
-        def label = objects["liquibase.ext.neo4j.structure.Label"][0]["label"]
-        label["value"] == "Foo"
-        label["constraints"].size() == 3
-        label["constraints"].every {it.startsWith("liquibase.ext.neo4j.structure.NodeConstraint")}
-        def constraints = objects["liquibase.ext.neo4j.structure.NodeConstraint"]
-        constraints.size() == 3
-        def existenceConstraint = constraints[0]["nodeConstraint"]
-        existenceConstraint["type"] == "NODE_PROPERTY_EXISTENCE"
-        existenceConstraint["labels"] == ["Foo"]
-        existenceConstraint["properties"] == ["bar"]
-        def keyConstraint = constraints[1]["nodeConstraint"]
-        keyConstraint["type"] == "NODE_KEY"
-        keyConstraint["labels"] == ["Foo"]
-        keyConstraint["properties"] == ["baz"]
-        def uniqueConstraint = constraints[2]["nodeConstraint"]
-        uniqueConstraint["type"] == "UNIQUENESS"
-        uniqueConstraint["labels"] == ["Foo"]
-        uniqueConstraint["properties"] == ["description"]
+        def indices = objects["liquibase.ext.neo4j.structure.NodeIndex"].collect {
+            def index = it["nodeIndex"]
+            [
+                type: index["type"],
+                labels: index["labels"],
+                properties: index["properties"],
+            ]
+        }
+        indices ==~ [
+                [type: "BTREE", labels: ["Foo"], properties: ["bar"]],
+                [type: "BTREE", labels: ["Foo"], properties: ["baz"]],
+                [type: "BTREE", labels: ["Foo"], properties: ["description"]],
+                [type: "FULLTEXT", labels: ["Foo", "Bar"], properties: ["bar", "description"]],
+                [type: "POINT", labels: ["Foo"], properties: ["location"]],
+                [type: "RANGE", labels: ["Foo"], properties: ["baz"]],
+                [type: "TEXT", labels: ["Foo"], properties: ["description"]],
+        ]
+        def constraints = objects["liquibase.ext.neo4j.structure.NodeConstraint"].collect {
+            def constraint = it["nodeConstraint"]
+            [
+                    "type": constraint["type"],
+                    "labels": constraint["labels"],
+                    "properties": constraint["properties"],
+            ]
+        }
+        constraints ==~ [
+                [type: "NODE_PROPERTY_EXISTENCE", labels: ["Foo"], properties: ["bar"]],
+                [type: "NODE_KEY", labels: ["Foo"], properties: ["baz"]],
+                [type: "UNIQUENESS", labels: ["Foo"], properties: ["description"]],
+        ]
     }
 
     @Requires({neo4jVersion() >= V5_0_0})
-    def "[5+] records snapshots of node indices"() {
+    def "[5+] records snapshots of node indices and constraints"() {
         given:
         queryRunner.run("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS")
         dropNodeConstraints()
         dropNodeIndicesExcept("btree")
         insertData()
         createNodeIndicesExcept("btree")
+        createNodeConstraintsExcept("type")
 
         and:
         def command = new CommandScope(SnapshotCommandStep.COMMAND_NAME)

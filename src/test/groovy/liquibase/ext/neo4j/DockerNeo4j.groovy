@@ -25,7 +25,7 @@ class DockerNeo4j {
     }
 
     static boolean enterpriseEdition() {
-        return parseBoolean(System.getenv().getOrDefault("ENTERPRISE", "false"))
+        return parseBoolean(System.getenv().getOrDefault("ENTERPRISE", "true"))
     }
 
     static KernelVersion neo4jVersion() {
