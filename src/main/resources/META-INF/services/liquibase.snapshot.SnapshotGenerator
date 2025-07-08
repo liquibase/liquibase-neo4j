@@ -1,0 +1,4 @@
+liquibase.ext.neo4j.snapshot.LabelSnapshotGeneratorNeo4j
+liquibase.ext.neo4j.snapshot.NodeIndexSnapshotGeneratorNeo4j
+liquibase.ext.neo4j.snapshot.NodeConstraintSnapshotGeneratorNeo4j
+liquibase.ext.neo4j.snapshot.TypeSnapshotGeneratorNeo4j
