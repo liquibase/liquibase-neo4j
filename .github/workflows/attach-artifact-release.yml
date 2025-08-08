@@ -13,6 +13,6 @@ permissions:
   id-token: write  
 jobs:
   attach-artifact-to-release:
-    uses: liquibase/build-logic/.github/workflows/extension-attach-artifact-release.yml@main
+    uses: liquibase/build-logic/.github/workflows/extension-attach-artifact-release.yml@fix/DAT-20612-simple-gpg-masking
     secrets: inherit
 
