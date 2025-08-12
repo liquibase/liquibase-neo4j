@@ -27,6 +27,7 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -38,6 +39,8 @@ import static java.sql.ResultSet.TYPE_FORWARD_ONLY;
 import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.normalizeUri;
 
 class Neo4jConnection implements Connection, DatabaseMetaData {
+    private static final String SERVER_VERSION_QUERY =
+            "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition, versions[0] AS version LIMIT 1";
 
     private final String uri;
     private final Driver driver;
@@ -46,6 +49,8 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     private Transaction transaction;
     private boolean autocommit = true;
     private boolean closed;
+    private String neo4jVersion;
+    private String neo4jEdition;
 
     public Neo4jConnection(String url, Properties info) {
         this(url, info, new DriverConfigSupplier(QueryStringParser.parseQueryString(url.replaceFirst("jdbc:neo4j:", "")), info));
@@ -154,13 +159,15 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public String getDatabaseProductName() {
-        return "Neo4j";
+    public String getDatabaseProductName() throws SQLException {
+        readNeo4jVersionAndEdition();
+        return String.format("Neo4j (%s Edition)", neo4jEdition.equals("enterprise") ? "Enterprise" : "Community");
     }
 
     @Override
-    public String getDatabaseProductVersion() {
-        return null;
+    public String getDatabaseProductVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        return neo4jVersion;
     }
 
     @Override
@@ -901,13 +908,25 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public int getDatabaseMajorVersion() {
-        return 0;
+    public int getDatabaseMajorVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        String[] versionComponents = neo4jVersion.split("\\.");
+        if (versionComponents.length <= 1) {
+            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+        }
+        String major = versionComponents[0];
+        return Integer.parseInt(major, 10);
     }
 
     @Override
-    public int getDatabaseMinorVersion() {
-        return 0;
+    public int getDatabaseMinorVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        String[] versionComponents = neo4jVersion.split("\\.");
+        if (versionComponents.length <= 1) {
+            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+        }
+        String minor = versionComponents[1];
+        return Integer.parseInt(minor, 10);
     }
 
     @Override
@@ -986,8 +1005,17 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public String getCatalog() {
-        return null;
+    public String getCatalog() throws SQLException {
+        try (ResultSet resultSet = this.createStatement().executeQuery("CALL db.info() YIELD name RETURN name")) {
+            if (!resultSet.next()) {
+                throw new SQLException("Could not retrieve current database name (catalog): expected 1 row, got none");
+            }
+            String databaseName = resultSet.getString("name");
+            if (resultSet.next()) {
+                throw new SQLException("Could not retrieve current database name (catalog): expected 1 row, got at least 2");
+            }
+            return databaseName;
+        }
     }
 
     @Override
@@ -1250,10 +1278,10 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     // visible for testing
+
     final Transaction getTransaction() {
         return transaction;
     }
-
     final Session openSession() {
         return driver.session(this.sessionConfig);
     }
@@ -1278,6 +1306,20 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     private static void ensureResultSetConcurrency(int resultSetConcurrency) throws SQLFeatureNotSupportedException {
         if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
             throw new SQLFeatureNotSupportedException("only CONCUR_READ_ONLY is supported");
+        }
+    }
+
+    private void readNeo4jVersionAndEdition() throws SQLException {
+        if (this.neo4jVersion != null) {
+            return;
+        }
+        try (ResultSet results = this.createStatement().executeQuery(SERVER_VERSION_QUERY)) {
+            if (!results.next()) {
+                throw new SQLException("Could not retrieve Neo4j version and edition");
+            }
+            results.next();
+            this.neo4jVersion = results.getString("version");
+            this.neo4jEdition = results.getString("edition").toLowerCase(Locale.ENGLISH);
         }
     }
 }
