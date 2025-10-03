@@ -45,31 +45,29 @@ class Neo4jResultSet_getObject_Test extends Specification {
         resultSet.getObject("bar") == null
 
         where:
-        input                                                                 | output
-        true                                                                  | true
-        false                                                                 | false
-        42                                                                    | 42
-        42L                                                                   | 42L
-        1.0f                                                                  | 1.0f
-        1.0d                                                                  | 1.0d
-        [1]                                                                   | [1]
-        [k: "v"]                                                              | [k: "v"]
-        Values.point(7203, 42, 43)                                            | [srid: 7203, crs: "cartesian", x: 42, y: 43]
-        Values.point(9157, 42, 43, 44)                                        | [srid: 9157, crs: "cartesian-3d", x: 42, y: 43, z: 44]
-        Values.point(4326, 42, 43)                                            | [srid: 4326, crs: "wgs-84", x: 42.0, y: 43.0, longitude: 42, latitude: 43]
-        Values.point(4979, 42, 43, 44)                                        | [srid: 4979, crs: "wgs-84-3d", x: 42.0, y: 43.0, z: 44, longitude: 42, latitude: 43, height: 44]
-        [[1], true, [almostpi: 2d]]                                           | [[1], true, [almostpi: 2d]]
-        [key: [true, false, Values.point(7203, 42, 43)]]                      | [key: [true, false, [srid: 7203, crs: "cartesian", x: 42, y: 43]]]
-        nodeValue(42L, ["Label1", "Label2"], [prop1: true, prop2: "yep"])                    | [_id: 42L, _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
-        nodeValueV5(42L, "elementId", ["Label1", "Label2"], [prop1: true, prop2: "yep"])     | [_id: 42L, _elementId: "elementId", _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
-        relationshipValue(42L, "type", [prop1: true, prop2: "yep"], 43L, 44L)                | [_id: 42L, _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
-        relationshipValueV5(42L, "elementId", "type", [prop1: true, prop2: "yep"], 43L, 44L) | [_id: 42L, _elementId: "elementId", _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
-        pathValue(nodeValue(42L, ["S"], [k1: "v1"]),
-                relationshipValue(43L, "L", [k2: "v2"], 42L, 44L),
-                nodeValue(44L, ["E"], [k3: "v3"]))                            | [[_id: 42L, _labels: ["S"], _properties: [k1: "v1"]],
-                                                                                 [_id: 43L, _type: "L", _properties: [k2: "v2"], "_startId": 42L, "_endId": 44L],
-                                                                                 [_id: 44L, _labels: ["E"], _properties: [k3: "v3"]]]
-        ZonedDateTime.of(2000, 1, 1, 12, 12, 0, 0, ZoneOffset.UTC)            | new Timestamp(946728720000)
+        input                                                                              | output
+        true                                                                               | true
+        false                                                                              | false
+        42                                                                                 | 42
+        42L                                                                                | 42L
+        1.0f                                                                               | 1.0f
+        1.0d                                                                               | 1.0d
+        [1]                                                                                | [1]
+        [k: "v"]                                                                           | [k: "v"]
+        Values.point(7203, 42, 43)                                                         | [srid: 7203, crs: "cartesian", x: 42, y: 43]
+        Values.point(9157, 42, 43, 44)                                                     | [srid: 9157, crs: "cartesian-3d", x: 42, y: 43, z: 44]
+        Values.point(4326, 42, 43)                                                         | [srid: 4326, crs: "wgs-84", x: 42.0, y: 43.0, longitude: 42, latitude: 43]
+        Values.point(4979, 42, 43, 44)                                                     | [srid: 4979, crs: "wgs-84-3d", x: 42.0, y: 43.0, z: 44, longitude: 42, latitude: 43, height: 44]
+        [[1], true, [almostpi: 2d]]                                                        | [[1], true, [almostpi: 2d]]
+        [key: [true, false, Values.point(7203, 42, 43)]]                                   | [key: [true, false, [srid: 7203, crs: "cartesian", x: 42, y: 43]]]
+        nodeValue(42L, "elementId", ["Label1", "Label2"], [prop1: true, prop2: "yep"])     | [_id: 42L, _elementId: "elementId", _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
+        relationshipValue(42L, "elementId", "type", [prop1: true, prop2: "yep"], 43L, 44L) | [_id: 42L, _elementId: "elementId", _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
+        pathValue(nodeValue(42L, "elementId", ["S"], [k1: "v1"]),
+                relationshipValue(43L, "elementId", "L", [k2: "v2"], 42L, 44L),
+                nodeValue(44L, "elementId", ["E"], [k3: "v3"]))                            | [[_elementId: "elementId", _id: 42L, _labels: ["S"], _properties: [k1: "v1"]],
+                                                                                              [_elementId: "elementId", _id: 43L, _type: "L", _properties: [k2: "v2"], "_startId": 42L, "_endId": 44L],
+                                                                                              [_elementId: "elementId", _id: 44L, _labels: ["E"], _properties: [k3: "v3"]]]
+        ZonedDateTime.of(2000, 1, 1, 12, 12, 0, 0, ZoneOffset.UTC)                         | new Timestamp(946728720000)
     }
 
     def "gets indexed object value"() {
@@ -87,31 +85,29 @@ class Neo4jResultSet_getObject_Test extends Specification {
         resultSet.getObject(44) == null
 
         where:
-        input                                                                                | output
-        true                                                                                 | true
-        false                                                                                | false
-        42                                                                                   | 42
-        42L                                                                                  | 42L
-        1.0f                                                                                 | 1.0f
-        1.0d                                                                                 | 1.0d
-        [1]                                                                                  | [1]
-        [k: "v"]                                                                             | [k: "v"]
-        Values.point(7203, 42, 43)                                                           | [srid: 7203, crs: "cartesian", x: 42, y: 43]
-        Values.point(9157, 42, 43, 44)                                                       | [srid: 9157, crs: "cartesian-3d", x: 42, y: 43, z: 44]
-        Values.point(4326, 42, 43)                                                           | [srid: 4326, crs: "wgs-84", x: 42.0, y: 43.0, longitude: 42, latitude: 43]
-        Values.point(4979, 42, 43, 44)                                                       | [srid: 4979, crs: "wgs-84-3d", x: 42.0, y: 43.0, z: 44, longitude: 42, latitude: 43, height: 44]
-        [[1], true, [almostpi: 2d]]                                                          | [[1], true, [almostpi: 2d]]
-        [key: [true, false, Values.point(7203, 42, 43)]]                                     | [key: [true, false, [srid: 7203, crs: "cartesian", x: 42, y: 43]]]
-        nodeValue(42L, ["Label1", "Label2"], [prop1: true, prop2: "yep"])                    | [_id: 42L, _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
-        nodeValueV5(42L, "elementId", ["Label1", "Label2"], [prop1: true, prop2: "yep"])     | [_id: 42L, _elementId: "elementId", _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
-        relationshipValue(42L, "type", [prop1: true, prop2: "yep"], 43L, 44L)                | [_id: 42L, _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
-        relationshipValueV5(42L, "elementId", "type", [prop1: true, prop2: "yep"], 43L, 44L) | [_id: 42L, _elementId: "elementId", _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
-        pathValue(nodeValue(42L, ["S"], [k1: "v1"]),
-                relationshipValue(43L, "L", [k2: "v2"], 42L, 44L),
-                nodeValue(44L, ["E"], [k3: "v3"]))                                           | [[_id: 42L, _labels: ["S"], _properties: [k1: "v1"]],
-                                                                                                [_id: 43L, _type: "L", _properties: [k2: "v2"], "_startId": 42L, "_endId": 44L],
-                                                                                                [_id: 44L, _labels: ["E"], _properties: [k3: "v3"]]]
-        ZonedDateTime.of(2000, 1, 1, 12, 12, 0, 0, ZoneOffset.UTC)                           | new Timestamp(946728720000)
+        input                                                                              | output
+        true                                                                               | true
+        false                                                                              | false
+        42                                                                                 | 42
+        42L                                                                                | 42L
+        1.0f                                                                               | 1.0f
+        1.0d                                                                               | 1.0d
+        [1]                                                                                | [1]
+        [k: "v"]                                                                           | [k: "v"]
+        Values.point(7203, 42, 43)                                                         | [srid: 7203, crs: "cartesian", x: 42, y: 43]
+        Values.point(9157, 42, 43, 44)                                                     | [srid: 9157, crs: "cartesian-3d", x: 42, y: 43, z: 44]
+        Values.point(4326, 42, 43)                                                         | [srid: 4326, crs: "wgs-84", x: 42.0, y: 43.0, longitude: 42, latitude: 43]
+        Values.point(4979, 42, 43, 44)                                                     | [srid: 4979, crs: "wgs-84-3d", x: 42.0, y: 43.0, z: 44, longitude: 42, latitude: 43, height: 44]
+        [[1], true, [almostpi: 2d]]                                                        | [[1], true, [almostpi: 2d]]
+        [key: [true, false, Values.point(7203, 42, 43)]]                                   | [key: [true, false, [srid: 7203, crs: "cartesian", x: 42, y: 43]]]
+        nodeValue(42L, "elementId", ["Label1", "Label2"], [prop1: true, prop2: "yep"])     | [_id: 42L, _elementId: "elementId", _labels: ["Label1", "Label2"], _properties: [prop1: true, prop2: "yep"]]
+        relationshipValue(42L, "elementId", "type", [prop1: true, prop2: "yep"], 43L, 44L) | [_id: 42L, _elementId: "elementId", _type: "type", _properties: [prop1: true, prop2: "yep"], "_startId": 43L, "_endId": 44L]
+        pathValue(nodeValue(42L, "elementId", ["S"], [k1: "v1"]),
+                relationshipValue(43L, "elementId", "L", [k2: "v2"], 42L, 44L),
+                nodeValue(44L, "elementId", ["E"], [k3: "v3"]))                            | [[_elementId: "elementId", _id: 42L, _labels: ["S"], _properties: [k1: "v1"]],
+                                                                                              [_elementId: "elementId", _id: 43L, _type: "L", _properties: [k2: "v2"], "_startId": 42L, "_endId": 44L],
+                                                                                              [_elementId: "elementId", _id: 44L, _labels: ["E"], _properties: [k3: "v3"]]]
+        ZonedDateTime.of(2000, 1, 1, 12, 12, 0, 0, ZoneOffset.UTC)                         | new Timestamp(946728720000)
     }
 
     def "fails getting named object value if access error occurred"() {
@@ -176,21 +172,8 @@ class Neo4jResultSet_getObject_Test extends Specification {
         exception.message == "cannot perform operation: result set is closed"
     }
 
-    NodeValue nodeValue(long id, List<String> labels, Map<String, Object> properties) {
+    NodeValue nodeValue(long id, String elementId, List<String> labels, Map<String, Object> properties) {
         def node = Mock(Node.class)
-        node.id() >> id
-        node.labels() >> labels
-        node.asMap() >> properties
-        return new NodeValue(node)
-    }
-
-    // emulates Nodes with v5 driver (elementId would actually belong to the Entity interface)
-    interface NodeV5 extends Node {
-        String elementId()
-    }
-
-    NodeValue nodeValueV5(long id, String elementId, List<String> labels, Map<String, Object> properties) {
-        def node = Mock(NodeV5.class)
         node.id() >> id
         node.elementId() >> elementId
         node.labels() >> labels
@@ -198,23 +181,8 @@ class Neo4jResultSet_getObject_Test extends Specification {
         return new NodeValue(node)
     }
 
-    RelationshipValue relationshipValue(long id, String type, Map<String, Object> properties, long startNodeId, long endNodeId) {
+    RelationshipValue relationshipValue(long id, String elementId, String type, Map<String, Object> properties, long startNodeId, long endNodeId) {
         def relationship = Mock(Relationship.class)
-        relationship.id() >> id
-        relationship.type() >> type
-        relationship.asMap() >> properties
-        relationship.startNodeId() >> startNodeId
-        relationship.endNodeId() >> endNodeId
-        return new RelationshipValue(relationship)
-    }
-
-    // emulates Nodes with v5 driver (elementId would actually belong to the Entity interface)
-    interface RelationshipV5 extends Relationship {
-        String elementId()
-    }
-
-    RelationshipValue relationshipValueV5(long id, String elementId, String type, Map<String, Object> properties, long startNodeId, long endNodeId) {
-        def relationship = Mock(RelationshipV5.class)
         relationship.id() >> id
         relationship.elementId() >> elementId
         relationship.type() >> type
