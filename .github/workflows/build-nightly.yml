@@ -25,17 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 17, 21]
+        java: [17, 21, 25]
         neo4j_version:
           - "3.5"
           - "4.0"
           - "4.4"
           - "5.1"
           - "5.26"
-          - "2025.01"
-          - "2025.02"
           - "2025.03"
-          - "2025.04"
+          - "2025.09"
         enterprise:
           - "true"
           - "false"
@@ -109,13 +107,6 @@ jobs:
 
       - name: Run Tests
         run: mvn --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT"
-        env:
-          NEO4J_VERSION: ${{ matrix.neo4j_version }}
-          ENTERPRISE: ${{ matrix.enterprise }}
-
-      - name: Run Tests (5.x driver)
-        if: ${{ ( matrix.neo4j_version == '4.4' || startsWith(matrix.neo4j_version, '5') ) && (matrix.java == 17 || matrix.java == 21) }}
-        run: mvn -P5x-driver --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT"
         env:
           NEO4J_VERSION: ${{ matrix.neo4j_version }}
           ENTERPRISE: ${{ matrix.enterprise }}
