@@ -127,7 +127,7 @@ class CypherRunner implements AutoCloseable {
 
     Map<String, Object> getSingleRow(String query) {
         driver.session().withCloseable { session ->
-            session.readTransaction({ tx ->
+            session.executeRead({ tx ->
                 tx.run(query).single().asMap()
             })
         }
@@ -135,7 +135,7 @@ class CypherRunner implements AutoCloseable {
 
     List<Map<String, Object>> getRows(String query) {
         driver.session().withCloseable { session ->
-            session.readTransaction({ tx ->
+            session.executeRead({ tx ->
                 tx.run(query).list({ record -> record.asMap() })
             })
         }
@@ -163,7 +163,7 @@ class CypherRunner implements AutoCloseable {
 
     void run(String query, Map<String, Object> params) {
         driver.session().withCloseable { session ->
-            session.writeTransaction({ tx ->
+            session.executeWrite({ tx ->
                 return tx.run(query, params).consume()
             })
         }
