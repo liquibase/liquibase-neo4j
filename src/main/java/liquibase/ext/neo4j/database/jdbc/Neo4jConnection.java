@@ -8,6 +8,7 @@ import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.Transaction;
+import org.neo4j.driver.internal.types.InternalTypeSystem;
 import org.neo4j.driver.types.TypeSystem;
 
 import java.sql.Array;
@@ -1259,7 +1260,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     TypeSystem getTypeSystem() {
-        return driver.defaultTypeSystem();
+        return InternalTypeSystem.TYPE_SYSTEM;
     }
 
     private static AuthToken newAuthToken(Properties info) {

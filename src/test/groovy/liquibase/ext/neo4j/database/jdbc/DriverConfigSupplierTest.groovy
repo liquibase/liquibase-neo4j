@@ -5,6 +5,8 @@ import org.neo4j.driver.SessionConfig
 import org.neo4j.driver.internal.retry.RetrySettings
 import spock.lang.Specification
 
+import java.util.concurrent.TimeUnit
+
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static java.util.concurrent.TimeUnit.MINUTES
 import static org.neo4j.driver.Config.TrustStrategy.trustAllCertificates
@@ -50,7 +52,7 @@ class DriverConfigSupplierTest extends Specification {
         def actualConfig = new DriverConfigSupplier(new QueryString(queryString), propertiesOf(properties)).get()
         verifyAll(actualConfig.trustStrategy()) {
             certFiles() == expectedConfig.certFiles()
-            revocationStrategy() == expectedConfig.revocationStrategy()
+            revocationCheckingStrategy() == expectedConfig.revocationCheckingStrategy()
             hostnameVerificationEnabled == expectedConfig.hostnameVerificationEnabled
         }
 
@@ -149,14 +151,13 @@ class DriverConfigSupplierTest extends Specification {
     def "creates the driver configuration with a custom max transaction retry time"() {
         expect:
         def actualConfig = new DriverConfigSupplier(new QueryString(queryString), propertiesOf(properties)).get()
-        fieldOf(actualConfig, "retrySettings", RetrySettings.class).maxRetryTimeMs() ==
-                fieldOf(config, "retrySettings", RetrySettings.class).maxRetryTimeMs()
+        actualConfig.maxTransactionRetryTimeMillis() == config.maxTransactionRetryTimeMillis()
 
         where:
-        queryString                         | properties                        | config
-        ["max.connection.poolsize": ["42"]] | [:]                               | Config.builder().withMaxConnectionPoolSize(42).build()
-        [:]                                 | ["max.connection.poolsize": "42"] | Config.builder().withMaxConnectionPoolSize(42).build()
-        ["max.connection.poolsize": ["42"]] | ["max.connection.poolsize": "24"] | Config.builder().withMaxConnectionPoolSize(42).build()
+        queryString                            | properties                           | config
+        ["max.transaction.retry.time": ["42"]] | [:]                                  | Config.builder().withMaxTransactionRetryTime(42, MILLISECONDS).build()
+        [:]                                    | ["max.transaction.retry.time": "42"] | Config.builder().withMaxTransactionRetryTime(42, MILLISECONDS).build()
+        ["max.transaction.retry.time": ["42"]] | ["max.transaction.retry.time": "24"] | Config.builder().withMaxTransactionRetryTime(42, MILLISECONDS).build()
     }
 
     def "creates the session configuration with a custom database name"() {
