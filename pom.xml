@@ -44,7 +44,7 @@
     </developers>
 
     <properties>
-        <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
+        <java.version>${maven.compiler.source}</java.version>
         <liquibase.version>4.33.0</liquibase.version>
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.21.3</testcontainers.version>
@@ -162,6 +162,21 @@
     <build>
         <defaultGoal>verify</defaultGoal>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <debug>true</debug>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>

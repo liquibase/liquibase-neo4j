@@ -106,7 +106,7 @@ jobs:
             ]
 
       - name: Run Tests
-        run: mvn --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT"
+        run: mvn --quiet --show-version --batch-mode verify -Dliquibase.version="master-SNAPSHOT" -Djava.version=${{ matrix.java }}
         env:
           NEO4J_VERSION: ${{ matrix.neo4j_version }}
           ENTERPRISE: ${{ matrix.enterprise }}
