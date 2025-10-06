@@ -5,6 +5,7 @@ import liquibase.statement.SqlStatement
 import liquibase.statement.core.RawParameterizedSqlStatement
 import liquibase.statement.core.RawSqlStatement
 import org.neo4j.driver.Driver
+import org.neo4j.driver.SessionConfig
 
 import java.util.function.Predicate
 import java.util.stream.Collectors
@@ -157,12 +158,11 @@ class CypherRunner implements AutoCloseable {
         throw new IllegalArgumentException("unsupported type of statement: ${statement.getClass()}")
     }
 
-    void run(String query) {
-        run(query, new HashMap<String, Object>(0))
-    }
+    void run(String query,
+             Map<String, Object> params = new HashMap<String, Object>(0),
+             SessionConfig config = SessionConfig.defaultConfig()) {
 
-    void run(String query, Map<String, Object> params) {
-        driver.session().withCloseable { session ->
+        driver.session(config).withCloseable { session ->
             session.writeTransaction({ tx ->
                 return tx.run(query, params).consume()
             })

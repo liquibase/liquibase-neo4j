@@ -39,9 +39,9 @@ abstract class Neo4jContainerSpec extends Specification {
     @Shared
     Database database
 
-    private PrintStream stdout
+    protected PrintStream stdout
 
-    private PrintStream stderr
+    protected PrintStream stderr
 
     def setupSpec() {
         neo4jContainer.start()
