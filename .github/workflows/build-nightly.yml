@@ -27,12 +27,9 @@ jobs:
       matrix:
         java: [17, 21, 25]
         neo4j_version:
-          - "3.5"
-          - "4.0"
           - "4.4"
           - "5.1"
           - "5.26"
-          - "2025.03"
           - "2025.09"
         enterprise:
           - "true"
