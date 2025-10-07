@@ -14,7 +14,11 @@ The extension allows to manage changes specifically for Neo4j databases.
 
 ### Neo4j
 
-The minimum required version of Neo4j is 3.5.
+The minimum required version of Neo4j is 4.4.
+
+!!! note
+    Earlier Neo4j versions (down to 3.5) are supported by the extension up to major version 4.
+
 The extension supports both Community Edition and Enterprise Edition of Neo4j.
 Please make sure to verify the end of support date of Neo4j
 versions [here](https://neo4j.com/developer/kb/neo4j-supported-versions/).
