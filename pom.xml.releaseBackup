@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-parent-pom</artifactId>
-        <version>0.5.8</version> <!-- Replace with the desired version -->
+        <version>1.0.0</version> <!-- Replace with the desired version -->
     </parent>
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>4.33.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
@@ -20,9 +20,9 @@
         <developer>
             <id>nvoxland</id>
             <name>Nathan Voxland</name>
-            <email>nathan.voxland@liquibase.org</email>
-            <url>http://nathan.voxland.net</url>
-            <organizationUrl>http://nathan.voxland.net/</organizationUrl>
+            <email>nathan@voxland.net</email>
+            <url>https://nathan.voxland.net</url>
+            <organizationUrl>https://nathan.voxland.net/</organizationUrl>
             <roles>
                 <role>architect</role>
                 <role>developer</role>
@@ -44,32 +44,25 @@
     </developers>
 
     <properties>
-        <maven.enforcer.requireJavaVersion>${maven.compiler.source}</maven.enforcer.requireJavaVersion>
-        <liquibase.version>4.33.0</liquibase.version>
+        <java.version>${maven.compiler.source}</java.version>
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.21.3</testcontainers.version>
-        <neo4j-driver.version>4.4.18</neo4j-driver.version>
-        <junit.version>5.13.3</junit.version>
-        <junit-platform.version>1.13.3</junit-platform.version>
+        <neo4j-driver.version>6.0.1</neo4j-driver.version>
+        <junit.version>5.13.4</junit.version>
+        <junit-platform.version>1.13.4</junit-platform.version>
     </properties>
 
     <scm>
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
-	<url>https://github.com/liquibase/liquibase-neo4j.git</url>
-	<tag>liquibase-neo4j-4.26.0</tag>
+        <url>https://github.com/liquibase/liquibase-neo4j.git</url>
+        <tag>liquibase-neo4j-4.26.0</tag>
     </scm>
 
     <dependencies>
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <version>${liquibase.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-commercial</artifactId>
             <version>${liquibase.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -82,7 +75,7 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
             <!-- 4.0.6 is the minimum for JDK 20 -->
-            <version>4.0.27</version>
+            <version>4.0.28</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -100,7 +93,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>9.3.0</version>
+            <version>9.4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -112,7 +105,7 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.17.6</version>
+            <version>1.17.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -163,9 +156,24 @@
         <defaultGoal>verify</defaultGoal>
         <plugins>
             <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <debug>true</debug>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                    <showWarnings>true</showWarnings>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <id>enforce-java</id>
@@ -176,7 +184,7 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>1.8</version>
+                                    <version>17</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -185,7 +193,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>über-jar</id>
@@ -219,34 +227,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>5x-driver</id>
-            <properties>
-                <maven.javadoc.skip>true</maven.javadoc.skip>
-                <maven.compiler.source>17</maven.compiler.source>
-                <maven.compiler.target>17</maven.compiler.target>
-                <enforcer.skip>true</enforcer.skip>
-                <neo4j-driver.version>5.28.1</neo4j-driver.version>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <useModulePath>false</useModulePath>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-	
 </project>
