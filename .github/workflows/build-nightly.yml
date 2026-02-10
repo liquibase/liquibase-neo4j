@@ -28,9 +28,8 @@ jobs:
         java: [17, 21, 25]
         neo4j_version:
           - "4.4"
-          - "5.1"
           - "5.26"
-          - "2025.09"
+          - "2026.01"
         enterprise:
           - "true"
           - "false"
