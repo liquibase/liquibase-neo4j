@@ -48,7 +48,7 @@
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>1.21.4</testcontainers.version>
         <neo4j-driver.version>6.0.2</neo4j-driver.version>
-        <junit.version>5.13.4</junit.version>
+        <junit.version>6.0.3</junit.version>
         <junit-platform.version>1.13.4</junit-platform.version>
     </properties>
 
