@@ -16,7 +16,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
@@ -26,7 +26,7 @@ jobs:
           docker run --pull never --volume "$(pwd)":/usr/src/app liquibase/neo4j-docs:latest build
 
       - name: Sync to Static
-        uses: jakejarvis/s3-sync-action@master
+        uses: jakejarvis/s3-sync-action@be0c4ab89158cac4278689ebedd8407dd5f35a83 # v0.5.1
         with:
           args: --acl public-read --follow-symlinks
         env:
