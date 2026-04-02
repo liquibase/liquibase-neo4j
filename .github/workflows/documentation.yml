@@ -26,7 +26,7 @@ jobs:
           docker run --pull never --volume "$(pwd)":/usr/src/app liquibase/neo4j-docs:latest build
 
       - name: Sync to Static
-        uses: jakejarvis/s3-sync-action@master
+        uses: jakejarvis/s3-sync-action@be0c4ab89158cac4278689ebedd8407dd5f35a83 # v0.5.1
         with:
           args: --acl public-read --follow-symlinks
         env:
