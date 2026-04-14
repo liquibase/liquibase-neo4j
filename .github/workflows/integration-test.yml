@@ -26,7 +26,7 @@ jobs:
         neo4j_version:
           - "4.4"
           - "5.26"
-          - "2026.01"
+          - "2026.03"
         enterprise:
           - "true"
           - "false"
