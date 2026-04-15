@@ -31,7 +31,6 @@ abstract class Neo4jContainerSpec extends Specification {
 
     @Shared
     Neo4jContainer neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE, neo4jImageVersion())
-            .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
 
     @Shared
     CypherRunner queryRunner
@@ -76,9 +75,9 @@ abstract class Neo4jContainerSpec extends Specification {
     }
 
     def cleanupSpec() {
-        database.close()
-        queryRunner.close()
-        neo4jContainer.stop()
+        database?.close()
+        queryRunner?.close()
+        neo4jContainer?.stop()
     }
 
     def jdbcUrl() {
