@@ -4,6 +4,7 @@ import liquibase.ext.neo4j.database.KernelVersion
 import org.testcontainers.neo4j.Neo4jContainer
 import org.testcontainers.utility.DockerImageName
 
+import java.time.Duration
 import java.time.ZoneId
 
 import static java.lang.Boolean.parseBoolean
@@ -14,6 +15,7 @@ class DockerNeo4j {
         def container = new Neo4jContainer(DockerImageName.parse("neo4j").withTag(tag))
                 .withAdminPassword(password)
                 .withNeo4jConfig("db.temporal.timezone", timezone.id)
+                .withStartupTimeout(Duration.ofSeconds(120))
                 .withLogConsumer { println it.utf8StringWithoutLineEnding}
         if (!enterpriseEdition()) {
             return container
