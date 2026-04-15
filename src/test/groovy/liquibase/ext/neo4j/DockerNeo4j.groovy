@@ -14,6 +14,7 @@ class DockerNeo4j {
         def container = new Neo4jContainer(DockerImageName.parse("neo4j").withTag(tag))
                 .withAdminPassword(password)
                 .withNeo4jConfig("db.temporal.timezone", timezone.id)
+                .withLogConsumer { println it.utf8StringWithoutLineEnding}
         if (!enterpriseEdition()) {
             return container
         }
