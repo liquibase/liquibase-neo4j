@@ -17,7 +17,7 @@ class DockerNeo4j {
         if (!enterpriseEdition()) {
             return container
         }
-        return container.withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
+        return container.acceptLicense()
     }
 
     static String dockerTag() {
