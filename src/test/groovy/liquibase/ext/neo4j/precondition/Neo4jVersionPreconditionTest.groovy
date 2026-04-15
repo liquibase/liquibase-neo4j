@@ -1,19 +1,9 @@
 package liquibase.ext.neo4j.precondition
 
-import liquibase.database.DatabaseConnection
-import liquibase.database.DatabaseFactory
-import liquibase.database.core.H2Database
-import liquibase.exception.PreconditionFailedException
-import liquibase.exception.ValidationErrors
-import liquibase.ext.neo4j.DockerNeo4j
-import liquibase.ext.neo4j.database.Neo4jDatabase
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Neo4jContainer
-import spock.lang.Shared
-import spock.lang.Specification
 
-import java.time.ZoneId
-import java.util.logging.LogManager
+import liquibase.database.core.H2Database
+import liquibase.exception.ValidationErrors
+import spock.lang.Specification
 
 class Neo4jVersionPreconditionTest extends Specification {
 

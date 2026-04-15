@@ -4,7 +4,7 @@ import liquibase.command.CommandScope
 import liquibase.command.core.UpdateCommandStep
 import liquibase.command.core.helpers.DatabaseChangelogCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
-import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.mysql.MySQLContainer
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -16,7 +16,7 @@ import static liquibase.ext.neo4j.Neo4jContainerSpec.tempFilePrintStream
 class MySQLMigrationIT extends Specification {
 
     @Shared
-    def mysql = new MySQLContainer<>("mysql:8")
+    def mysql = new MySQLContainer("mysql:8")
 
     @Shared
     Connection connection

@@ -4,7 +4,7 @@ import liquibase.database.Database
 import liquibase.database.DatabaseFactory
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
-import org.testcontainers.containers.Neo4jContainer
+import org.testcontainers.neo4j.Neo4jContainer
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -30,8 +30,7 @@ abstract class Neo4jContainerSpec extends Specification {
     static final TIMEZONE = ZoneId.of("Europe/Paris")
 
     @Shared
-    Neo4jContainer<Neo4jContainer> neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE, neo4jImageVersion())
-            .withEnv("NEO4J_ACCEPT_LICENSE_AGREEMENT", "yes")
+    Neo4jContainer neo4jContainer = DockerNeo4j.container(PASSWORD, TIMEZONE, neo4jImageVersion())
 
     @Shared
     CypherRunner queryRunner
@@ -76,9 +75,9 @@ abstract class Neo4jContainerSpec extends Specification {
     }
 
     def cleanupSpec() {
-        database.close()
-        queryRunner.close()
-        neo4jContainer.stop()
+        database?.close()
+        queryRunner?.close()
+        neo4jContainer?.stop()
     }
 
     def jdbcUrl() {
