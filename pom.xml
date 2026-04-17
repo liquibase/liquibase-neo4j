@@ -10,7 +10,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>5.0.1-SNAPSHOT</version>
+    <version>5.0.2-SNAPSHOT</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
@@ -50,7 +50,7 @@
         <neo4j-driver.version>6.0.5</neo4j-driver.version>
         <junit.version>6.0.3</junit.version>
         <junit-platform.version>${junit.version}</junit-platform.version>
-        <liquibase.version>5.0.1</liquibase.version>
+        <liquibase.version>5.0.2</liquibase.version>
     </properties>
 
     <scm>
