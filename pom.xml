@@ -50,7 +50,7 @@
         <neo4j-driver.version>6.1.0</neo4j-driver.version>
         <junit.version>6.0.3</junit.version>
         <junit-platform.version>${junit.version}</junit-platform.version>
-        <liquibase.version>5.0.2</liquibase.version>
+        <liquibase.version>5.0.3</liquibase.version>
     </properties>
 
     <scm>
