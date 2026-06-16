@@ -47,7 +47,7 @@
         <java.version>${maven.compiler.source}</java.version>
         <sonar.tests>src/test/groovy</sonar.tests>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <neo4j-driver.version>6.1.0</neo4j-driver.version>
+        <neo4j-driver.version>6.2.0</neo4j-driver.version>
         <junit.version>6.1.0</junit.version>
         <junit-platform.version>${junit.version}</junit-platform.version>
         <liquibase.version>5.0.2</liquibase.version>
