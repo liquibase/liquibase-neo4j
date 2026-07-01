@@ -154,13 +154,13 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
 
 ### Function existence check
 
-|Required plugin version|5.1.0|
+|Required plugin version|5.0.2.1|
 
 The `functionExists` precondition asserts whether a function is registered in the target Neo4j database.
 It can be combined with other preconditions with the standard boolean operators.
 
 The `functionName` attribute accepts both built-in and user-defined function names, as returned by
-[`SHOW FUNCTIONS`](https://neo4j.com/docs/cypher-manual/current/functions/listing-functions/).
+[`SHOW FUNCTIONS`](https://neo4j.com/docs/cypher-manual/current/functions/show-functions/).
 
 === "XML"
 
