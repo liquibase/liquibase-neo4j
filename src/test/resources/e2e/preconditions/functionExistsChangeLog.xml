@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="neo4j-abs-function" author="superstar">
+        <preConditions onFail="CONTINUE">
+            <neo4j:functionExists functionName="abs"/>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {createdWhenAbsExists: true})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="neo4j-missing-function" author="superstar">
+        <preConditions onFail="CONTINUE">
+            <neo4j:functionExists functionName="liquibase.nonexistent.function"/>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {createdWhenFakeFunctionExists: true})</neo4j:cypher>
+    </changeSet>
+
+</databaseChangeLog>

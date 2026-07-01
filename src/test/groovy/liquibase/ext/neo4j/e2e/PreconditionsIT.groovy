@@ -89,11 +89,11 @@ class PreconditionsIT extends Neo4jContainerSpec {
 
         expect:
         def row = queryRunner.getSingleRow("""
-            MATCH (n:Neo4j) RETURN n.absFunctionExists AS absFunctionExists, n.missingFunctionExists AS missingFunctionExists
+            MATCH (n:Neo4j) RETURN n.createdWhenAbsExists AS createdWhenAbsExists, n.createdWhenFakeFunctionExists AS createdWhenFakeFunctionExists
         """)
 
-        row["absFunctionExists"] == true
-        row["missingFunctionExists"] == null
+        row["createdWhenAbsExists"] == true
+        row["createdWhenFakeFunctionExists"] == null
 
         where:
         format << ["json", "xml", "yaml"]
