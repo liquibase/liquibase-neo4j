@@ -8,8 +8,7 @@ First install [Liquibase](https://www.liquibase.org/download).
 
 === "CLI users"
     1. Locate the Liquibase installation folder (subsequently called `LIQUIBASE_HOME`)
-    1. Download the extension JAR (from [GitHub]({{ github_repo }}/releases/download/{{ artifact_id }}-{{ version
-    }}/{{ artifact_id }}-{{ version }}-full.jar))
+    1. Download the "full" extension JAR (from [GitHub]({{ github_repo }}/releases/download/v{{ version }}/{{ artifact_id }}-{{ version }}-full.jar))
     1. Place the JAR in the `lib` folder of `LIQUIBASE_HOME`
     1. Run `liquibase --version`, the Neo4j extension should be listed
 
