@@ -73,13 +73,6 @@
             <version>${neo4j-driver.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <!-- 4.0.6 is the minimum for JDK 20 -->
-            <version>4.0.32</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-neo4j</artifactId>
             <version>${testcontainers.version}</version>
