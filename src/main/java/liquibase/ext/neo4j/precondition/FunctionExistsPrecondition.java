@@ -84,9 +84,6 @@ public class FunctionExistsPrecondition extends AbstractPrecondition {
 
     private static boolean functionExists(Neo4jDatabase database, String functionName) throws LiquibaseException {
         List<Map<String, ?>> rows = database.run(new RawParameterizedSqlStatement(FUNCTION_EXISTS_CHECK_QUERY, functionName));
-        if (rows.isEmpty()) {
-            return false;
-        }
         Object count = rows.get(0).get("count");
         return count instanceof Number && ((Number) count).longValue() > 0;
     }
