@@ -1,0 +1,46 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "neo4j-db-labels-procedure",
+        "author": "superstar",
+        "preConditions": [
+          {
+            "onFail": "CONTINUE"
+          },
+          {
+            "procedureExists": {
+              "procedureName": "db.labels"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "cypher": "CREATE (:Neo4j {createdWhenDbLabelsExists: true})"
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "neo4j-missing-procedure",
+        "author": "superstar",
+        "preConditions": [
+          {
+            "onFail": "CONTINUE"
+          },
+          {
+            "procedureExists": {
+              "procedureName": "liquibase.nonexistent.procedure"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "cypher": "CREATE (:Neo4j {createdWhenFakeProcedureExists: true})"
+          }
+        ]
+      }
+    }
+  ]
+}
