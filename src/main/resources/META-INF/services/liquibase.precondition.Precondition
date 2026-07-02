@@ -2,3 +2,4 @@ liquibase.ext.neo4j.precondition.Neo4jEditionPrecondition
 liquibase.ext.neo4j.precondition.Neo4jVersionPrecondition
 liquibase.ext.neo4j.precondition.CypherCheckPrecondition
 liquibase.ext.neo4j.precondition.FunctionExistsPrecondition
+liquibase.ext.neo4j.precondition.ProcedureExistsPrecondition

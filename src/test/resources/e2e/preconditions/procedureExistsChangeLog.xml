@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="neo4j-db-labels-procedure" author="superstar">
+        <preConditions onFail="CONTINUE">
+            <neo4j:procedureExists procedureName="db.labels"/>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {createdWhenDbLabelsExists: true})</neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="neo4j-missing-procedure" author="superstar">
+        <preConditions onFail="CONTINUE">
+            <neo4j:procedureExists procedureName="liquibase.nonexistent.procedure"/>
+        </preConditions>
+        <neo4j:cypher>CREATE (:Neo4j {createdWhenFakeProcedureExists: true})</neo4j:cypher>
+    </changeSet>
+
+</databaseChangeLog>
