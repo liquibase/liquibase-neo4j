@@ -152,6 +152,34 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
     {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.yaml' !}
     ~~~~
 
+### Procedure existence check
+
+|Required plugin version|5.0.2.1|
+
+The `procedureExists` precondition asserts whether a procedure is registered in the target Neo4j database.
+It can be combined with other preconditions with the standard boolean operators.
+
+The `procedureName` attribute accepts both built-in and user-defined procedure names, as returned by
+[`SHOW PROCEDURES`](https://neo4j.com/docs/cypher-manual/current/procedures/show-procedures/).
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/procedureExistsChangeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/procedureExistsChangeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/procedureExistsChangeLog.yaml' !}
+    ~~~~
+
 ## Insert Change
 
 |Required plugin version|4.21.1|
