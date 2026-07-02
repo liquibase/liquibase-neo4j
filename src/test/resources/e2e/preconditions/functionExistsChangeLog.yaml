@@ -1,0 +1,19 @@
+databaseChangeLog:
+- changeSet:
+    id: neo4j-abs-function
+    author: superstar
+    preConditions:
+    - onFail: CONTINUE
+    - functionExists:
+        functionName: abs
+    changes:
+    - cypher: 'CREATE (:Neo4j {createdWhenAbsExists: true})'
+- changeSet:
+    id: neo4j-missing-function
+    author: superstar
+    preConditions:
+    - onFail: CONTINUE
+    - functionExists:
+        functionName: liquibase.nonexistent.function
+    changes:
+    - cypher: 'CREATE (:Neo4j {createdWhenFakeFunctionExists: true})'

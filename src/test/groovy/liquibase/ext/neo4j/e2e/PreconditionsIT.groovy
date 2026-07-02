@@ -77,6 +77,28 @@ class PreconditionsIT extends Neo4jContainerSpec {
         format << ["json", "xml", "yaml"]
     }
 
+    def "runs migrations depending on function existence"() {
+        given:
+        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
+                .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/preconditions/functionExistsChangeLog.${format}".toString())
+                .setOutput(System.out)
+        command.execute()
+
+        expect:
+        def row = queryRunner.getSingleRow("""
+            MATCH (n:Neo4j) RETURN n.createdWhenAbsExists AS createdWhenAbsExists, n.createdWhenFakeFunctionExists AS createdWhenFakeFunctionExists
+        """)
+
+        row["createdWhenAbsExists"] == true
+        row["createdWhenFakeFunctionExists"] == null
+
+        where:
+        format << ["json", "xml", "yaml"]
+    }
+
     def "runs migrations depending on procedure existence"() {
         given:
         def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)

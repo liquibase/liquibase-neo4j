@@ -152,6 +152,34 @@ Cypher formatted change log files can only use `sqlCheck` at the moment.
     {! include '../src/test/resources/e2e/preconditions/cypherCheckChangeLog.yaml' !}
     ~~~~
 
+### Function existence check
+
+|Required plugin version|5.0.2.1|
+
+The `functionExists` precondition asserts whether a function is registered in the target Neo4j database.
+It can be combined with other preconditions with the standard boolean operators.
+
+The `functionName` attribute accepts both built-in and user-defined function names, as returned by
+[`SHOW FUNCTIONS`](https://neo4j.com/docs/cypher-manual/current/functions/show-functions/).
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/preconditions/functionExistsChangeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/preconditions/functionExistsChangeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/preconditions/functionExistsChangeLog.yaml' !}
+    ~~~~
+
 ### Procedure existence check
 
 |Required plugin version|5.0.2.1|
