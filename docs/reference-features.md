@@ -835,6 +835,7 @@ The `normalizeBoolean` change converts string property values with boolean meani
 
 Values listed in `trueValues` are set to `true`, values listed in `falseValues` are set to `false`.
 Use comma-separated strings (for example `trueValues="YES,y"`).
+Whitespace around each comma-separated value is trimmed.
 Properties whose value is in neither list are removed. Already boolean values are left unchanged.
 
 This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or later, like other graph refactorings.
