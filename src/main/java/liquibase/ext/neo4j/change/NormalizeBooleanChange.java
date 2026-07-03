@@ -20,6 +20,7 @@ public class NormalizeBooleanChange extends BatchableChange {
     private String property;
     private String trueValues;
     private String falseValues;
+    private Boolean deletedUnmatched = Boolean.FALSE;
 
     @Override
     public boolean supports(Database database) {
@@ -68,13 +69,14 @@ public class NormalizeBooleanChange extends BatchableChange {
         };
     }
 
-    private static String constructCypher(String batchSpec, String quotedProperty, String entitySource) {
+    private String constructCypher(String batchSpec, String quotedProperty, String entitySource) {
         String propertyAccess = "e.`" + quotedProperty + "`";
+        String result = deletedUnmatched ? "null" : propertyAccess;
         String setCase = ("SET %s = CASE"
                 + " WHEN %s IN $1 THEN true"
                 + " WHEN %s IN $2 THEN false"
                 + " WHEN %s IN [true, false] THEN %s"
-                + " ELSE null END").formatted(propertyAccess, propertyAccess, propertyAccess, propertyAccess, propertyAccess);
+                + " ELSE %s END").formatted(propertyAccess, propertyAccess, propertyAccess, propertyAccess, propertyAccess, result);
         String mutation = batchSpec.isEmpty()
                 ? setCase
                 : "CALL { WITH e " + setCase + " }" + batchSpec;
@@ -115,6 +117,14 @@ public class NormalizeBooleanChange extends BatchableChange {
 
     public void setFalseValues(String falseValues) {
         this.falseValues = falseValues;
+    }
+
+    public Boolean getDeletedUnmatched() {
+        return deletedUnmatched;
+    }
+
+    public void setDeletedUnmatched(Boolean deletedUnmatched) {
+        this.deletedUnmatched = deletedUnmatched;
     }
 
     private static List<String> splitCommaSeparated(String commaSeparated) {

@@ -170,6 +170,7 @@
         <xsd:attribute type="xsd:string" name="property" use="required" />
         <xsd:attribute type="xsd:string" name="trueValues" />
         <xsd:attribute type="xsd:string" name="falseValues" />
+        <xsd:attribute type="xsd:boolean" name="deletedUnmatched" />
         <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
         <xsd:attribute type="xsd:int" name="batchSize" />
         <xsd:attribute type="xsd:boolean" name="concurrent" />
