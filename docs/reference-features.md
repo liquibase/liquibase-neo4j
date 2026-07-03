@@ -827,6 +827,37 @@ When setting the `entityType` attribute to `RELATIONSHIP`, only the matching pro
     {! include '../src/test/resources/e2e/rename-property/changeLog-rel-batched.yaml' !}
     ~~~~
 
+### Boolean normalization
+
+|Required plugin version|5.0.2.1|
+
+The `normalizeBoolean` change converts string property values with boolean meaning into real boolean values.
+It can target all nodes and relationships, or a subset via the `entityType`, `fragment` and `outputVariable` attributes.
+
+Values listed in `trueValues` are set to `true`, values listed in `falseValues` are set to `false`.
+Use comma-separated strings (for example `trueValues="YES,y"`).
+Properties whose value is in neither list are removed. Already boolean values are left unchanged.
+
+This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or later, like other graph refactorings.
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog.yaml' !}
+    ~~~~
+
 
 ## Change Set's `runInTransaction`
 
