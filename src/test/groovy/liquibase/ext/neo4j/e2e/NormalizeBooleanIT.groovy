@@ -17,7 +17,7 @@ class NormalizeBooleanIT extends Neo4jContainerSpec {
         runUpdate("/e2e/normalize-boolean/changeLog.${format}")
 
         expect:
-        assertNormalizedBooleans()
+        assertNormalizedBooleans(false)
 
         where:
         format << ["json", "xml", "yaml"]
@@ -32,10 +32,21 @@ class NormalizeBooleanIT extends Neo4jContainerSpec {
         runUpdate("/e2e/normalize-boolean/changeLog${suffix}.${format}")
 
         expect:
-        assertNormalizedBooleans()
+        assertNormalizedBooleans(false)
 
         where:
         [format, concurrent] << [["json", "xml", "yaml"], [false, true]].combinations()
+    }
+
+    def "deletes unmatched values when deletedUnmatched is true"() {
+        given:
+        runUpdate("/e2e/normalize-boolean/changeLog-deleted-unmatched.${format}")
+
+        expect:
+        assertNormalizedBooleans(true)
+
+        where:
+        format << ["json", "xml", "yaml"]
     }
 
     private void runUpdate(String changelogPath) {
@@ -48,7 +59,7 @@ class NormalizeBooleanIT extends Neo4jContainerSpec {
                 .execute()
     }
 
-    private void assertNormalizedBooleans() {
+    private void assertNormalizedBooleans(boolean deletedUnmatched) {
         def movieCounts = queryRunner.getSingleRow("""
             MATCH (m:Movie)
             RETURN
@@ -59,7 +70,15 @@ class NormalizeBooleanIT extends Neo4jContainerSpec {
 
         assert movieCounts["trueCount"] == 2
         assert movieCounts["falseCount"] == 1
-        assert movieCounts["missingCount"] == 1
+        assert movieCounts["missingCount"] == (deletedUnmatched ? 1 : 0)
+
+        if (!deletedUnmatched) {
+            def maybe = queryRunner.getSingleRow("""
+                MATCH (m:Movie {watched: 'maybe'})
+                RETURN count(m) AS count
+            """)
+            assert maybe["count"] == 1
+        }
 
         def relationship = queryRunner.getSingleRow("""
             MATCH ()-[r:SEEN]->()

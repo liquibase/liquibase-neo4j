@@ -89,6 +89,25 @@ class NormalizeBooleanChangeTest extends Specification {
 
         then:
         statement.sql.contains("SET e.`watched` = CASE")
+        statement.sql.contains("ELSE e.`watched` END")
         !statement.sql.contains("IN TRANSACTIONS")
+    }
+
+    def "deletes unmatched values when deletedUnmatched is true"() {
+        given:
+        def change = new NormalizeBooleanChange()
+        change.property = "watched"
+        change.trueValues = "YES,y"
+        change.falseValues = "no,n"
+        change.deletedUnmatched = true
+        def database = Mock(Neo4jDatabase)
+        database.getKernelVersion() >> KernelVersion.V5_26_0
+
+        when:
+        def statement = change.generateStatements(database)[0] as RawParameterizedSqlStatement
+
+        then:
+        statement.sql.contains("ELSE null END")
+        !statement.sql.contains("ELSE e.`watched` END")
     }
 }

@@ -1,0 +1,20 @@
+databaseChangeLog:
+- changeSet:
+    id: seed-messy-booleans
+    author: superstar
+    changes:
+    - cypher: |-
+        CREATE (:Movie {watched: 'YES'})
+        CREATE (:Movie {watched: 'no'})
+        CREATE (:Movie {watched: 'maybe'})
+        CREATE (:Movie {watched: true})
+        CREATE (:Person)-[:SEEN {watched: 'YES'}]->(:Person)
+- changeSet:
+    id: normalize-watched
+    author: superstar
+    changes:
+    - normalizeBoolean:
+        property: watched
+        trueValues: 'YES,y'
+        falseValues: 'no,n'
+        deletedUnmatched: true

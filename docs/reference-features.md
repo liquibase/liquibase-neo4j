@@ -836,7 +836,8 @@ The `normalizeBoolean` change converts string property values with boolean meani
 Values listed in `trueValues` are set to `true`, values listed in `falseValues` are set to `false`.
 Use comma-separated strings (for example `trueValues="YES,y"`).
 Whitespace around each comma-separated value is trimmed.
-Properties whose value is in neither list are removed. Already boolean values are left unchanged.
+Properties whose value is in neither list are left unchanged by default. Already boolean values are left unchanged.
+Set `deletedUnmatched` to `true` to remove properties whose value matches neither list (Neo4j Migrations-compatible behavior).
 
 This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or later, like other graph refactorings.
 
@@ -894,6 +895,24 @@ This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or lat
 
     ~~~~yaml
     {! include '../src/test/resources/e2e/normalize-boolean/changeLog-batched-concurrent.yaml' !}
+    ~~~~
+
+=== "XML"
+
+    ~~~~xml
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.xml' !}
+    ~~~~
+
+=== "JSON"
+
+    ~~~~json
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.json' !}
+    ~~~~
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.yaml' !}
     ~~~~
 
 
