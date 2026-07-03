@@ -4,6 +4,7 @@ import liquibase.changelog.ChangeSet
 import liquibase.database.core.MySQLDatabase
 import liquibase.ext.neo4j.database.KernelVersion
 import liquibase.ext.neo4j.database.Neo4jDatabase
+import liquibase.statement.core.RawParameterizedSqlStatement
 import spock.lang.Specification
 
 class NormalizeBooleanChangeTest extends Specification {
@@ -50,5 +51,44 @@ class NormalizeBooleanChangeTest extends Specification {
 
         expect:
         change.trueValues == "YES, y"
+    }
+
+    def "generates batched cypher when enableBatchImport is true"() {
+        given:
+        def change = new NormalizeBooleanChange()
+        change.property = "watched"
+        change.trueValues = "YES,y"
+        change.falseValues = "no,n"
+        change.enableBatchImport = true
+        change.batchSize = 1L
+        def changeSet = Mock(ChangeSet)
+        changeSet.runInTransaction >> false
+        change.setChangeSet(changeSet)
+        def database = Mock(Neo4jDatabase)
+        database.getKernelVersion() >> KernelVersion.V5_26_0
+
+        when:
+        def statement = change.generateStatements(database)[0] as RawParameterizedSqlStatement
+
+        then:
+        statement.sql.contains("CALL { WITH e SET")
+        statement.sql.contains("IN TRANSACTIONS OF 1 ROWS")
+    }
+
+    def "generates unbatched cypher when enableBatchImport is false"() {
+        given:
+        def change = new NormalizeBooleanChange()
+        change.property = "watched"
+        change.trueValues = "YES,y"
+        change.falseValues = "no,n"
+        def database = Mock(Neo4jDatabase)
+        database.getKernelVersion() >> KernelVersion.V5_26_0
+
+        when:
+        def statement = change.generateStatements(database)[0] as RawParameterizedSqlStatement
+
+        then:
+        statement.sql.contains("SET e.`watched` = CASE")
+        !statement.sql.contains("IN TRANSACTIONS")
     }
 }

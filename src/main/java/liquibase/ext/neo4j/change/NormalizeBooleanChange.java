@@ -44,34 +44,41 @@ public class NormalizeBooleanChange extends BatchableChange {
 
     @Override
     protected SqlStatement[] generateBatchedStatements(Neo4jDatabase database) {
-        return generateStatements();
+        return generateStatements(cypherBatchSpec());
     }
 
     @Override
     protected SqlStatement[] generateUnbatchedStatements(Neo4jDatabase database) {
-        return generateStatements();
+        return generateStatements("");
     }
 
-    private SqlStatement[] generateStatements() {
+    private SqlStatement[] generateStatements(String batchSpec) {
         String quotedProperty = property.replace("`", "\\`");
-        String cypher = String.format("""
+        String entitySource = """
                 CALL {
                   MATCH (n) RETURN n AS t
                   UNION ALL
                   MATCH ()-[r]->() RETURN r AS t
                 } WITH t AS e
-                WHERE e.`%1$s` IS NOT NULL
-                SET e.`%1$s` = CASE
-                  WHEN e.`%1$s` IN $1 THEN true
-                  WHEN e.`%1$s` IN $2 THEN false
-                  WHEN e.`%1$s` IN [true, false] THEN e.`%1$s`
-                  ELSE null
-                END
-                """, quotedProperty);
+                """;
+        String cypher = constructCypher(batchSpec, quotedProperty, entitySource);
 
         return new SqlStatement[]{
                 new RawParameterizedSqlStatement(cypher, parameterList(parsedTrueValues()), parameterList(parsedFalseValues()))
         };
+    }
+
+    private static String constructCypher(String batchSpec, String quotedProperty, String entitySource) {
+        String propertyAccess = "e.`" + quotedProperty + "`";
+        String setCase = ("SET %s = CASE"
+                + " WHEN %s IN $1 THEN true"
+                + " WHEN %s IN $2 THEN false"
+                + " WHEN %s IN [true, false] THEN %s"
+                + " ELSE null END").formatted(propertyAccess, propertyAccess, propertyAccess, propertyAccess, propertyAccess);
+        String mutation = batchSpec.isEmpty()
+                ? setCase
+                : "CALL { WITH e " + setCase + " }" + batchSpec;
+        return entitySource + "WHERE " + propertyAccess + " IS NOT NULL\n" + mutation;
     }
 
     private static List<Object> parameterList(List<String> values) {

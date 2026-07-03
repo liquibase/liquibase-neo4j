@@ -6,19 +6,49 @@ import liquibase.command.core.helpers.DatabaseChangelogCommandStep
 import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep
 import liquibase.ext.neo4j.Neo4jContainerSpec
 
+import static liquibase.ext.neo4j.DockerNeo4j.neo4jVersion
+import static liquibase.ext.neo4j.database.KernelVersion.V5_21_0
+import static org.junit.jupiter.api.Assumptions.assumeTrue
+
 class NormalizeBooleanIT extends Neo4jContainerSpec {
 
     def "normalizes string boolean properties on nodes and relationships"() {
         given:
-        def command = new CommandScope(UpdateCommandStep.COMMAND_NAME)
+        runUpdate("/e2e/normalize-boolean/changeLog.${format}")
+
+        expect:
+        assertNormalizedBooleans()
+
+        where:
+        format << ["json", "xml", "yaml"]
+    }
+
+    def "normalizes string boolean properties in batched migrations"() {
+        given:
+        if (concurrent) {
+            assumeTrue(neo4jVersion() >= V5_21_0)
+        }
+        def suffix = concurrent ? "-batched-concurrent" : "-batched"
+        runUpdate("/e2e/normalize-boolean/changeLog${suffix}.${format}")
+
+        expect:
+        assertNormalizedBooleans()
+
+        where:
+        [format, concurrent] << [["json", "xml", "yaml"], [false, true]].combinations()
+    }
+
+    private void runUpdate(String changelogPath) {
+        new CommandScope(UpdateCommandStep.COMMAND_NAME)
                 .addArgumentValue(DbUrlConnectionArgumentsCommandStep.URL_ARG, "jdbc:neo4j:${neo4jContainer.getBoltUrl()}".toString())
                 .addArgumentValue(DbUrlConnectionArgumentsCommandStep.USERNAME_ARG, "neo4j")
                 .addArgumentValue(DbUrlConnectionArgumentsCommandStep.PASSWORD_ARG, PASSWORD)
-                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, "/e2e/normalize-boolean/changeLog.${format}".toString())
+                .addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_FILE_ARG, changelogPath)
                 .setOutput(System.out)
-        command.execute()
+                .execute()
+    }
 
-        expect:
+    private void assertNormalizedBooleans() {
         def movieCounts = queryRunner.getSingleRow("""
             MATCH (m:Movie)
             RETURN
@@ -27,18 +57,15 @@ class NormalizeBooleanIT extends Neo4jContainerSpec {
                 count(CASE WHEN m.watched IS NULL THEN 1 END) AS missingCount
         """)
 
-        movieCounts["trueCount"] == 2
-        movieCounts["falseCount"] == 1
-        movieCounts["missingCount"] == 1
+        assert movieCounts["trueCount"] == 2
+        assert movieCounts["falseCount"] == 1
+        assert movieCounts["missingCount"] == 1
 
         def relationship = queryRunner.getSingleRow("""
             MATCH ()-[r:SEEN]->()
             RETURN r.watched AS watched
         """)
 
-        relationship["watched"] == true
-
-        where:
-        format << ["json", "xml", "yaml"]
+        assert relationship["watched"] == true
     }
 }
