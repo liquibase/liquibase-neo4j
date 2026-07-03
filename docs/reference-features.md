@@ -837,7 +837,7 @@ Values listed in `trueValues` are set to `true`, values listed in `falseValues` 
 Use comma-separated strings (for example `trueValues="YES,y"`).
 Whitespace around each comma-separated value is trimmed.
 Properties whose value is in neither list are left unchanged by default. Already boolean values are left unchanged.
-Set `deletedUnmatched` to `true` to remove properties whose value matches neither list (Neo4j Migrations-compatible behavior).
+Set `deleteUnmatched` to `true` to remove properties whose value matches neither list (Neo4j Migrations-compatible behavior).
 
 This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or later, like other graph refactorings.
 
@@ -900,19 +900,19 @@ This refactoring requires Neo4j 4.1 or later. Batching requires Neo4j 4.4 or lat
 === "XML"
 
     ~~~~xml
-    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.xml' !}
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-delete-unmatched.xml' !}
     ~~~~
 
 === "JSON"
 
     ~~~~json
-    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.json' !}
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-delete-unmatched.json' !}
     ~~~~
 
 === "YAML"
 
     ~~~~yaml
-    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-deleted-unmatched.yaml' !}
+    {! include '../src/test/resources/e2e/normalize-boolean/changeLog-delete-unmatched.yaml' !}
     ~~~~
 
 

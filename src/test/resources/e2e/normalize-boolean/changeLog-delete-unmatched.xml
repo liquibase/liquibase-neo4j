@@ -15,7 +15,7 @@ CREATE (:Person)-[:SEEN {watched: 'YES'}]->(:Person)
     </changeSet>
 
     <changeSet id="normalize-watched" author="superstar">
-        <neo4j:normalizeBoolean property="watched" trueValues="YES,y" falseValues="no,n" deletedUnmatched="true"/>
+        <neo4j:normalizeBoolean property="watched" trueValues="YES,y" falseValues="no,n" deleteUnmatched="true"/>
     </changeSet>
 
 </databaseChangeLog>

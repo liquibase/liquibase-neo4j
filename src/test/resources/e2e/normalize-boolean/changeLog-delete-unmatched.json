@@ -21,7 +21,7 @@
               "property": "watched",
               "trueValues": "YES,y",
               "falseValues": "no,n",
-              "deletedUnmatched": true
+              "deleteUnmatched": true
             }
           }
         ]

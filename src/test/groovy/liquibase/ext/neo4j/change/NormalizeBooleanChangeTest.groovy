@@ -93,13 +93,13 @@ class NormalizeBooleanChangeTest extends Specification {
         !statement.sql.contains("IN TRANSACTIONS")
     }
 
-    def "deletes unmatched values when deletedUnmatched is true"() {
+    def "deletes unmatched values when deleteUnmatched is true"() {
         given:
         def change = new NormalizeBooleanChange()
         change.property = "watched"
         change.trueValues = "YES,y"
         change.falseValues = "no,n"
-        change.deletedUnmatched = true
+        change.deleteUnmatched = true
         def database = Mock(Neo4jDatabase)
         database.getKernelVersion() >> KernelVersion.V5_26_0
 
