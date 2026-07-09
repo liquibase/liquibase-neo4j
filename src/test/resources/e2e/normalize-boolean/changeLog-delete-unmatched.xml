@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:neo4j="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="seed-messy-booleans" author="superstar">
+        <neo4j:cypher><![CDATA[
+CREATE (:Movie {watched: 'YES'})
+CREATE (:Movie {watched: 'no'})
+CREATE (:Movie {watched: 'maybe'})
+CREATE (:Movie {watched: true})
+CREATE (:Person)-[:SEEN {watched: 'YES'}]->(:Person)
+        ]]></neo4j:cypher>
+    </changeSet>
+
+    <changeSet id="normalize-watched" author="superstar">
+        <neo4j:normalizeBoolean property="watched" trueValues="YES,y" falseValues="no,n" deleteUnmatched="true"/>
+    </changeSet>
+
+</databaseChangeLog>

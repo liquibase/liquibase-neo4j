@@ -164,4 +164,24 @@
             </xsd:simpleType>
         </xsd:attribute>
     </xsd:complexType>
+
+    <xsd:element name="normalizeBoolean" type="normalizeBooleanType" />
+    <xsd:complexType name="normalizeBooleanType">
+        <xsd:attribute type="xsd:string" name="property" use="required" />
+        <xsd:attribute type="xsd:string" name="trueValues" />
+        <xsd:attribute type="xsd:string" name="falseValues" />
+        <xsd:attribute type="xsd:boolean" name="deleteUnmatched" />
+        <xsd:attribute type="xsd:boolean" name="enableBatchImport" />
+        <xsd:attribute type="xsd:int" name="batchSize" />
+        <xsd:attribute type="xsd:boolean" name="concurrent" />
+        <xsd:attribute type="xsd:string" name="batchErrorPolicy">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="CONTINUE"/>
+                    <xsd:enumeration value="BREAK"/>
+                    <xsd:enumeration value="FAIL"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
 </xsd:schema>
