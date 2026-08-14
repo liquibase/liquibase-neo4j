@@ -60,7 +60,7 @@ jobs:
 
       # look for dependencies in maven
       - name: Set up Maven settings.xml
-        uses: liquibase/build-logic/.github/actions/setup-maven-settings@991cd0a401f28eab0788f7b6fd28fcbce247fe4c # main
+        uses: liquibase/build-logic/.github/actions/setup-maven-settings@34fcec840b11a51c1a76b244b63f350ee22c0d5b # main
         with:
           gpm-token: ${{ env.LIQUIBOT_PAT_GPM_ACCESS }}
 
