@@ -1,0 +1,5 @@
+liquibase.ext.neo4j.structure.Label
+liquibase.ext.neo4j.structure.GraphType
+liquibase.ext.neo4j.structure.Index
+liquibase.ext.neo4j.structure.Constraint
+liquibase.ext.neo4j.structure.Type

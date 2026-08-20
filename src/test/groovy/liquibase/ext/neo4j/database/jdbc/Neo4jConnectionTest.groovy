@@ -182,4 +182,24 @@ but got:
         def exception = thrown(SQLException.class)
         exception.message == "the connection is in auto-commit mode. Explicit rollback is prohibited"
     }
+
+    def "unwraps supported connection types"() {
+        expect:
+        connection.isWrapperFor(Connection.class)
+        connection.unwrap(Connection.class).is(connection)
+        connection.isWrapperFor(Neo4jTransactionState.class)
+        connection.unwrap(Neo4jTransactionState.class).is(connection)
+    }
+
+    def "rejects unsupported unwrap types"() {
+        expect:
+        !connection.isWrapperFor(String.class)
+
+        when:
+        connection.unwrap(String.class)
+
+        then:
+        def exception = thrown(SQLException.class)
+        exception.message == "Cannot unwrap Neo4j connection to java.lang.String"
+    }
 }

@@ -28,7 +28,9 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
@@ -38,15 +40,22 @@ import static java.sql.ResultSet.HOLD_CURSORS_OVER_COMMIT;
 import static java.sql.ResultSet.TYPE_FORWARD_ONLY;
 import static liquibase.ext.neo4j.database.jdbc.SupportedJdbcUrl.normalizeUri;
 
-class Neo4jConnection implements Connection, DatabaseMetaData {
+class Neo4jConnection implements Connection, DatabaseMetaData, Neo4jTransactionState {
+    private static final String SERVER_VERSION_QUERY =
+            "CALL dbms.components() YIELD name, edition, versions WHERE name = \"Neo4j Kernel\" RETURN edition, versions[0] AS version LIMIT 1";
+    private static final String CURRENT_USER_QUERY = "SHOW CURRENT USER YIELD user RETURN user";
 
     private final String uri;
     private final Driver driver;
-    private final SessionConfig sessionConfig;
-    private final Session session;
+    private SessionConfig sessionConfig;
+    private Session session;
     private Transaction transaction;
+    private String catalog;
     private boolean autocommit = true;
     private boolean closed;
+    private String neo4jVersion;
+    private String neo4jEdition;
+    private String username;
 
     public Neo4jConnection(String url, Properties info) {
         this(url, info, new DriverConfigSupplier(QueryStringParser.parseQueryString(url.replaceFirst("jdbc:neo4j:", "")), info));
@@ -56,6 +65,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
         this.uri = uri;
         this.driver = createDriver(configSupplier, info);
         this.sessionConfig = configSupplier.getSessionConfig();
+        this.catalog = this.sessionConfig.database().orElse(null);
         this.session = openSession();
     }
 
@@ -125,8 +135,9 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public String getUserName() {
-        return null;
+    public String getUserName() throws SQLException {
+        readCurrentUser();
+        return username;
     }
 
     @Override
@@ -155,13 +166,15 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public String getDatabaseProductName() {
-        return "Neo4j";
+    public String getDatabaseProductName() throws SQLException {
+        readNeo4jVersionAndEdition();
+        return String.format("Neo4j (%s Edition)", neo4jEdition.equals("enterprise") ? "Enterprise" : "Community");
     }
 
     @Override
-    public String getDatabaseProductVersion() {
-        return null;
+    public String getDatabaseProductVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        return neo4jVersion;
     }
 
     @Override
@@ -902,13 +915,25 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public int getDatabaseMajorVersion() {
-        return 0;
+    public int getDatabaseMajorVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        String[] versionComponents = neo4jVersion.split("\\.");
+        if (versionComponents.length <= 1) {
+            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+        }
+        String major = versionComponents[0];
+        return Integer.parseInt(major, 10);
     }
 
     @Override
-    public int getDatabaseMinorVersion() {
-        return 0;
+    public int getDatabaseMinorVersion() throws SQLException {
+        readNeo4jVersionAndEdition();
+        String[] versionComponents = neo4jVersion.split("\\.");
+        if (versionComponents.length <= 1) {
+            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+        }
+        String minor = versionComponents[1];
+        return Integer.parseInt(minor, 10);
     }
 
     @Override
@@ -982,13 +1007,46 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     @Override
-    public void setCatalog(String catalog) {
-
+    public void setCatalog(String catalog) throws SQLException {
+        if (hasActiveTransaction()) {
+            throw new SQLException(String.format("Cannot switch catalog to '%s' while a transaction is active", catalog));
+        }
+        SessionConfig newSessionConfig = sessionConfig(catalog);
+        if (newSessionConfig.equals(this.sessionConfig)) {
+            return;
+        }
+        Session newSession;
+        try {
+            newSession = driver.session(newSessionConfig);
+        } catch (RuntimeException e) {
+            throw new SQLException(String.format("Could not switch catalog to '%s'", catalog), e);
+        }
+        Session previousSession = this.session;
+        this.sessionConfig = newSessionConfig;
+        this.session = newSession;
+        this.catalog = catalog;
+        try {
+            previousSession.close();
+        } catch (RuntimeException e) {
+            throw new SQLException(String.format("Could not close session for previous catalog while switching to '%s'", catalog), e);
+        }
     }
 
     @Override
-    public String getCatalog() {
-        return null;
+    public String getCatalog() throws SQLException {
+        if (catalog != null) {
+            return catalog;
+        }
+        try {
+            if (hasActiveTransaction()) {
+                catalog = transaction.run("CALL db.info() YIELD name RETURN name").single().get("name").asString();
+            } else {
+                catalog = session.executeRead(tx -> tx.run("CALL db.info() YIELD name RETURN name").single().get("name").asString());
+            }
+            return catalog;
+        } catch (RuntimeException e) {
+            throw new SQLException("Could not retrieve current database name (catalog)", e);
+        }
     }
 
     @Override
@@ -1188,12 +1246,15 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
 
     @Override
     public <T> T unwrap(Class<T> type) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        if (isWrapperFor(type)) {
+            return type.cast(this);
+        }
+        throw new SQLException(String.format("Cannot unwrap Neo4j connection to %s", type.getName()));
     }
 
     @Override
-    public boolean isWrapperFor(Class<?> type) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+    public boolean isWrapperFor(Class<?> type) {
+        return Objects.requireNonNull(type, "type").isInstance(this);
     }
 
     @Override
@@ -1201,11 +1262,14 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
         if (autocommit) {
             throw new SQLException("the connection is in auto-commit mode. Explicit commit is prohibited");
         }
-        if (!transaction.isOpen()) {
+        if (transaction == null || !transaction.isOpen()) {
             return;
         }
-        transaction.commit();
-        transaction.close();
+        try (Transaction tx = transaction) {
+            tx.commit();
+        } finally {
+            transaction = null;
+        }
     }
 
     @Override
@@ -1213,11 +1277,14 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
         if (autocommit) {
             throw new SQLException("the connection is in auto-commit mode. Explicit rollback is prohibited");
         }
-        if (!transaction.isOpen()) {
+        if (transaction == null || !transaction.isOpen()) {
             return;
         }
-        transaction.rollback();
-        transaction.close();
+        try (Transaction tx = transaction) {
+            tx.rollback();
+        } finally {
+            transaction = null;
+        }
     }
 
     @Override
@@ -1244,10 +1311,15 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
     }
 
     public Transaction getOrBeginTransaction() {
-        if (transaction == null || !transaction.isOpen()) {
+        if (!hasActiveTransaction()) {
             transaction = session.beginTransaction();
         }
         return transaction;
+    }
+
+    @Override
+    public boolean hasActiveTransaction() {
+        return transaction != null && transaction.isOpen();
     }
 
     // visible for testing
@@ -1281,4 +1353,57 @@ class Neo4jConnection implements Connection, DatabaseMetaData {
             throw new SQLFeatureNotSupportedException("only CONCUR_READ_ONLY is supported");
         }
     }
+
+    private void readNeo4jVersionAndEdition() throws SQLException {
+        if (this.neo4jVersion != null) {
+            return;
+        }
+        try (Session metadataSession = openSession()) {
+            var results = metadataSession.run(SERVER_VERSION_QUERY);
+            if (!results.hasNext()) {
+                throw new SQLException("Could not retrieve Neo4j version and edition");
+            }
+            var row = results.next();
+            this.neo4jVersion = row.get("version").asString();
+            this.neo4jEdition = row.get("edition").asString().toLowerCase(Locale.ENGLISH);
+        } catch (RuntimeException e) {
+            throw new SQLException("Could not retrieve Neo4j version and edition", e);
+        }
+    }
+
+    private void readCurrentUser() throws SQLException {
+        if (this.username != null) {
+            return;
+        }
+        try (Session metadataSession = openSession()) {
+            var results = metadataSession.run(CURRENT_USER_QUERY);
+            if (!results.hasNext()) {
+                throw new SQLException("Could not retrieve current Neo4j user");
+            }
+            this.username = results.next().get("user").asString();
+        } catch (RuntimeException e) {
+            throw new SQLException("Could not retrieve current Neo4j user", e);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private SessionConfig sessionConfig(String catalog) {
+        SessionConfig.Builder builder = SessionConfig.builder()
+                .withDefaultAccessMode(this.sessionConfig.defaultAccessMode())
+                .withBookmarks(this.sessionConfig.bookmarks());
+        this.sessionConfig.fetchSize().ifPresent(builder::withFetchSize);
+        this.sessionConfig.impersonatedUser().ifPresent(builder::withImpersonatedUser);
+        this.sessionConfig.bookmarkManager().ifPresent(builder::withBookmarkManager);
+        if (this.sessionConfig.notificationConfig() != null) {
+            builder.withNotificationConfig(this.sessionConfig.notificationConfig());
+        }
+        if (this.sessionConfig.autoCommitRetriesMode() != null) {
+            builder.withAutoCommitRetriesMode(this.sessionConfig.autoCommitRetriesMode());
+        }
+        if (catalog != null) {
+            builder.withDatabase(catalog);
+        }
+        return builder.build();
+    }
+
 }
