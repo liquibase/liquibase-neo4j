@@ -12,7 +12,8 @@ permissions:
   statuses: read
   actions: read
   security-events: write
-  
+  id-token: write # Required by AWS OIDC authentication in sonar
+
 jobs:
   create-release:
     uses: liquibase/build-logic/.github/workflows/create-release.yml@main
