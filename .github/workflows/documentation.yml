@@ -36,4 +36,4 @@ jobs:
         env:
           AWS_S3_BUCKET: ${{ secrets.NEO4J_DOCS_S3_BUCKET }}
         run: |
-          aws s3 sync site/ "s3://${AWS_S3_BUCKET}/labs/liquibase/docs" --acl public-read --follow-symlinks
+          aws s3 sync site/ "s3://${AWS_S3_BUCKET}/labs/liquibase/docs" --follow-symlinks
