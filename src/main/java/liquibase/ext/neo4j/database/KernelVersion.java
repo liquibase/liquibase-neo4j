@@ -120,8 +120,12 @@ public class KernelVersion implements Comparable<KernelVersion> {
         return versionString();
     }
 
+    public boolean hasMinor() {
+        return minor != Integer.MAX_VALUE;
+    }
+
     public String versionString() {
-        if (minor == Integer.MAX_VALUE) {
+        if (!hasMinor()) {
             return String.format("%d", major);
         }
         if (patch == Integer.MAX_VALUE) {

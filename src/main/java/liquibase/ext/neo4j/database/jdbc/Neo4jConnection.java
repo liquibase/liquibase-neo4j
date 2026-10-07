@@ -929,7 +929,7 @@ class Neo4jConnection implements Connection, DatabaseMetaData, Neo4jTransactionS
         readNeo4jVersionAndEdition();
         try {
             var version = KernelVersion.parse(neo4jVersion);
-            if (version.minor() == Integer.MAX_VALUE) {
+            if (!version.hasMinor()) {
                 throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
             }
             return version;
