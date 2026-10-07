@@ -1,5 +1,6 @@
 package liquibase.ext.neo4j.database.jdbc;
 
+import liquibase.ext.neo4j.database.KernelVersion;
 import org.neo4j.driver.AuthToken;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Config;
@@ -916,24 +917,25 @@ class Neo4jConnection implements Connection, DatabaseMetaData, Neo4jTransactionS
 
     @Override
     public int getDatabaseMajorVersion() throws SQLException {
-        readNeo4jVersionAndEdition();
-        String[] versionComponents = neo4jVersion.split("\\.");
-        if (versionComponents.length <= 1) {
-            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
-        }
-        String major = versionComponents[0];
-        return Integer.parseInt(major, 10);
+        return parseNeo4jVersion().major();
     }
 
     @Override
     public int getDatabaseMinorVersion() throws SQLException {
+        return parseNeo4jVersion().minor();
+    }
+
+    private KernelVersion parseNeo4jVersion() throws SQLException {
         readNeo4jVersionAndEdition();
-        String[] versionComponents = neo4jVersion.split("\\.");
-        if (versionComponents.length <= 1) {
-            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+        try {
+            var version = KernelVersion.parse(neo4jVersion);
+            if (!version.hasMinor()) {
+                throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion));
+            }
+            return version;
+        } catch (IllegalArgumentException e) {
+            throw new SQLException(String.format("Unrecognized Neo4j version string: %s", neo4jVersion), e);
         }
-        String minor = versionComponents[1];
-        return Integer.parseInt(minor, 10);
     }
 
     @Override

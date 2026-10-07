@@ -1,6 +1,5 @@
 package liquibase.ext.neo4j.database.jdbc
 
-import org.neo4j.driver.Transaction
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -31,6 +30,41 @@ class Neo4jConnectionTest extends Specification {
 
         then:
         connection.getAutoCommit()
+    }
+
+    def "parses major and minor database versions from '#version'"() {
+        given:
+        connection.neo4jVersion = version
+
+        expect:
+        connection.getDatabaseMajorVersion() == major
+        connection.getDatabaseMinorVersion() == minor
+
+        where:
+        version      | major | minor
+        "5.26.1"     | 5     | 26
+        "5.27-aura"  | 5     | 27
+        "2026.01.0"  | 2026  | 1
+    }
+
+    def "rejects unrecognized database version '#version'"() {
+        given:
+        connection.neo4jVersion = version
+
+        when:
+        connection.getDatabaseMajorVersion()
+
+        then:
+        thrown(SQLException)
+
+        when:
+        connection.getDatabaseMinorVersion()
+
+        then:
+        thrown(SQLException)
+
+        where:
+        version << ["5", "abc", "5.x"]
     }
 
     def "creates a simple statement"() {
