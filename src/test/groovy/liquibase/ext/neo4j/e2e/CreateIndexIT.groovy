@@ -37,7 +37,7 @@ class CreateIndexIT extends Neo4jContainerSpec {
             WHERE name = 'movie_title_year'
             RETURN properties
         """)
-        Arrays.asList((String[]) row["properties"]) == ["title", "year"]
+        row.get("properties") == ["title", "year"]
     }
 
     def "does not fail when the index already exists and ifNotExists is set"() {
