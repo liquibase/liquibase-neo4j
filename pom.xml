@@ -10,7 +10,7 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-neo4j</artifactId>
-    <version>5.1.0-SNAPSHOT</version>
+    <version>5.0.4.1-SNAPSHOT</version>
 
     <name>Liquibase Neo4j Database Extension</name>
     <description>Adds additional Neo4j specific Liquibase functionality</description>
@@ -99,7 +99,7 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.18.14</version>
+            <version>1.18.15</version>
             <scope>test</scope>
         </dependency>
         <dependency>
