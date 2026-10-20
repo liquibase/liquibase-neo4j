@@ -294,6 +294,32 @@ Make sure to use the right `valueXxx` attribute:
 - `valueNumeric` for numeric values
 - `value` for everything else
 
+## Create Index
+
+The `createIndex` change creates a [range index](https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/managing-indexes/)
+on either:
+
+- a node label, set with `labelName`
+- a relationship type, set with `relationshipType`
+
+Exactly one of these two attributes must be set. Each `column` denotes an indexed property; several columns define a
+composite index.
+
+|Attribute|Description|
+|---|---|
+|`indexName`|Optional index name. It is required for the change to be rolled back.|
+|`labelName` / `relationshipType`|The indexed node label or relationship type (mutually exclusive).|
+|`columns`|The indexed properties (at least one).|
+|`ifNotExists`|Optional, adds `IF NOT EXISTS` to the generated statement.|
+
+Rolling back the change runs `DROP INDEX <indexName> IF EXISTS`.
+
+=== "YAML"
+
+    ~~~~yaml
+    {! include '../src/test/resources/e2e/create-index/changeLog.yaml' !}
+    ~~~~
+
 ## Graph refactorings
 
 ### Node Merge
