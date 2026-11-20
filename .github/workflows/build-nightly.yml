@@ -44,21 +44,11 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Configure AWS credentials for vault access
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+      - name: Get the GPM token from vault
+        uses: liquibase/build-logic/.github/actions/setup-aws-vault@2003fece51886ec69cda3df1cb4520b3ceeb2e0c # main
         with:
-          role-to-assume: ${{ secrets.LIQUIBASE_VAULT_OIDC_ROLE_ARN }}
-          aws-region: us-east-1
-
-      - name: Get secrets from vault
-        id: vault-secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@2297f9a879480a9e3af9b293ed15c70caf8e1c88 # v3.0.2
-        with:
-          secret-ids: |
-            ,/vault/liquibase
-          parse-json-secrets: true
-
-      # look for dependencies in maven
+          group: liquibot-github-pat
+          role-arn: ${{ secrets.VAULT_GROUPED_LIQUIBOT_GITHUB_PAT_ROLE_ARN }}
       - name: Set up Maven settings.xml
         uses: liquibase/build-logic/.github/actions/setup-maven-settings@f95fd0a740e3ca455ad16344c90ec6cd11f64f4a # main
         with:
