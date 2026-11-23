@@ -50,7 +50,7 @@ jobs:
           group: liquibot-github-pat
           role-arn: ${{ secrets.VAULT_GROUPED_LIQUIBOT_GITHUB_PAT_ROLE_ARN }}
       - name: Set up Maven settings.xml
-        uses: liquibase/build-logic/.github/actions/setup-maven-settings@f95fd0a740e3ca455ad16344c90ec6cd11f64f4a # main
+        uses: liquibase/build-logic/.github/actions/setup-maven-settings@dd700c6191de7a28a8e602701f791e0e59566995 # main
         with:
           gpm-token: ${{ env.LIQUIBOT_PAT_GPM_ACCESS }}
 
