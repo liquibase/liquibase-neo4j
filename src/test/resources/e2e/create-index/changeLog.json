@@ -1,0 +1,40 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "create-node-index",
+        "author": "superstar",
+        "changes": [
+          {
+            "createIndex": {
+              "indexName": "movie_title_year",
+              "labelName": "Movie",
+              "ifNotExists": true,
+              "columns": [
+                {"column": {"name": "title"}},
+                {"column": {"name": "year"}}
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "create-relationship-index",
+        "author": "superstar",
+        "changes": [
+          {
+            "createIndex": {
+              "indexName": "acted_in_role",
+              "relationshipType": "ACTED_IN",
+              "columns": [
+                {"column": {"name": "role"}}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
