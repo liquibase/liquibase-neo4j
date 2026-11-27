@@ -45,7 +45,7 @@ jobs:
           cache: "maven"
 
       - name: Get the GPM token from vault
-        uses: liquibase/build-logic/.github/actions/setup-aws-vault@2003fece51886ec69cda3df1cb4520b3ceeb2e0c # main
+        uses: liquibase/build-logic/.github/actions/setup-aws-vault@07bc7663b472eefe4854a0f7c1b542f1e7e129f5 # main
         with:
           group: liquibot-github-pat
           role-arn: ${{ secrets.VAULT_GROUPED_LIQUIBOT_GITHUB_PAT_ROLE_ARN }}
